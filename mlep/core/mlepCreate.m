@@ -222,6 +222,19 @@ msg = '';
 
 end
 
+function [status, pid] = startProcessNET(cmd, args, env, workdir)
+% Use .NET Documentation for the System.Diagnostics.Process class
+
+% Create .NET Process object
+proc = System.Diagnostics.Process();
+proc.StartInfo.FileName = 'C:\\Windows\\system32\\notepad.exe';
+
+% Start the process
+proc.Start();
+
+% WaitForExit(); %if need be
+end
+
 
 function [status, pid] = startProcess(cmd, args, env, workdir)
 % This helper function starts a new process of a given program in the
@@ -240,7 +253,6 @@ function [status, pid] = startProcess(cmd, args, env, workdir)
 % workdir: working directory
 %
 % status: 0 if successful, != 0 if error (then status is error code)
-% (obsolete) msg: string message returned by the program (e.g. its standard output)
 % pid: process ID/object; this ID is often not used but may be useful later.
 
 if nargin < 1 || ~ischar(cmd)
@@ -288,9 +300,9 @@ end
 
 % Run Command
 if ispc
-    [status,~] = system([cmd ' &'],'-echo'); %  '> mlep.log &' ,'-echo'
+    [status,msg] = system(['START "" /B ' cmd ''],'-echo');    
 else
-    [status,~] = system([cmd ' > mlep.log &'] ,'-echo'); %  '> mlep.log &' ,'-echo'
+    [status,~] = system([cmd ' > mlep.log &'] ,'-echo'); 
 end
 
 % Process id - not used
