@@ -27,7 +27,8 @@ classdef mlepProcess < handle
         program;
         env;
         arguments = {}; % Arguments to the client program
-        workDir = '';   % Working directory (default is current directory)
+        workDir = '.';   % Working directory (default is current directory)
+        outputDir = 'eplusout'; % EnergyPlus output directory (created under working folder)
         port = 0;       % Socket port (default 0 = any free port)
         host = '';      % Host name (default '' = localhost)
         bcvtbDir;       % Directory to BCVTB (default '' means that if
@@ -35,12 +36,17 @@ classdef mlepProcess < handle
         % directory)
         configFile = 'socket.cfg';  % Name of socket configuration file
         configFileWriteOnce = false;  % if true, only write the socket config file
+        variablesFile = 'variables.cfg'; % Contains ExternalInterface settings 
+        iddFile = 'Energy+.idd'; % IDD file
+        idfFile = 'in.idf'; % Building specification IDF file (E+ default by default)
+        epwFile = 'in.epw'; % Weather profile EPW file (E+ default by default)       
         % for the first time and when server
         % socket changes.
         acceptTimeout = 20000;  % Timeout for waiting for the client to connect
         execcmd;        % How to execute EnergyPlus from Matlab (system/Java)
         status = 0;
-        msg = '';
+        verboseEP = true; % Print standard output of the E+ process into Matlab
+        msg = '';       
     end
     
     properties (SetAccess=private, GetAccess=public)
@@ -49,8 +55,8 @@ classdef mlepProcess < handle
         serverSocket = [];  % Server socket to listen to client
         commSocket = [];    % Socket for sending/receiving data
         writer;             % Buffered writer stream
-        reader;             % Buffered reader stream
-        pid = [];           % Process ID for E+
+        reader;             % Buffered reader stream        
+        process = [];        % Process object for E+
     end
     
     properties (Constant)
@@ -85,14 +91,233 @@ classdef mlepProcess < handle
                     theport = obj.port;
                     theConfigFile = obj.configFile;
                 end
+                                
+                status = runEP(obj, theport,theConfigFile);
+                msg = '';
                 
-                [obj.serverSocket, obj.commSocket, status, msg, obj.pid] = ...
-                    mlepCreate(obj.program, obj.arguments, obj.workDir,...
-                    obj.acceptTimeout, theport, obj.host,...
-                    obj.bcvtbDir, theConfigFile, obj.env, obj.execcmd);
             catch ErrObj
                 obj.closeCommSockets;
                 rethrow(ErrObj);
+            end
+        end
+        
+        function status = runEP(obj, port, configfile)
+            
+            host_ = obj.host;            
+            env_ = obj.env;
+            
+            ni = nargin;
+            if ni < 2 || isempty(port)
+                port = 0;  % any port that is free
+            end
+            if ni < 3 || isempty(configfile)
+                configfile = 'socket.cfg';
+            end                        
+            bWorkDir = ~strcmp(obj.workDir,'.');
+            
+            % Set BCVTB_HOME environment
+            if ~isempty(obj.bcvtbDir)
+                env_ = [env_, {{'BCVTB_HOME', obj.bcvtbDir, obj.bcvtbDir}}];  % Always overwrite
+            else
+                env_ = [env_, {{'BCVTB_HOME', pwd}}];
+            end
+            
+            
+            % Save current directory and change directory if necessary                        
+            if bWorkDir                 
+                oldCurDir = cd(obj.workDir);                
+            end            
+            
+            % Create E+ output folder
+            obj.cleanEP(pwd);                                      
+            outputDir_ = fullfile(pwd,obj.outputDir);            
+            mkdir(outputDir_);                
+            
+            
+            % If port is a ServerSocket java object then re-use it
+            if isa(port, 'java.net.ServerSocket')
+                if port.isClosed
+                    port = 0;   % Create a new socket
+                else
+                    serversock = port;
+                end
+            end
+            
+            % Create server socket if necessary
+            if isnumeric(port)
+                % If any error happens, this function will be interrupted
+                if ni >= 6 && ~isempty(host_)
+                    serversock = java.net.ServerSocket(port, 0, host_);
+                    hostname = host_;
+                else
+                    serversock = java.net.ServerSocket(port);
+                    
+                    % The following get local host address for incoming connections even
+                    % from outside, but it seems unstable, sometimes E+ cannot connect.
+                    % hostname = char(getHostName(java.net.InetAddress.getLocalHost));
+                    
+                    % The following get address that can only be used locally on this
+                    % machine, no connections from outside. It may be more stable.
+                    hostname = char(getHostName(javaMethod('getLocalHost', 'java.net.InetAddress')));
+                    %hostname = char(getHostAddress(serversock.getInetAddress));
+                end
+            else
+                hostname = char(getHostName(javaMethod('getLocalHost', 'java.net.InetAddress')));
+                %hostname = char(getHostAddress(serversock.getInetAddress));
+            end
+            
+            serversock.setSoTimeout(obj.acceptTimeout);
+            
+            % Write socket config file if necessary (configfile ~= -1)
+            if configfile ~= -1
+                fid = fopen(fullfile(outputDir_,configfile), 'w');
+                if fid == -1
+                    % error
+                    serversock.close; serversock = [];
+                    error('Error while creating socket config file: %s', ferror(fid));
+                end
+                
+                % Write socket config to file
+                socket_config = [...
+                    '<?xml version="1.0" encoding="ISO-8859-1"?>\n' ...
+                    '<BCVTB-client>\n' ...
+                    '<ipc>\n' ...
+                    '<socket port="%d" hostname="%s"/>\n' ...
+                    '</ipc>\n' ...
+                    '</BCVTB-client>'];
+                fprintf(fid, socket_config, serversock.getLocalPort, hostname);
+                
+                [femsg, ferr] = ferror(fid);
+                if ferr ~= 0  % Error while writing config file
+                    serversock.close; serversock = [];
+                    fclose(fid);
+                    error('Error while writing socket config file: %s', femsg);
+                end
+                
+                fclose(fid);
+            end
+            
+            % Create the external process
+            try
+                for kk = 1:numel(env_)
+                    setenv(env_{kk}{1}, env_{kk}{2});
+                end
+                
+                
+                %% Create the EnergyPlus co-simulatin process
+                epdir = fileparts(obj.program);                
+                epwFilename = [obj.epwFile, '.epw'];
+                idfFilename = [obj.idfFile, '.idf'];                
+                
+                assert(exist(obj.iddFile,'file')>0,'Could not find "%s" file. Please correct the file path or make sure it is on the Matlab search path.',obj.iddFile);
+                assert(exist(obj.variablesFile,'file')>0,'Could not find "%s" file. Please correct the file path or make sure it is on the Matlab search path.',obj.variablesFile);
+                assert(exist(epwFilename,'file')>0,'Could not find "%s" file. Please correct the file path or make sure it is on the Matlab search path.',epwFilename);
+                assert(exist(idfFilename,'file')>0,'Could not find "%s" file. Please correct the file path or make sure it is on the Matlab search path.',idfFilename);
+                
+                
+                var_file_path = fileparts(which(obj.variablesFile));
+                if ~strcmp(var_file_path,pwd)
+                    warning('Using "%s" file from outside the current path. Specifically from "%s"',obj.variablesFile,var_file_path);
+                end
+                
+                % Copy variables.cfg to the working directory
+                if ~copyfile(which(obj.variablesFile),outputDir_)
+                    error('Cannot copy "%s" to "%s".',var_fobj.variablesFileile, outputDir_);
+                end
+                % Add disclamer to the new variables.cfg file
+                copied_var_file = fullfile(outputDir_,obj.variablesFile);
+                S = fileread(copied_var_file);                
+                disclaimer = ['<!--' newline,...
+                    '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!' newline,...
+                    'THIS IS A FILE COPY.' newline,...
+                    'DO NOT EDIT THIS FILE AS ANY CHANGES WILL BE OVERWRITTEN!' newline,...
+                    '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!' newline,...
+                    '-->' newline];
+                anchor = '<BCVTB-variables>';
+                k = strfind(S,anchor);
+                if isempty(k), error('Parsing of "%s" failed. Please check the file',obj.variablesFile); 
+                else
+                    k = k + numel(anchor);
+                    S = [S(1:k), disclaimer, S(k+1:end)];
+                end
+                FID = fopen(copied_var_file, 'w');
+                if FID == -1, error('Cannot open file "%s".', copied_var_file); end                
+                fwrite(FID, S, 'char');
+                fclose(FID);
+                
+                % Prepare EP command
+                epcmd = javaArray('java.lang.String',11);
+                epcmd(1) = java.lang.String([epdir, filesep, 'energyplus']);
+                epcmd(2) = java.lang.String('-w'); % weather file
+                epcmd(3) = java.lang.String(which(epwFilename));
+                epcmd(4) = java.lang.String('-i'); % IDD file
+                epcmd(5) = java.lang.String(which(obj.iddFile));
+                epcmd(6) = java.lang.String('-x'); % expand objects
+                epcmd(7) = java.lang.String('-p'); % output prefix
+                epcmd(8) = java.lang.String(obj.idfFile);
+                epcmd(9) = java.lang.String('-s'); % output suffix
+                epcmd(10) = java.lang.String('D'); % Dash style "prefix-suffix"
+                epcmd(11) = java.lang.String(which(idfFilename)); % IDF file
+                
+                epproc = processManager('command',epcmd,...
+                                        'printStdout',obj.verboseEP,...
+                                        'printStderr',obj.verboseEP,...
+                                        'keepStdout',~obj.verboseEP,...
+                                        'keepStderr',~obj.verboseEP,...
+                                        'autoStart', false,...                                        
+                                        'id','EP');  
+                epproc.workingDir = outputDir_;                
+                addlistener(epproc.state,'exit',@epProcListener);
+                epproc.start();                     
+                    
+                if ~epproc.running                    
+                    error('Error while starting external co-simulation program.');                    
+                else
+                    obj.process = epproc;
+                end
+            catch ErrObj
+                serversock.close; % serversock = [];
+                rethrow(ErrObj);
+            end
+            
+            % Listen for the external program to connect
+            try
+%                 simsock = serversock.accept; % One or the other
+                simsock = []; % simsock dummy
+            catch ErrObj
+                % Error, usually because the external program failed to connect
+                serversock.close; % serversock = [];
+                rethrow(ErrObj);
+            end
+            
+            % Now that the connection is established, return the sockets
+            obj.serverSocket = serversock;
+            obj.commSocket = simsock;
+            
+            status = 0; % zero means no_problem
+            
+            % Revert current folder
+            if bWorkDir                 
+                cd(oldCurDir);                
+            end
+            
+            function epProcListener(src,data)                
+                fprintf('\n');
+                fprintf('%s: Process exited with exitValue = %g\n',src.id,src.exitValue);                
+                    
+                if src.exitValue ~= 1                    
+                    fprintf('Event name %s\n',data.EventName);   
+                    fprintf('\n');
+                    if ~isempty(src.stdout)
+                        fprintf('StdOut of the process:\n\n');
+                        processManager.printStream(src.stdout,'StdOut',80);
+                    end
+                    if ~isempty(src.stderr)
+                        fprintf('StdErr of the process:\n\n');
+                        processManager.printStream(src.stdout,'StdErr',80);
+                    end
+                end
+                
             end
         end
         
@@ -129,8 +354,8 @@ classdef mlepProcess < handle
             obj.closeCommSockets;
             
             % Destroy process E+
-            if isa(obj.pid, 'java.lang.Process')
-                obj.pid.destroy();
+            if isa(obj.process, 'processManager')
+                obj.process.stop;
             end
             
             obj.isRunning = false;
@@ -382,6 +607,21 @@ classdef mlepProcess < handle
             else
                 obj.execcmd = MLEPSETTINGS.execcmd;
             end
+        end
+        
+        function cleanEP(obj, rootDir)            
+            dirname = fullfile(rootDir,obj.outputDir);
+            if exist(dirname,'dir')
+                mlepProcess.rmdirR(dirname);
+            end
+        end
+    end
+    
+    methods (Static)
+        function rmdirR(dirname)
+            delete(fullfile(dirname,'*'));
+            st = rmdir(dirname);
+            assert(st,'Could not delete folder "%s"',dirname);
         end
     end
 end
