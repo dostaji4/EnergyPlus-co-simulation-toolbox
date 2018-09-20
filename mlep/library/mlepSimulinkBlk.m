@@ -54,7 +54,7 @@
 %   Jul. 2015       Modified by Willy Bernal to work for the MLE+
 %                   installation and not only Campus Energy Modeling 
 %                   Project. 
-%
+%  
 %
 
 function mlepSimulinkBlk(block)
@@ -215,7 +215,7 @@ function Start(block)
     % Parse working directory path
     if isempty(d.dialog.work_dir)
         % Empty = use current working directory
-        work_dir = [pwd];
+        work_dir = '.';
         
     elseif d.dialog.rel_path
         % Parse relative path
@@ -228,47 +228,43 @@ function Start(block)
         % Use absolute path
         work_dir = d.dialog.work_dir;
     end
+    
     if strcmp(work_dir(end), filesep)
         % Strip trailing file sep
         work_dir = work_dir(1:end-1);
     end
     
-    % Parse model file location
-    fname = [work_dir filesep d.dialog.fname];
-    if ~strcmpi(d.dialog.fname(end-3:end), '.idf')
+    % Parse model file location         
+    fname = d.dialog.fname;
+    if strcmpi(d.dialog.fname(end-3:end), '.idf')
         % Strip extension
-        fname = [fname '.idf'];
+        fname = fname(1:end-4);
     end
     
     % Check paths
     assert( ...
         exist(work_dir, 'dir') > 0, ...
         'EnergyPlusCosim:invalidWorkingDirectory', ...
-        'Specified working directory %s does not exist.', ...
+        'Specified working directory "%s" does not exist.', ...
         work_dir );
     assert( ...
-        exist(fname, 'file') > 0, ...
+        exist([fname,'.idf'], 'file') > 0, ...
         'EnergyPlusCosim:invalidModelFile', ...
-        'Specified IDF file %s does not exist.', ...
+        'Specified IDF file "%s" does not exist.', ...
         fname );
     
-    % For EnergyPlus call, strip extensions
-    fname = fname(1:end-4);
-    
-    % Parse weather file name
-    if strcmpi(d.dialog.weather_profile(end-3:end), '.epw')
+    % Parse weather file name (may contain '.' in the filename)
+    wname = d.dialog.weather_profile;
+    if strcmpi(wname(end-3:end), '.epw')
         % Strip extension
-        weather_profile = d.dialog.weather_profile(1:end-4);
-    else
-        weather_profile = d.dialog.weather_profile;
+        wname = wname(1:end-4);
     end
     
-    % Parse arguments
-    arg = [fname ' ' weather_profile];
     
     % Setup up MLE+
     processobj.workDir =        work_dir;
-    processobj.arguments =      arg;
+    processobj.idfFile =        fname;
+    processobj.epwFile =        wname;
     processobj.acceptTimeout =  d.dialog.timeout*1000; % s -> ms
     processobj.port =           d.dialog.port;
     processobj.host =           d.dialog.host;
@@ -334,7 +330,7 @@ function Outputs(block)
         VERNUMBER = 2;
 
         % Send signals to E+
-        rvalues1 = block.InputPort(1).Data;
+        rvaluesOut = block.InputPort(1).Data;
         
         % Read data from E+
         readpacket = processobj.read;
@@ -345,7 +341,7 @@ function Outputs(block)
 
         % Decode data
         % (Currently, ivalues and bvalues are not used)
-        [flag, timevalue, rvalues] = mlepDecodePacket(readpacket);
+        [flag, timevalue, rvaluesIn] = mlepDecodePacket(readpacket);
         
         % Process output
         if flag ~= 0
@@ -354,17 +350,17 @@ function Outputs(block)
             return;
         else
             % Case where no data is returned
-            if isempty(rvalues), rvalues = 0; end
+            if isempty(rvaluesIn), rvaluesIn = 0; end
 
             % Set outputs of block
             block.OutputPort(1).Data = flag;
             block.OutputPort(2).Data = timevalue;
-            block.OutputPort(3).Data = rvalues(:);
+            block.OutputPort(3).Data = rvaluesIn(:);
         end
         
         % Write data to E+
         processobj.write( ...
-            mlepEncodeRealData(VERNUMBER, 0, block.CurrentTime, rvalues1));
+            mlepEncodeRealData(VERNUMBER, 0, block.CurrentTime, rvaluesOut));
         
     end
 

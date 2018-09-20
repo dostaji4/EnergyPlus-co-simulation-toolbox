@@ -52,7 +52,7 @@ if ispc
     end    
 else
     % Unix
-    eplusPath = '/Applications/EnergyPlus-8-6-0';
+    eplusPath = '/EnergyPlusV8-9-0';
 end
 
 %% DO NOT MODIFY
