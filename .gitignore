@@ -1,0 +1,6 @@
+.SimulinkProject/
+EnergyPlusV8-9-0/ExampleFiles/1ZoneDataCenterCRAC_wApproachTemp.idf
+EnergyPlusV8-9-0/Documentation/
+EnergyPlusV8-9-0/ExampleFiles/
+*.asv
+MLE+/
