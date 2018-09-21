@@ -354,7 +354,7 @@ classdef mlepProcess < handle
             obj.closeCommSockets;
             
             % Destroy process E+
-            if isa(obj.process, 'processManager')
+            if isa(obj.process, 'processManager') && obj.process.running
                 obj.process.stop;
             end
             

@@ -156,11 +156,6 @@ end
 %% Parse Parameters
 % Parse the dialog parameters and store them in the block user data
 function ParseParameters(block)
-    % Get existing user data, if any
-    d = get_param(block.BlockHandle, 'UserData');
-    if isempty(d)
-        d = struct();
-    end
     
     % Define names of dialog parameters (in order)
     dialogNames = { ...
@@ -308,8 +303,9 @@ function InitializeConditions(block)
         'EnergyPlusCosim:startupError', ...
         'Cannot start EnergyPlus: %s.', msg );
 
-    % Save processobj back to UserData of the block
-    set_param(block.BlockHandle, 'UserData', d);
+%     % Save processobj back to UserData of the block
+% COMMENTED OUT BY JD
+%     set_param(block.BlockHandle, 'UserData', d);
 
 end
 
@@ -377,10 +373,8 @@ function Terminate(block)
         'Internal error: Cosimulation process object is lost.' );
     
     % Stop the running process
-    if processobj.isRunning
-        % TO DO: Check why it stoped
-        % Send a signal.
-        processobj.stop(true);
+    if processobj.isRunning        
+        processobj.stop;
     end
     
 end
