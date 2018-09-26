@@ -2848,19 +2848,17 @@ ExternalInterface,
 
 !-   ===========  ALL OBJECTS IN CLASS: EXTERNALINTERFACE:SCHEDULE ===========
 
-! Cooling schedule. This schedule is set directly by the external interface.
-! During warm-up and system-sizing, it is fixed at 24 degC.
-ExternalInterface:Schedule,
-    TSetCoo,                 !- Name
-    Temperature,             !- Schedule Type Limits Name
-    24;                      !- Initial Value
-
 ! Heating schedule. This schedule is set directly by the external interface.
 ! During warm-up and system-sizing, it is fixed at 20 degC.
 ExternalInterface:Schedule,
     TSetHea,                 !- Name
     Temperature,             !- Schedule Type Limits Name
     20;                      !- Initial Value
+
+ExternalInterface:Schedule,
+    TSetCoo,                 !- Name
+    Temperature,             !- Schedule Type Limits Name
+    24;                      !- Initial Value
 
 
 !-   ===========  ALL OBJECTS IN CLASS: AVAILABILITYMANAGER:SCHEDULED ===========
@@ -3025,183 +3023,18 @@ Curve:Biquadratic,
 !-   ===========  ALL OBJECTS IN CLASS: OUTPUT:VARIABLEDICTIONARY ===========
 
 Output:VariableDictionary,
-    Regular;                 !- Key Field
-
-
-!-   ===========  ALL OBJECTS IN CLASS: OUTPUT:SURFACES:DRAWING ===========
-
-Output:Surfaces:Drawing,
-    dxf;                     !- Report Type
-
-
-!-   ===========  ALL OBJECTS IN CLASS: OUTPUT:TABLE:SUMMARYREPORTS ===========
-
-Output:Table:SummaryReports,
-    AllSummary;              !- Report 1 Name
-
-
-!-   ===========  ALL OBJECTS IN CLASS: OUTPUTCONTROL:TABLE:STYLE ===========
-
-OutputControl:Table:Style,
-    Comma;                   !- Column Separator
+    IDF;                     !- Key Field
 
 
 !-   ===========  ALL OBJECTS IN CLASS: OUTPUT:VARIABLE ===========
 
 Output:Variable,
-    TSetHea,                 !- Key Value
-    Schedule Value,          !- Variable Name
-    TimeStep;                !- Reporting Frequency
-
-Output:Variable,
-    TSetCoo,                 !- Key Value
-    Schedule Value,          !- Variable Name
-    TimeStep;                !- Reporting Frequency
-
-Output:Variable,
-    *,                       !- Key Value
+    Environment,             !- Key Value
     Site Outdoor Air Drybulb Temperature,  !- Variable Name
     timestep;                !- Reporting Frequency
 
 Output:Variable,
-    *,                       !- Key Value
-    Zone Air System Sensible Cooling Rate,  !- Variable Name
-    timestep;                !- Reporting Frequency
-
-Output:Variable,
-    *,                       !- Key Value
-    Zone Air System Sensible Heating Rate,  !- Variable Name
-    timestep;                !- Reporting Frequency
-
-Output:Variable,
-    *,                       !- Key Value
+    ZSF1,                    !- Key Value
     Zone Air Temperature,    !- Variable Name
     timestep;                !- Reporting Frequency
-
-Output:Variable,
-    *,                       !- Key Value
-    Zone Air Humidity Ratio, !- Variable Name
-    timestep;                !- Reporting Frequency
-
-Output:Variable,
-    *,                       !- Key Value
-    Coil System Part Load Ratio,  !- Variable Name
-    timestep;                !- Reporting Frequency
-
-Output:Variable,
-    *,                       !- Key Value
-    Cooling Coil Total Cooling Rate,  !- Variable Name
-    timestep;                !- Reporting Frequency
-
-Output:Variable,
-    *,                       !- Key Value
-    Cooling Coil Sensible Cooling Rate,  !- Variable Name
-    timestep;                !- Reporting Frequency
-
-Output:Variable,
-    *,                       !- Key Value
-    Heating Coil Heating Rate,  !- Variable Name
-    timestep;                !- Reporting Frequency
-
-
-!-   ===========  ALL OBJECTS IN CLASS: OUTPUT:METER ===========
-
-Output:Meter,
-    Cooling:Electricity,     !- Key Name
-    monthly;                 !- Reporting Frequency
-
-Output:Meter,
-    Heating:Gas,             !- Key Name
-    monthly;                 !- Reporting Frequency
-
-Output:Meter,
-    Fans:Electricity,        !- Key Name
-    monthly;                 !- Reporting Frequency
-
-Output:Meter,
-    HeatingCoils:EnergyTransfer,  !- Key Name
-    monthly;                 !- Reporting Frequency
-
-Output:Meter,
-    CoolingCoils:EnergyTransfer,  !- Key Name
-    monthly;                 !- Reporting Frequency
-
-Output:Meter,
-    InteriorLights:Electricity,  !- Key Name
-    monthly;                 !- Reporting Frequency
-
-Output:Meter,
-    InteriorEquipment:Electricity,  !- Key Name
-    monthly;                 !- Reporting Frequency
-
-Output:Meter,
-    Cooling:Electricity,     !- Key Name
-    runperiod;               !- Reporting Frequency
-
-Output:Meter,
-    Heating:Gas,             !- Key Name
-    runperiod;               !- Reporting Frequency
-
-Output:Meter,
-    Fans:Electricity,        !- Key Name
-    runperiod;               !- Reporting Frequency
-
-Output:Meter,
-    HeatingCoils:EnergyTransfer,  !- Key Name
-    runperiod;               !- Reporting Frequency
-
-Output:Meter,
-    CoolingCoils:EnergyTransfer,  !- Key Name
-    runperiod;               !- Reporting Frequency
-
-Output:Meter,
-    InteriorLights:Electricity,  !- Key Name
-    runperiod;               !- Reporting Frequency
-
-Output:Meter,
-    InteriorEquipment:Electricity,  !- Key Name
-    runperiod;               !- Reporting Frequency
-
-
-!-   ===========  ALL OBJECTS IN CLASS: OUTPUT:METER:METERFILEONLY ===========
-
-Output:Meter:MeterFileOnly,
-    Electricity:Facility,    !- Key Name
-    monthly;                 !- Reporting Frequency
-
-Output:Meter:MeterFileOnly,
-    Electricity:Building,    !- Key Name
-    monthly;                 !- Reporting Frequency
-
-Output:Meter:MeterFileOnly,
-    Electricity:HVAC,        !- Key Name
-    monthly;                 !- Reporting Frequency
-
-Output:Meter:MeterFileOnly,
-    Gas:Facility,            !- Key Name
-    monthly;                 !- Reporting Frequency
-
-Output:Meter:MeterFileOnly,
-    Gas:HVAC,                !- Key Name
-    monthly;                 !- Reporting Frequency
-
-Output:Meter:MeterFileOnly,
-    Electricity:Facility,    !- Key Name
-    runperiod;               !- Reporting Frequency
-
-Output:Meter:MeterFileOnly,
-    Electricity:Building,    !- Key Name
-    runperiod;               !- Reporting Frequency
-
-Output:Meter:MeterFileOnly,
-    Electricity:HVAC,        !- Key Name
-    runperiod;               !- Reporting Frequency
-
-Output:Meter:MeterFileOnly,
-    Gas:Facility,            !- Key Name
-    runperiod;               !- Reporting Frequency
-
-Output:Meter:MeterFileOnly,
-    Gas:HVAC,                !- Key Name
-    runperiod;               !- Reporting Frequency
 
