@@ -22,83 +22,89 @@
 %               system settings.
 %   2011-04-28  Update to new version of MLE+ which uses Java for running
 %               E+.
-%   2015-07-30  Update to new version of MLE+ which uses the Matlab system 
-%               call for running E+. Updated BCVTB libraries to 1.5. 
-%         
+%   2015-07-30  Update to new version of MLE+ which uses the Matlab system
+%               call for running E+. Updated BCVTB libraries to 1.5.
+%
 
 %% Create an mlepProcess instance and configure it
 
-ep = mlepProcess;
+ep = mlep;
 ep.idfFile = 'SmOffPSZ';
 ep.epwFile = 'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3';
-ep.acceptTimeout = 6000;
 
 VERNUMBER = 2;  % version number of communication protocol (2 for E+ 7.2.0)
 
 %% Start EnergyPlus cosimulation
-[status, msg] = ep.start;  
-
-if status ~= 0
-    error('Could not start EnergyPlus: %s.', msg);
-end
-
-[status, msg] = ep.acceptSocket;
-
-if status ~= 0
-    error('Could not connect to EnergyPlus: %s.', msg);
-end
-
-%% The main simulation loop
-
-deltaT = 60/4*60;  % time step = 15 minutes
-kStep = 1;  % current simulation step
-MAXSTEPS = 4*24*4+1;  % max simulation time = 4 days
-
-TCRooLow = 22;  % Zone temperature is kept between TCRooLow & TCRooHi
-TCRooHi = 26;
-TOutLow = 22;  % Low level of outdoor temperature
-TOutHi = 24;  % High level of outdoor temperature
-ratio = (TCRooHi - TCRooLow)/(TOutHi - TOutLow);
-
-% logdata stores set-points, outdoor temperature, and zone temperature at
-% each time step.
-logdata = zeros(MAXSTEPS, 4);
-
-while kStep <= MAXSTEPS    
-    % Read a data packet from E+
-    packet = ep.read;
-    if isempty(packet)
-        error('Could not read outputs from E+.');
+try
+    [status, msg] = ep.start;
+    if status ~= 0
+        error('Could not start EnergyPlus: %s.', msg);
     end
     
-    % Parse it to obtain building outputs
-    [flag, eptime, outputs] = mlepDecodePacket(packet);
-    if flag ~= 0, break; end
-        
-    % BEGIN Compute next set-points
-    dayTime = mod(eptime, 86400);  % time in current day
-    if (dayTime >= 6*3600) && (dayTime <= 18*3600)
-        % It is day time (6AM-6PM)
-        
-        % The Heating set-point: day -> 20, night -> 16
-        % The cooling set-point is bounded by TCRooLow and TCRooHi
-        
-        SP = [20, max(TCRooLow, ...
-                    min(TCRooHi, TCRooLow + (outputs(1) - TOutLow)*ratio))];
-    else
-        % The Heating set-point: day -> 20, night -> 16
-        % The Cooling set-point: night -> 30
-        SP = [16 30];
+    [status, msg] = ep.acceptSocket;
+    
+    if status ~= 0
+        error('Could not connect to EnergyPlus: %s.', msg);
     end
-    % END Compute next set-points
     
-    % Write to inputs of E+
-    ep.write(mlepEncodeRealData(VERNUMBER, 0, (kStep-1)*deltaT, SP));    
-
-    % Save to logdata
-    logdata(kStep, :) = [SP outputs];
+    %% The main simulation loop
     
-    kStep = kStep + 1;
+    deltaT = ep.timestep;  % time step = 15 minutes
+    kStep = 1;  % current simulation step
+    MAXSTEPS = 4*24*4+1;  % max simulation time = 4 days
+    
+    TCRooLow = 22;  % Zone temperature is kept between TCRooLow & TCRooHi
+    TCRooHi = 26;
+    TOutLow = 22;  % Low level of outdoor temperature
+    TOutHi = 24;  % High level of outdoor temperature
+    ratio = (TCRooHi - TCRooLow)/(TOutHi - TOutLow);
+    
+    % logdata stores set-points, outdoor temperature, and zone temperature at
+    % each time step.
+    logdata = zeros(MAXSTEPS, 4);
+    
+    
+    while kStep <= MAXSTEPS
+        % Read a data packet from E+
+        packet = ep.read;
+        if isempty(packet)
+            error('Could not read outputs from E+.');
+        end
+        
+        % Parse it to obtain building outputs
+        
+        [flag, eptime, outputs] = mlepDecodePacket(packet);
+        
+        if flag ~= 0, break; end
+        
+        % BEGIN Compute next set-points
+        dayTime = mod(eptime, 86400);  % time in current day
+        if (dayTime >= 6*3600) && (dayTime <= 18*3600)
+            % It is day time (6AM-6PM)
+            
+            % The Heating set-point: day -> 20, night -> 16
+            % The cooling set-point is bounded by TCRooLow and TCRooHi
+            
+            SP = [20, max(TCRooLow, ...
+                min(TCRooHi, TCRooLow + (outputs(1) - TOutLow)*ratio))];
+        else
+            % The Heating set-point: day -> 20, night -> 16
+            % The Cooling set-point: night -> 30
+            SP = [16 30];
+        end
+        % END Compute next set-points
+        
+        % Write to inputs of E+
+        ep.write(mlepEncodeRealData(VERNUMBER, 0, (kStep-1)*deltaT, SP));
+        
+        % Save to logdata
+        logdata(kStep, :) = [SP outputs];
+        
+        kStep = kStep + 1;
+    end
+catch me
+    ep.stop;
+    rethrow(me);
 end
 
 % Stop EnergyPlus
