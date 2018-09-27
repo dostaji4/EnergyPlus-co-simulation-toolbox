@@ -1,4 +1,7 @@
-classdef so_mlepBlk < matlab.System & matlab.system.mixin.SampleTime & matlab.system.mixin.Propagates
+classdef so_mlepBlk < matlab.System &...
+                      matlab.system.mixin.SampleTime &...
+                      matlab.system.mixin.Propagates &...                      
+                      matlab.system.mixin.CustomIcon
     %EnergyPlus co-simulation block for Simulink.
     
     % Public, tunable properties
@@ -11,16 +14,14 @@ classdef so_mlepBlk < matlab.System & matlab.system.mixin.SampleTime & matlab.sy
     end
     
     properties(Nontunable)        
-        idfFile; %Specify IDF file
-        epwFile; %Specify EPW file         
-        inputBusName = 'so_mlep_inbus';  %Input bus name
-        outputBusName = 'so_mlep_outbus'; %Output bus name
+        idfFile = 'SmOffPSZ.idf'; %Specify IDF file
+        epwFile = 'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw'; %Specify EPW file         
+        inputBusName = 'epInbus';  %Input bus name
+        outputBusName = 'epOutbus'; %Output bus name
     end
     
-    properties(Access = private)
-        
-        outputSigName; 
-        
+    properties(Access = private)        
+        outputSigName;         
         inputSigName;
         proc;  %mlep instance
         sigNameFcn = @(name,type) regexprep([name '__' type],'\W','_');
@@ -44,7 +45,47 @@ classdef so_mlepBlk < matlab.System & matlab.system.mixin.SampleTime & matlab.sy
             end
         end
         
-        function [flag, time, outbus] = stepImpl(obj,inbus)
+        
+        function validatePropertiesImpl(obj)
+            % Validate related or interdependent property values
+            if isempty(obj.proc)
+                obj.proc = mlep;
+            end
+            
+            % Validate files
+            obj.proc.idfFile = obj.idfFile;
+            obj.proc.epwFile = obj.epwFile;
+                        
+            % Initialize
+            obj.proc.initialize;
+            
+            % Create output bus object 
+            obj.createBusObjects;
+        end
+
+        function validateInputsImpl(obj,inbus)
+            % Validate inputs to the step method at initialization
+            if ~isstruct(inbus)
+                warning('Input is not a bus. Assigning inputs by order.');
+                obj.inputMap = 1:numel(inbus);
+            else
+                %             'Bus with valid signal names is expected at input.';
+                inbusSignals = fieldnames(inbus);
+                
+                for i = 1:obj.nInIdf
+                    idx = contains(inbusSignals,obj.inputSigName{i});
+                    if ~any(idx) % more then one occurence should not be present
+                        obj.stopError('Signal "%s" not found in the input bus.\nExpecting these signals: \n"%s".',...
+                            obj.inputSigName{i},...
+                            strjoin(obj.inputSigName,'",\n"'));
+                    else
+                        obj.inputMap(i) = find(idx); % Save inbus to EP mapping
+                    end
+                end
+            end
+        end
+        
+        function [flag,time,outbus] = stepImpl(obj,inbus)
             % Implement algorithm. Calculate y as a function of input u and
             % discrete states.
             % Step EnergyPlus and get outputs
@@ -72,8 +113,18 @@ classdef so_mlepBlk < matlab.System & matlab.system.mixin.SampleTime & matlab.sy
             end
             
             % Process output
-            if flag ~= 0
-                obj.stopError('EnergyPlus process sent flag "%d".',flag);                
+            if flag ~= 0                
+                err_str = sprintf(['EnergyPlus process sent flag "%d". ',...
+                            mlep.epFlag2str(flag)], flag);
+                if flag < 0 
+                    [~,errFile] = fileparts(obj.idfFile);                    
+                    errFile = [errFile '.err'];
+                    errFilePath = fullfile(pwd,obj.proc.outputDir,errFile);
+                    err_str = [err_str, ...
+                        sprintf(' Check the <a href="matlab:open %s">%s</a> file for further information.',...
+                            errFilePath, errFile)];
+                end
+                obj.stopError(err_str);                
             else
                 if ~(numel(rValIn)==obj.nOutIdf)
                     obj.stopError('EnergyPlus data output dimension not correct.');
@@ -83,12 +134,16 @@ classdef so_mlepBlk < matlab.System & matlab.system.mixin.SampleTime & matlab.sy
                 for i = 1:obj.nOutIdf                  
                     outbus.(obj.outputSigName{i}) = rValIn(i);
                 end
-                
             end
             
-            % Send signals to E+
-            inbus_vec = struct2array(inbus);
-            real_val_out = inbus_vec(obj.inputMap);
+            % Send signals to E+            
+            if isstruct(inbus)
+                inbus_vec = struct2array(inbus);
+                inbus_vec = inbus_vec(obj.inputMap); 
+            else
+                inbus_vec = inbus;
+            end
+            real_val_out = inbus_vec;
             
             % Write data
             obj.proc.write( ...
@@ -96,102 +151,47 @@ classdef so_mlepBlk < matlab.System & matlab.system.mixin.SampleTime & matlab.sy
         
         end
         
-        function resetImpl(obj)
-            % Initialize / reset discrete-state properties
-        end
-        
         function releaseImpl(obj)
             % Release resources, such as file handles
-            % Stop the running process            
+            % Stop the process            
             obj.proc.stop;            
         end
 
-        function validatePropertiesImpl(obj)
-            % Validate related or interdependent property values
-            if isempty(obj.proc)
-                obj.proc = mlep;
-            end
-            
-            % Validate files
-            obj.proc.idfFile = obj.idfFile;
-            obj.proc.epwFile = obj.epwFile;
-                        
-            % Initialize
-            obj.proc.initialize;
-            
-            % Create output bus object 
-            obj.createBusObjects;
-        end
-
-        function validateInputsImpl(obj,inbus)
-            % Validate inputs to the step method at initialization
-            err_str = 'Bus with valid signal names is expected at input.';
-            assert(isstruct(inbus),err_str);
-            inbusSignals = fieldnames(inbus);
-            
-            for i = 1:obj.nInIdf
-                idx = contains(inbusSignals,obj.inputSigName{i});
-                if ~any(idx) % more then one occurence should not be present               
-                    obj.stopError('Signal "%s" not found in the input bus. Expecting these signals \n"%s".',...
-                        obj.inputSigName{i},...
-                        strjoin(obj.inputSigName,'",\n"'));                
-                else
-                    obj.inputMap(i) = find(idx); % Save inbus to EP mapping
-                end
-            end
-        end
-
-        function flag = isInputSizeMutableImpl(obj,index)
-            % Return false if input size cannot change
-            % between calls to the System object
-            flag = false;
-        end
-
-        function flag = isInputComplexityMutableImpl(obj,index)
-            % Return false if input complexity cannot change
-            % between calls to the System object
-            flag = false;
-        end
-
-        function flag = isInputDataTypeMutableImpl(obj,index)
+        
+%         function flag = isInputSizeMutableImpl(obj,index)
+%             % Return false if input size cannot change
+%             % between calls to the System object
+%             flag = false;
+%         end
+% 
+%         function flag = isInputComplexityMutableImpl(obj,index)
+%             % Return false if input complexity cannot change
+%             % between calls to the System object
+%             flag = false;
+%         end
+% 
+%         function flag = isInputDataTypeMutableImpl(obj,index)
             % Return false if input data type cannot change
             % between calls to the System object
-            flag = false;
-        end
+%             flag = false;
+%         end
 
-        function num = getNumInputsImpl(obj)
-            % Define total number of inputs for system with optional inputs
-            num = 1;            
-        end
-
-        function num = getNumOutputsImpl(obj)
-            % Define total number of outputs for system with optional
-            % outputs
-            num = 3;            
-        end
-
-        function [out,out2,out3] = getOutputSizeImpl(obj)
-            % Return size for each output port
-            out = [1 1];
-            out2 = [1 1];
-            out3 = [1 1];
-        end
-
-        function [flag,time,outbus] = getOutputDataTypeImpl(obj)
+%         function num = getNumInputsImpl(obj)
+%             % Define total number of inputs for system with optional inputs
+%             num = 1;            
+%         end
+% 
+%         function num = getNumOutputsImpl(obj)
+%             % Define total number of outputs for system with optional
+%             % outputs
+%             num = 3;            
+%         end
+% 
+        function [out,out2,out3] = getOutputDataTypeImpl(obj)
             % Return data type for each output port
-            flag = "double";
-            time = "double";                        
-            outbus = obj.outputBusName;
-        end
-
-        function [out,out2,out3] = isOutputComplexImpl(obj)
-            % Return true for each output port with complex data
-            out = false;
-            out2 = false;
-            out3 = false;
-
-            % Example: inherit complexity from first input port
-            % out = propagatedInputComplexity(obj,1);
+            out = "double";
+            out2 = "double";
+            out3 = obj.outputBusName;
         end
 
         function [out,out2,out3] = isOutputFixedSizeImpl(obj)
@@ -201,11 +201,20 @@ classdef so_mlepBlk < matlab.System & matlab.system.mixin.SampleTime & matlab.sy
             out3 = true;
         end
         
-        function stopError(obj, msg, varargin)
-            obj.proc.stop;
-            error(msg, varargin{:});            
+        function [out,out2,out3] = getOutputSizeImpl(obj)
+            % Return size for each output port
+            out = [1 1];
+            out2 = [1 1];
+            out3 = [1 1];
         end
         
+        function [out,out2,out3] = isOutputComplexImpl(obj)
+            % Return true for each output port with complex data
+            out = false;
+            out2 = false;
+            out3 = false;
+        end
+
         function sts = getSampleTimeImpl(obj)    
             samplingTime = obj.proc.timestep;
             sts = obj.createSampleTime("Type", "Discrete", ...
@@ -247,6 +256,11 @@ classdef so_mlepBlk < matlab.System & matlab.system.mixin.SampleTime & matlab.sy
             end
             assignin('base',obj.inputBusName, bus);
         end
+        
+        function stopError(obj, msg, varargin)
+            obj.proc.stop;
+            error(msg, varargin{:});            
+        end
     end
     
     % Get/Set methods
@@ -277,5 +291,36 @@ classdef so_mlepBlk < matlab.System & matlab.system.mixin.SampleTime & matlab.sy
                 value{i} = signame;
             end            
        end
+    end
+%% ================ Simulink Block Graphics Specification =================
+    methods(Access = protected)
+       function icon = getIconImpl(obj)
+            % Define icon for System block
+            icon = matlab.system.display.Icon("mlepIcon.jpg"); % Example: image file icon
+        end
+        
+        function name = getInputNamesImpl(obj)
+            % Return input port names for System block
+            name = obj.inputBusName;
+        end
+        
+        function [name,name2,name3] = getOutputNamesImpl(obj)
+            % Return output port names for System block
+            name = 'Flag';
+            name2 = 'Time';
+            name3 = obj.outputBusName;
+        end 
+    end
+    
+    methods(Access = protected, Static)
+        function header = getHeaderImpl
+            % Define header panel for System block dialog
+            header = matlab.system.display.Header(mfilename("class"));
+        end
+
+        function group = getPropertyGroupsImpl
+            % Define property section(s) for System block dialog
+            group = matlab.system.display.Section(mfilename("class"));
+        end
     end
 end

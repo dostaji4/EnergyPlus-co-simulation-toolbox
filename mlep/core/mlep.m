@@ -31,6 +31,7 @@ classdef mlep < handle
         outputDir = 'eplusout'; % EnergyPlus output directory (created under working folder)
         outputDirFullPath;
         epDir;          % EnergyPlus directory
+        epProgram = 'energyplus'; % EnergyPlus executable
         port = 0;       % Socket port (default 0 = any free port)
         host = '';      % Host name (default '' = localhost)
         bcvtbDir;       % Directory to BCVTB (default '' means that if
@@ -43,7 +44,7 @@ classdef mlep < handle
         idfFile = 'in.idf'; % Building specification IDF file (E+ default by default)
         idfFullFilename;
         epwFile = 'in.epw'; % Weather profile EPW file (E+ default by default)
-        epwFullFilename;
+        epwFullFilename;        
         % for the first time and when server
         % socket changes.
         acceptTimeout = 6000;  % Timeout for waiting for the client to connect
@@ -53,6 +54,7 @@ classdef mlep < handle
         versionEnergyPlus = ''; % EnergyPlus version found
         msg = '';
         timestep;       %[s] Timestep specified in the IDF file (Co-simulation timestep must adhere to this value)
+        checkAndKillExistingEPprocesses = 1;    % If selected, mlep will check on startup for other energyplus processes and kill them
     end
     
     properties (SetAccess=private, GetAccess=public)
@@ -96,6 +98,11 @@ classdef mlep < handle
             obj.loadIdf;
             obj.verifyIdf;
             
+            % Check for possible hanging EP processes
+            if obj.checkAndKillExistingEPprocesses
+                mlep.killProcess(obj.epProgram);
+            end
+            
             % Create E+ output folder
             obj.cleanEP(obj.workDir);
             obj.outputDirFullPath = fullfile(obj.workDir,obj.outputDir);
@@ -126,8 +133,8 @@ classdef mlep < handle
                 % Create server socket if necessary
                 obj.makeSocket;
                 
-                % Run the EP process
-                obj.runEnergyPlus;
+                % Run the EnergyPlus process
+                obj.runEP;
                 status = 0;
                 msg = '';
                 
@@ -181,7 +188,7 @@ classdef mlep < handle
         end
         
         % Run EnergyPlus process
-        function runEnergyPlus(obj)
+        function runEP(obj)
             env_ = obj.env;
             
             % Set BCVTB_HOME environment
@@ -203,7 +210,7 @@ classdef mlep < handle
             
             % Prepare EP command
             epcmd = javaArray('java.lang.String',11);
-            epcmd(1) = java.lang.String(fullfile(obj.epDir,'energyplus'));
+            epcmd(1) = java.lang.String(fullfile(obj.epDir,obj.epProgram));
             epcmd(2) = java.lang.String('-w'); % weather file
             epcmd(3) = java.lang.String(obj.epwFullFilename);
             epcmd(4) = java.lang.String('-i'); % IDD file
@@ -594,6 +601,9 @@ classdef mlep < handle
         
         function cleanEP(obj, rootDir)
             % Remove "outputDir" from the rootDir folder
+            if strcmp(rootDir,'.')
+                rootDir = pwd;
+            end
             dirname = fullfile(rootDir,obj.outputDir);
             if exist(dirname,'dir')
                 mlep.rmdirR(dirname);
@@ -698,7 +708,9 @@ classdef mlep < handle
         end
         
         function set.idfFile(obj, file)
-            if ~strcmpi(file(end-3:end), '.idf')
+            assert(~isempty(file),'IDF file not specified.');
+            assert(ischar(file) || isstring(file),'Invalid file name.');
+            if strlength(file)<4 || ~strcmpi(file(end-3:end), '.idf')
                 file = [file '.idf']; %add extension
             end
             assert(exist(file,'file')>0,obj.file_not_found_str,file);
@@ -706,7 +718,9 @@ classdef mlep < handle
         end
         
         function set.epwFile(obj,file)
-            if ~strcmpi(file(end-3:end), '.epw')
+            assert(~isempty(file),'EPW file not specified.');
+            assert(ischar(file) || isstring(file),'Invalid file name.');
+            if strlength(file)<4 || ~strcmpi(file(end-3:end), '.epw')
                 file = [file '.epw'];
             end
             assert(exist(file,'file')>0,obj.file_not_found_str,file);
@@ -715,7 +729,7 @@ classdef mlep < handle
     end
     
     % Static methods
-    methods (Static)
+    methods (Static)        
         function rmdirR(dirname)
             % Remove foldert recursively (with all files beneath)
             delete(fullfile(dirname,'*'));            
@@ -737,6 +751,45 @@ classdef mlep < handle
             assert(~isempty(tokens)&&size(tokens{1},2)==2,' Error while parsing "%s" for EnergyPlus version',iddFullpath);
             ver = tokens{1}{1};
             minor = tokens{1}{2};
+        end
+        
+        function killProcess(name)
+            p = System.Diagnostics.Process.GetProcessesByName(name);
+            for i = 1:p.Length
+                try
+                    dt = p(i).StartTime.Now - p(i).StartTime;
+                    warning('Found process "%s", ID = %d, started %d minutes ago. Terminating the process.',name, p(i).Id, dt.Minutes);
+                    p(i).Kill();
+                    p(i).WaitForExit(100);
+                catch 
+                    warning('Couldn''t kill process "%s" with ID = %d.',name,p(i).Id);
+                    % process was terminating or can't be terminated - deal with it
+                    % process has already exited - might be able to let this one go
+                end
+            end
+        end
+        
+        function str = epFlag2str(flag)
+            % Flag	Description
+            % +1	Simulation reached end time.
+            % 0	    Normal operation.
+            % -1	Simulation terminated due to an unspecified error.
+            % -10	Simulation terminated due to an error during the initialization.
+            % -20	Simulation terminated due to an error during the time integration. 
+            switch flag
+                case 1
+                    str = 'Simulation reached end time. If this is not intended, extend the simulation period in the IDF file.';
+                case 0 
+                    str = 'Normal operation.';                    
+                case -1
+                    str = 'Simulation terminated due to an unspecified runtime error.';
+                case -10
+                    str = 'Simulation terminated due to an error during initialization.';
+                case -20
+                    str = 'Simulation terminated due to an error during the time integration.';
+                otherwise
+                    str = sprintf('Unknown flag "%d".',flag);
+            end
         end
     end
 end
