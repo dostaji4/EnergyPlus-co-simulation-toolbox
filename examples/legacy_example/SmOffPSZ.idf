@@ -3038,3 +3038,8 @@ Output:Variable,
     Zone Air Temperature,    !- Variable Name
     timestep;                !- Reporting Frequency
 
+Output:Variable,
+    ZSF2,                    !- Key Value
+    Zone Air Temperature,    !- Variable Name
+    timestep;                !- Reporting Frequency
+
