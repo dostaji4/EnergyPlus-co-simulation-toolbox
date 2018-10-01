@@ -5,6 +5,7 @@ docNode = com.mathworks.xml.XMLUtils.createDocument([], 'BCVTB-variables', docTy
 docNode.setEncoding('ISO-8859-1');
 docNode.setVersion('1.0')
 
+% INPUT to E+
 docRootNode = docNode.getDocumentElement;
 %docRootNode.setAttribute('SYSTEM','variables.dtd');
 docRootNode.appendChild(docNode.createComment('INPUT to E+'));
@@ -23,7 +24,7 @@ for i=1:numel(inputList)
     docRootNode.appendChild(thisElement);
 end
 
-% OUTPUT
+% OUTPUT from E+
 docRootNode.appendChild(docNode.createComment('OUTPUT from E+'));
 for i=1:numel(outputList)
     
@@ -33,8 +34,8 @@ for i=1:numel(outputList)
     
     %Example: <EnergyPlus name="ZSF1" type="Zone Air Temperature"/>
     newElement = docNode.createElement('EnergyPlus');
-    newElement.setAttribute('name',outputList(i).Name); % variable name ('signal')
-    newElement.setAttribute('type',outputList(i).Type); % key value ('zone name')
+    newElement.setAttribute('name',outputList(i).Name); % key value ('zone name')
+    newElement.setAttribute('type',outputList(i).Type); % variable name ('signal')
     
     thisElement.appendChild(newElement);
     docRootNode.appendChild(thisElement);

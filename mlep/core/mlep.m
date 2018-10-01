@@ -38,13 +38,10 @@ classdef mlep < handle
         % no environment variable exist, set it to current
         % directory)
         configFile = 'socket.cfg';  % Name of socket configuration file
-        variablesFile = 'variables.cfg'; % Contains ExternalInterface settings
-        iddFile = 'Energy+.idd'; % IDD file
-        iddFullFilename;
-        idfFile = 'in.idf'; % Building specification IDF file (E+ default by default)
-        idfFullFilename;
+        variablesFile = 'variables.cfg'; % Contains ExternalInterface settings        
+        iddFile = 'Energy+.idd'; % IDD file        
+        idfFile = 'in.idf'; % Building specification IDF file (E+ default by default)        
         epwFile = 'in.epw'; % Weather profile EPW file (E+ default by default)
-        epwFullFilename;        
         % for the first time and when server
         % socket changes.
         acceptTimeout = 6000;  % Timeout for waiting for the client to connect
@@ -54,10 +51,10 @@ classdef mlep < handle
         versionEnergyPlus = ''; % EnergyPlus version found
         msg = '';
         timestep;       %[s] Timestep specified in the IDF file (Co-simulation timestep must adhere to this value)
-        checkAndKillExistingEPprocesses = 1;    % If selected, mlep will check on startup for other energyplus processes and kill them
+        checkAndKillExistingEPprocesses = 1;    % If selected, mlep will check on startup for other energyplus processes and kill them        
     end
     
-    properties (SetAccess=private, GetAccess=public)
+    properties (SetAccess=private, GetAccess=public)        
         rwTimeout = 0;      % Timeout for sending/receiving data (0 = infinite)
         isRunning = false;  % Is co-simulation running?
         serverSocket = [];  % Server socket to listen to client
@@ -66,7 +63,14 @@ classdef mlep < handle
         reader;             % Buffered reader stream
         process = [];       % Process object for E+
         idfdata = [];       % Structure with data from parsed IDF
-        initialized = 0;    % Initialization flag
+        initialized = 0;    % Initialization flag        
+        inputList;          % Structured input list
+        outputList;         % Structured output list
+        idfFullFilename;
+        epwFullFilename;
+        iddFullFilename;
+        varFullFilename; 
+        isUserVarFile;      % True if user-defined variables.cfg file is present 
     end
     
     properties (Constant)
@@ -109,8 +113,23 @@ classdef mlep < handle
             [st,ms] = mkdir(obj.outputDirFullPath);
             assert(st,'%s',ms);
             
+            % Determine co-simulation inputs and outputs out of IDF or
+            % varibles.cfg files
+            
+            idfDir = fileparts(obj.idfFullFilename);
+            obj.varFullFilename = fullfile(idfDir, obj.variablesFile);
+            obj.isUserVarFile = (exist(obj.varFullFilename,'file') == 2);
+            
+            if obj.isUserVarFile                 
+                [obj.inputList, obj.outputList] = mlep.parseVariablesConfigFile(obj.varFullFilename);
+            else
+                % Use all the inputs and outputs from IDF
+                obj.inputList = obj.idfdata.inputList;
+                obj.outputList = obj.idfdata.outputList;
+            end
+            
             % Create or copy ExternalInterface variable configuration file
-            obj.makeVariableConfig;
+            obj.makeVariablesConfigFile;
         end
         
         function [status, msg] = start(obj)
@@ -260,29 +279,21 @@ classdef mlep < handle
         end
         
         % Create or use user-defined variable.cfg config file
-        function makeVariableConfig(obj)
+        function makeVariablesConfigFile(obj)
             % If there is a variable.cfg in the same directory as the IDF file,
             % then use it (copy it into the outputFolder for E+ to use).
             % Otherwise, create a new one based on the inputs and outputs
             % defined in the IDF file.
             
-            
-            idfDir = fileparts(obj.idfFullFilename);
-            fileList = dir(idfDir);
-            idx = contains({fileList.name},obj.variablesFile);
-            isVarFile = any(idx);
-            
-            
-            if isVarFile
-                disp('varfile found. copying');
-                % Copy variables.cfg to the working directory
-                varFileFullPath = fullfile(idfDir,obj.variablesFile);
-                if ~copyfile(varFileFullPath, obj.outputDirFullPath)
-                    error('Cannot copy "%s" to "%s".', varFileFullPath, obj.outputDirFullPath);
+            if obj.isUserVarFile                
+                assert(exist(obj.varFullFilename,'file')==2,obj.file_not_found_str,obj.varFullFilename);
+                % Copy variables.cfg to the output directory (= working dir for EP)                                                
+                if ~copyfile(obj.varFullFilename, obj.outputDirFullPath)
+                    error('Cannot copy "%s" to "%s".', obj.varFullFilename, obj.outputDirFullPath);
                 end
-                
+                newVarFullFilename = fullfile(obj.outputDirFullPath, obj.variablesFile);
                 % Add disclamer to the copied variables.cfg file                
-                S = fileread(varFileFullPath);
+                S = fileread(newVarFullFilename);
                 disclaimer = [newline '<!--' newline,...
                     '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!' newline,...
                     'THIS IS A FILE COPY.' newline,...
@@ -295,17 +306,16 @@ classdef mlep < handle
                 else                
                     S = [S(1:e), disclaimer, S(e+1:end)];
                 end
-                FID = fopen(varFileFullPath, 'w');
-                if FID == -1, error('Cannot open file "%s".', varFileFullPath); end
+                FID = fopen(newVarFullFilename, 'w');
+                if FID == -1, error('Cannot open file "%s".', newVarFullFilename); end
                 fwrite(FID, S, 'char');
-                fclose(FID);
-                %}
+                fclose(FID);                
             else
                 % Create a new 'variables.cfg' file based on the input/output
-                % definition in the IDF file
+                % definition in the IDF file                
                 
-                writeVariableConfig(obj.idfdata.inputList,...
-                    obj.idfdata.outputList,...
+                writeVariableConfig(obj.inputList,...
+                    obj.outputList,...
                     fullfile(obj.outputDirFullPath, obj.variablesFile));
                 
             end
@@ -789,6 +799,34 @@ classdef mlep < handle
                     str = 'Simulation terminated due to an error during the time integration.';
                 otherwise
                     str = sprintf('Unknown flag "%d".',flag);
+            end
+        end
+        
+        function [inputList, outputList] = parseVariablesConfigFile(file)
+            assert(exist(file,'file') > 0,'File "%s" not found.');
+            s = xml2struct(file);
+            s = struct2cell(s);
+            vars = s{1}{2}.variable;
+            inputList = []; cInput = 1;
+            outputList = []; cOutput = 1;
+            for i = 1:numel(vars)
+                switch vars{i}.Attributes.source
+                    case 'EnergyPlus' % Output from E+
+                        out = vars{i}.EnergyPlus.Attributes;
+                        assert(isfield(out,'name') && isfield(out,'type'),'Fields "name" and/or "type" are not existing');
+                        outputList(cOutput).Name = out.name;
+                        outputList(cOutput).Type = out.type;
+                        cOutput = cOutput + 1;
+                    case 'Ptolemy' % Input to E+
+                        name = fieldnames(vars{i}.EnergyPlus.Attributes);
+                        assert(any(contains({'schedule','variable','actuator'},name)),...
+                            'Unknown variable name "%s".',name);
+                        inputList(cInput).Name = name{1};
+                        inputList(cInput).Type = vars{i}.EnergyPlus.Attributes.(name{1});
+                        cInput = cInput + 1;
+                    otherwise
+                        error('Unknown varible source "%s".',vars{i}.Attributes.source)
+                end
             end
         end
     end
