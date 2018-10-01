@@ -29,7 +29,8 @@ classdef so_mlepBlk < matlab.System &...
         nInIdf;
         inputMap;
     end
-    
+
+%% ======================= Runtime methods ================================
     methods
         function obj = so_mlepBlk(varargin)
             % Support name-value pair arguments when constructing object
@@ -37,14 +38,13 @@ classdef so_mlepBlk < matlab.System &...
         end
     end
 
-    methods(Access = protected)
+    methods (Access = protected)
         function setupImpl(obj)
             % Perform one-time calculations, such as computing constants            
              if ~obj.proc.isRunning
                  obj.proc.start;                
             end
         end
-        
         
         function validatePropertiesImpl(obj)
             % Validate related or interdependent property values
@@ -156,8 +156,81 @@ classdef so_mlepBlk < matlab.System &...
             % Stop the process            
             obj.proc.stop;            
         end
-
+    end
+    
+    methods(Access = private)
+        function createBusObjects(obj)
+            % Create inbus
+            bus = Simulink.Bus;            
+            for i = 1:obj.nOutIdf                
+                % Create one signal
+                elem = Simulink.BusElement;
+                elem.Name = obj.outputSigName{i};
+                elem.Dimensions = 1;
+                elem.DimensionsMode = 'Fixed';
+                elem.DataType = 'double';
+                elem.SampleTime = obj.proc.timestep;
+                elem.Complexity = 'real';
+                % Add to bus
+                bus.Elements(i) = elem;
+            end
+            assignin('base',obj.outputBusName, bus);
+            
+            % Create outbus
+            bus = Simulink.Bus;            
+            for i = 1:obj.nInIdf                
+                % Create one signal
+                elem = Simulink.BusElement;
+                elem.Name = obj.inputSigName{i};
+                elem.Dimensions = 1;
+                elem.DimensionsMode = 'Fixed';
+                elem.DataType = 'double';
+                elem.SampleTime = obj.proc.timestep;
+                elem.Complexity = 'real';
+                % Add to bus
+                bus.Elements(i) = elem;
+            end
+            assignin('base',obj.inputBusName, bus);
+        end
         
+        function stopError(obj, msg, varargin)
+            obj.proc.stop;
+            error(msg, varargin{:});            
+        end
+    end
+    
+%% ========================= Get/Set methods ==============================
+    methods 
+       function value = get.nInIdf(obj)
+           value = numel(obj.proc.idfdata.inputList);
+       end
+       
+       function value = get.inputSigName(obj)  
+            value = cell(obj.nInIdf,1);
+            for i = 1: obj.nInIdf
+                signame = obj.sigNameFcn(obj.proc.idfdata.inputList(i).Name,...
+                        obj.proc.idfdata.inputList(i).Type); 
+                value{i} = signame;
+            end
+       end 
+       
+       function value = get.nOutIdf(obj)
+           value = numel(obj.proc.idfdata.outputList);
+       end
+       
+       function value = get.outputSigName(obj)
+            obj.nOutIdf = numel(obj.proc.idfdata.outputList);
+            value = cell(obj.nOutIdf,1);
+            for i = 1: obj.nOutIdf
+                signame = obj.sigNameFcn(obj.proc.idfdata.outputList(i).Name,...
+                        obj.proc.idfdata.outputList(i).Type); 
+                value{i} = signame;
+            end            
+       end
+    end
+    
+%% ======================= Simulink I/O methods ===========================
+    methods (Access = protected)
 %         function flag = isInputSizeMutableImpl(obj,index)
 %             % Return false if input size cannot change
 %             % between calls to the System object
@@ -221,77 +294,7 @@ classdef so_mlepBlk < matlab.System &...
                  "SampleTime", samplingTime);
         end
     end
-    
-    methods(Access = private)
-        function createBusObjects(obj)
-            % Create inbus
-            bus = Simulink.Bus;            
-            for i = 1:obj.nOutIdf                
-                % Create one signal
-                elem = Simulink.BusElement;
-                elem.Name = obj.outputSigName{i};
-                elem.Dimensions = 1;
-                elem.DimensionsMode = 'Fixed';
-                elem.DataType = 'double';
-                elem.SampleTime = obj.proc.timestep;
-                elem.Complexity = 'real';
-                % Add to bus
-                bus.Elements(i) = elem;
-            end
-            assignin('base',obj.outputBusName, bus);
-            
-            % Create outbus
-            bus = Simulink.Bus;            
-            for i = 1:obj.nInIdf                
-                % Create one signal
-                elem = Simulink.BusElement;
-                elem.Name = obj.inputSigName{i};
-                elem.Dimensions = 1;
-                elem.DimensionsMode = 'Fixed';
-                elem.DataType = 'double';
-                elem.SampleTime = obj.proc.timestep;
-                elem.Complexity = 'real';
-                % Add to bus
-                bus.Elements(i) = elem;
-            end
-            assignin('base',obj.inputBusName, bus);
-        end
-        
-        function stopError(obj, msg, varargin)
-            obj.proc.stop;
-            error(msg, varargin{:});            
-        end
-    end
-    
-    % Get/Set methods
-    methods 
-       function value = get.nInIdf(obj)
-           value = numel(obj.proc.idfdata.inputList);
-       end
-       
-       function value = get.inputSigName(obj)  
-            value = cell(obj.nInIdf,1);
-            for i = 1: obj.nInIdf
-                signame = obj.sigNameFcn(obj.proc.idfdata.inputList(i).Name,...
-                        obj.proc.idfdata.inputList(i).Type); 
-                value{i} = signame;
-            end
-       end 
-       
-       function value = get.nOutIdf(obj)
-           value = numel(obj.proc.idfdata.outputList);
-       end
-       
-       function value = get.outputSigName(obj)
-            obj.nOutIdf = numel(obj.proc.idfdata.outputList);
-            value = cell(obj.nOutIdf,1);
-            for i = 1: obj.nOutIdf
-                signame = obj.sigNameFcn(obj.proc.idfdata.outputList(i).Name,...
-                        obj.proc.idfdata.outputList(i).Type); 
-                value{i} = signame;
-            end            
-       end
-    end
+
 %% ================ Simulink Block Graphics Specification =================
     methods(Access = protected)
        function icon = getIconImpl(obj)
