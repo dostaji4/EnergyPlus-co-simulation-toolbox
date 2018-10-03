@@ -16,7 +16,6 @@
     <param.guid>f0f50fa4-c72a-4978-a241-7933910859fa</param.guid>
     <param.exclude.filters>^.*
 **\.git
-EnergyPlus co-simulation toolbox2.prj
 EnergyPlusV8-9-0\api-ms-win-core-console-l1-1-0.dll
 EnergyPlusV8-9-0\api-ms-win-core-datetime-l1-1-0.dll
 EnergyPlusV8-9-0\api-ms-win-core-debug-l1-1-0.dll
@@ -910,13 +909,13 @@ tools\busObjectBusCreator\license.txt</param.exclude.filters>
     <param.matlabpath.excludes />
     <param.javaclasspath.excludes />
     <param.exported.on.package>false</param.exported.on.package>
-    <param.release.start />
-    <param.release.end />
+    <param.release.start>R2018a</param.release.start>
+    <param.release.end>latest</param.release.end>
     <param.release.current.only>false</param.release.current.only>
     <param.compatiblity.windows>true</param.compatiblity.windows>
-    <param.compatiblity.macos>true</param.compatiblity.macos>
+    <param.compatiblity.macos>false</param.compatiblity.macos>
     <param.compatiblity.linux>true</param.compatiblity.linux>
-    <param.compatiblity.matlabonline>true</param.compatiblity.matlabonline>
+    <param.compatiblity.matlabonline>false</param.compatiblity.matlabonline>
     <unset>
       <param.email />
       <param.company />
@@ -936,13 +935,9 @@ tools\busObjectBusCreator\license.txt</param.exclude.filters>
       <param.matlabpath.excludes />
       <param.javaclasspath.excludes />
       <param.exported.on.package />
-      <param.release.start />
-      <param.release.end />
       <param.release.current.only />
       <param.compatiblity.windows />
-      <param.compatiblity.macos />
       <param.compatiblity.linux />
-      <param.compatiblity.matlabonline />
     </unset>
     <fileset.rootdir>
       <file>C:\work\projects\Hydronics_4_0\Matlab\Building_cosimulation\EnergyPlus_cosimulation_toolbox</file>
