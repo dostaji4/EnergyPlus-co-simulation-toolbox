@@ -36,14 +36,13 @@ VERNUMBER = 2;  % version number of communication protocol (2 for E+ 7.2.0)
 
 %% Start EnergyPlus cosimulation
 try
-    [status, msg] = ep.start;
-    if status ~= 0
+    ep.start;
+    if ~ep.initialized
         error('Could not start EnergyPlus: %s.', msg);
     end
     
-    [status, msg] = ep.acceptSocket;
-    
-    if status ~= 0
+    ep.acceptSocket;
+    if ~ep.isRunning
         error('Could not connect to EnergyPlus: %s.', msg);
     end
     
@@ -61,8 +60,7 @@ try
     
     % logdata stores set-points, outdoor temperature, and zone temperature at
     % each time step.
-    logdata = zeros(MAXSTEPS, 4);
-    
+    logdata = zeros(MAXSTEPS, 14);
     
     while kStep <= MAXSTEPS
         % Read a data packet from E+

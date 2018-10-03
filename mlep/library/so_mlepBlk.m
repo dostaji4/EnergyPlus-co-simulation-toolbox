@@ -1,7 +1,8 @@
 classdef so_mlepBlk < matlab.System &...
-                      matlab.system.mixin.SampleTime &...
-                      matlab.system.mixin.Propagates &...                      
-                      matlab.system.mixin.CustomIcon
+        matlab.system.mixin.SampleTime &...
+        matlab.system.mixin.Propagates &...
+        matlab.system.mixin.CustomIcon &...
+        matlab.system.mixin.Nondirect
     %EnergyPlus co-simulation block for Simulink.
     
     % Public, tunable properties
@@ -13,40 +14,56 @@ classdef so_mlepBlk < matlab.System &...
         
     end
     
-    properties(Nontunable)        
-        idfFile = 'SmOffPSZ.idf'; %Specify IDF file
-        epwFile = 'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw'; %Specify EPW file         
-        inputBusName = 'epInbus';  %Input bus name
-        outputBusName = 'epOutbus'; %Output bus name
+    properties (Nontunable)
+        idfFile = 'in.idf';         % Specify IDF file
+        epwFile = 'in.epw';         % Specify EPW file        
+        inputBusName = 'epInbus';   % Input bus name
+        outputBusName = 'epOutbus'; % Output bus name                
     end
     
-    properties(Access = private)        
-        outputSigName;         
-        inputSigName;
-        proc;  %mlep instance
-        sigNameFcn = @(name,type) regexprep([name '__' type],'\W','_');
-        nOutIdf;
-        nInIdf;
-        inputMap;
+    properties (Logical, Nontunable)
+        useBus = true;              % Use bus
     end
-
-%% ======================= Runtime methods ================================
+    
+    properties (Hidden, SetAccess = private)
+        nOut;
+        nIn;
+        timestep;
+        outputSigName;
+        inputSigName;
+        outTable;        
+    end
+    
+    properties (Access = private)                            
+        sigNameFcn = @(name,type) ['EP_' regexprep([name '__' type],'\W','_')];        
+        inputMap;
+        proc;  %mlep instance
+    end
+    
+    %% ======================= Runtime methods ============================
     methods
         function obj = so_mlepBlk(varargin)
             % Support name-value pair arguments when constructing object
             setProperties(obj,nargin,varargin{:})
         end
     end
-
+    
     methods (Access = protected)
-        function setupImpl(obj)
-            % Perform one-time calculations, such as computing constants            
-             if ~obj.proc.isRunning
-                 obj.proc.start;                
-            end
+        function setupImpl(obj)            
+            if ~obj.proc.isRunning
+                obj.proc.start;
+            end            
+        end
+
+        function resetImpl(obj)
+            % Initialize / reset discrete-state properties
+            if ~obj.proc.isRunning
+                obj.proc.start;
+            end 
         end
         
         function validatePropertiesImpl(obj)
+            
             % Validate related or interdependent property values
             if isempty(obj.proc)
                 obj.proc = mlep;
@@ -55,114 +72,128 @@ classdef so_mlepBlk < matlab.System &...
             % Validate files
             obj.proc.idfFile = obj.idfFile;
             obj.proc.epwFile = obj.epwFile;
-                        
+            
             % Initialize
             obj.proc.initialize;
             
-            % Create output bus object 
-            obj.createBusObjects;
+            % Create output bus object
+            if obj.useBus
+                % Prepare output structure prototype
+                obj.outTable = table('Size',[0 obj.nOut],...
+                    'VariableTypes',repmat({'double'},1,obj.nOut),...
+                    'VariableNames', obj.outputSigName);    
+                obj.outTable{1,:} = zeros(1,obj.nOut);
+                obj.createBusObjects;
+            end
         end
-
-        function validateInputsImpl(obj,inbus)
-            % Validate inputs to the step method at initialization
-            if ~isstruct(inbus)
-                warning('Input is not a bus. Assigning inputs by order.');
-                obj.inputMap = 1:numel(inbus);
+        
+        function validateInputsImpl(obj,in)
+            % Validate inputs to the step method at initialization            
+            if obj.useBus && isstruct(in)
+                assert(isequal(obj.inputSigName,fieldnames(in)));                           
             else
-                %             'Bus with valid signal names is expected at input.';
-                inbusSignals = fieldnames(inbus);
-                
-                for i = 1:obj.nInIdf
-                    idx = contains(inbusSignals,obj.inputSigName{i});
-                    if ~any(idx) % more then one occurence should not be present
-                        obj.stopError('Signal "%s" not found in the input bus.\nExpecting these signals: \n"%s".',...
-                            obj.inputSigName{i},...
-                            strjoin(obj.inputSigName,'",\n"'));
-                    else
-                        obj.inputMap(i) = find(idx); % Save inbus to EP mapping
-                    end
+                if obj.useBus && ~isstruct(in)
+                    warning('Input is not a bus. Assigning inputs by their order.');                    
+                end
+                if isnumeric(in)
+                    assert(numel(in) == obj.nIn,'The size of input %dx%d does not comply with the required size %dx%d.',...
+                        size(in,1),size(in,2),obj.nIn, 1);                                    
+                elseif ischar(in) && strcmpi(in,'init')
+                    %do nothing
+                else
+                    error('Invalid input type "%s". Use either numerical vector of appropriate size or a string ''init''.',...
+                        class(in));
                 end
             end
         end
         
-        function [flag,time,outbus] = stepImpl(obj,inbus)
-            % Implement algorithm. Calculate y as a function of input u and
-            % discrete states.
-            % Step EnergyPlus and get outputs
+        function updateImpl(obj,in)
+            % Send signals to E+
+            if isstruct(in)
+                rValIn = struct2array(in);                
+            else
+                rValIn = in;
+            end            
+            
+            % Write data
+            outtime = obj.getCurrentTime;
+            if isempty(outtime), outtime = time; end
+            obj.proc.write(mlepEncodeRealData(obj.proc.versionProtocol,...
+                                              0, ...
+                                              outtime,...
+                                              rValIn));
+        end
+
+        function [flag, time, out] = outputImpl(obj,~)
+            % Initialize
             if ~obj.proc.isRunning
                 % Create connection
-                [status, msg] = obj.proc.acceptSocket;
+                obj.proc.acceptSocket;
                 assert( ...
-                    status == 0, ...
-                    'EnergyPlusCosim:startupError', ...
-                    'Cannot start EnergyPlus: %s.', msg );
+                    obj.proc.isRunning, ...
+                    'EnergyPlusCosim:startupError: Cannot start EnergyPlus.');
             end
             
-            % Read data from E+
-            readpacket = obj.proc.read;
+            % Read data from EnergyPlus
+            readPacket = obj.proc.read;
             assert( ...
-                ~isempty(readpacket), ...
+                ~isempty(readPacket), ...
                 'EnergyPlusCosim:readError', ...
                 'Could not read data from EnergyPlus.' );
             
             % Decode data
-            try 
-                [flag, time, rValIn] = mlepDecodePacket(readpacket);
-            catch 
-                obj.stopError('Error occured while decoding EnergyPlus packet.');
+            try
+                [flag, time, rValOut] = mlepDecodePacket(readPacket);
+            catch me
+                obj.stopError(me); %'Error occured while decoding EnergyPlus packet.'
             end
             
-            % Process output
-            if flag ~= 0                
-                err_str = sprintf(['EnergyPlus process sent flag "%d". ',...
-                            mlep.epFlag2str(flag)], flag);
-                if flag < 0 
-                    [~,errFile] = fileparts(obj.idfFile);                    
+            % Process outputs from EnergyPlus
+            if flag ~= 0
+                err_str = sprintf('EnergyPlus process sent flag "%d" (%s).',...
+                    flag, mlep.epFlag2str(flag));
+                if flag < 0
+                    [~,errFile] = fileparts(obj.idfFile);
                     errFile = [errFile '.err'];
                     errFilePath = fullfile(pwd,obj.proc.outputDir,errFile);
                     err_str = [err_str, ...
                         sprintf(' Check the <a href="matlab:open %s">%s</a> file for further information.',...
-                            errFilePath, errFile)];
+                        errFilePath, errFile)];
                 end
-                obj.stopError(err_str);                
+                obj.stopError(err_str);
             else
-                if ~(numel(rValIn)==obj.nOutIdf)
+                if ~(numel(rValOut)==obj.nOut)
                     obj.stopError('EnergyPlus data output dimension not correct.');
                 end
                 
-                % Create output bus
-                for i = 1:obj.nOutIdf                  
-                    outbus.(obj.outputSigName{i}) = rValIn(i);
+                if obj.useBus
+                    % Create output bus
+                    obj.outTable{1,:} = rValOut;
+                    out = table2struct(obj.outTable);
+                    % Note: This is the fastest way compared to
+                    % slower  out = cell2struct(num2cell(rValOut'),obj.outputSigName,1);
+                    % slowest for i = 1:obj.nOut
+                    %            out.(obj.outputSigName{i}) = rValOut(i);
+                    %         end
+                else
+                    % Output vector
+                    out = rValOut(:);
                 end
             end
-            
-            % Send signals to E+            
-            if isstruct(inbus)
-                inbus_vec = struct2array(inbus);
-                inbus_vec = inbus_vec(obj.inputMap); 
-            else
-                inbus_vec = inbus;
-            end
-            real_val_out = inbus_vec;
-            
-            % Write data
-            obj.proc.write( ...
-                mlepEncodeRealData(obj.proc.versionProtocol, 0, obj.getCurrentTime, real_val_out));
-        
         end
         
         function releaseImpl(obj)
             % Release resources, such as file handles
-            % Stop the process            
-            obj.proc.stop;            
+            % Stop the process
+            obj.proc.stop;
         end
+        
     end
     
     methods(Access = private)
-        function createBusObjects(obj)
-            % Create inbus
-            bus = Simulink.Bus;            
-            for i = 1:obj.nOutIdf                
+        function createBusObjects(obj)             
+            bus = Simulink.Bus;
+            for i = 1:obj.nOut
                 % Create one signal
                 elem = Simulink.BusElement;
                 elem.Name = obj.outputSigName{i};
@@ -177,8 +208,8 @@ classdef so_mlepBlk < matlab.System &...
             assignin('base',obj.outputBusName, bus);
             
             % Create outbus
-            bus = Simulink.Bus;            
-            for i = 1:obj.nInIdf                
+            bus = Simulink.Bus;
+            for i = 1:obj.nIn
                 % Create one signal
                 elem = Simulink.BusElement;
                 elem.Name = obj.inputSigName{i};
@@ -195,78 +226,85 @@ classdef so_mlepBlk < matlab.System &...
         
         function stopError(obj, msg, varargin)
             obj.proc.stop;
-            error(msg, varargin{:});            
+            error(msg, varargin{:});
         end
     end
     
-%% ========================= Get/Set methods ==============================
-    methods 
-       function value = get.nInIdf(obj)
-           value = numel(obj.proc.idfdata.inputList);
-       end
-       
-       function value = get.inputSigName(obj)  
-            value = cell(obj.nInIdf,1);
-            for i = 1: obj.nInIdf
-                signame = obj.sigNameFcn(obj.proc.idfdata.inputList(i).Name,...
-                        obj.proc.idfdata.inputList(i).Type); 
+    % ----------------------- Get/Set methods -----------------------------
+    methods
+        function value = get.nIn(obj)
+            value = height(obj.proc.inputTable);
+        end
+        
+        function value = get.inputSigName(obj)
+            value = cell(obj.nIn,1);
+            for i = 1: obj.nIn
+                signame = obj.sigNameFcn(obj.proc.inputTable.Name{i},...
+                    obj.proc.inputTable.Type{i});
                 value{i} = signame;
             end
-       end 
-       
-       function value = get.nOutIdf(obj)
-           value = numel(obj.proc.idfdata.outputList);
-       end
-       
-       function value = get.outputSigName(obj)
-            obj.nOutIdf = numel(obj.proc.idfdata.outputList);
-            value = cell(obj.nOutIdf,1);
-            for i = 1: obj.nOutIdf
-                signame = obj.sigNameFcn(obj.proc.idfdata.outputList(i).Name,...
-                        obj.proc.idfdata.outputList(i).Type); 
+        end
+        
+        function value = get.nOut(obj)
+            value = height(obj.proc.outputTable);
+        end
+        
+        function value = get.outputSigName(obj)
+            value = cell(obj.nOut,1);
+            for i = 1: obj.nOut
+                signame = obj.sigNameFcn(obj.proc.outputTable.Name{i},...
+                    obj.proc.outputTable.Type{i});
                 value{i} = signame;
-            end            
-       end
+            end
+        end
+        
+        function value = get.timestep(obj)
+            value = obj.proc.timestep;
+        end
     end
     
-%% ======================= Simulink I/O methods ===========================
+    %% ===================== Simulink I/O methods =========================
     methods (Access = protected)
-%         function flag = isInputSizeMutableImpl(obj,index)
-%             % Return false if input size cannot change
-%             % between calls to the System object
-%             flag = false;
-%         end
-% 
-%         function flag = isInputComplexityMutableImpl(obj,index)
-%             % Return false if input complexity cannot change
-%             % between calls to the System object
-%             flag = false;
-%         end
-% 
-%         function flag = isInputDataTypeMutableImpl(obj,index)
-            % Return false if input data type cannot change
-            % between calls to the System object
-%             flag = false;
-%         end
-
-%         function num = getNumInputsImpl(obj)
-%             % Define total number of inputs for system with optional inputs
-%             num = 1;            
-%         end
-% 
-%         function num = getNumOutputsImpl(obj)
-%             % Define total number of outputs for system with optional
-%             % outputs
-%             num = 3;            
-%         end
-% 
+        %         function flag = isInputSizeMutableImpl(obj,index)
+        %             % Return false if input size cannot change
+        %             % between calls to the System object
+        %             flag = false;
+        %         end
+        %
+        %         function flag = isInputComplexityMutableImpl(obj,index)
+        %             % Return false if input complexity cannot change
+        %             % between calls to the System object
+        %             flag = false;
+        %         end
+        %
+        %         function flag = isInputDataTypeMutableImpl(obj,index)
+        % Return false if input data type cannot change
+        % between calls to the System object
+        %             flag = false;
+        %         end
+        %
+        %         function num = getNumInputsImpl(obj)
+        %             % Define total number of inputs for system with optional inputs
+        %             num = 1;
+        %         end
+        %
+        %         function num = getNumOutputsImpl(obj)
+        %             % Define total number of outputs for system with optional
+        %             % outputs
+        %             num = 3;
+        %         end
+        %
         function [out,out2,out3] = getOutputDataTypeImpl(obj)
             % Return data type for each output port
             out = "double";
             out2 = "double";
-            out3 = obj.outputBusName;
+            if obj.useBus
+                out3 = obj.outputBusName;
+            else
+                out3 = "double";
+            end
         end
-
+        
         function [out,out2,out3] = isOutputFixedSizeImpl(obj)
             % Return true for each output port with fixed size
             out = true;
@@ -278,7 +316,11 @@ classdef so_mlepBlk < matlab.System &...
             % Return size for each output port
             out = [1 1];
             out2 = [1 1];
-            out3 = [1 1];
+            if obj.useBus
+                out3 = [1 1];
+            else
+                out3 = [obj.nOut 1];
+            end
         end
         
         function [out,out2,out3] = isOutputComplexImpl(obj)
@@ -287,19 +329,18 @@ classdef so_mlepBlk < matlab.System &...
             out2 = false;
             out3 = false;
         end
-
-        function sts = getSampleTimeImpl(obj)    
-            samplingTime = obj.proc.timestep;
+        
+        function sts = getSampleTimeImpl(obj)            
             sts = obj.createSampleTime("Type", "Discrete", ...
-                 "SampleTime", samplingTime);
+                "SampleTime", obj.timestep);
         end
     end
-
-%% ================ Simulink Block Graphics Specification =================
+    
+    %% ================== Simulink Block Appearence =======================
     methods(Access = protected)
-       function icon = getIconImpl(obj)
+        function icon = getIconImpl(obj)
             % Define icon for System block
-            icon = matlab.system.display.Icon("mlepIcon.jpg"); % Example: image file icon
+            icon = matlab.system.display.Icon("mlepBlkIcon.jpg"); % Example: image file icon
         end
         
         function name = getInputNamesImpl(obj)
@@ -312,18 +353,33 @@ classdef so_mlepBlk < matlab.System &...
             name = 'Flag';
             name2 = 'Time';
             name3 = obj.outputBusName;
-        end 
+        end
     end
     
     methods(Access = protected, Static)
-        function header = getHeaderImpl
+        function header = getHeaderImpl(obj)
             % Define header panel for System block dialog
             header = matlab.system.display.Header(mfilename("class"));
         end
-
-        function group = getPropertyGroupsImpl
-            % Define property section(s) for System block dialog
-            group = matlab.system.display.Section(mfilename("class"));
+        
+        function groups = getPropertyGroupsImpl(obj)
+            simGroup = matlab.system.display.Section(...
+                'Title','Simulation settings',...
+                'PropertyList',{'idfFile','epwFile'});
+            
+            simTab = matlab.system.display.SectionGroup(...
+                'Title','Simulation', ...
+                'Sections',[simGroup]);
+            
+            busGroup = matlab.system.display.Section(...
+                'Title','Bus',...
+                'PropertyList',{'useBus','inputBusName','outputBusName'});
+            
+            busTab = matlab.system.display.SectionGroup(...
+                'Title','Bus', ...
+                'Sections',[busGroup]);
+            groups = [simTab,busTab];
         end
     end
+    
 end
