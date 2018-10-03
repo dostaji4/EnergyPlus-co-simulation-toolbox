@@ -125,7 +125,7 @@ HeatBalanceAlgorithm,
 !-   ===========  ALL OBJECTS IN CLASS: TIMESTEP ===========
 
 Timestep,
-    4;                       !- Number of Timesteps per Hour
+    6;                       !- Number of Timesteps per Hour
 
 
 !-   ===========  ALL OBJECTS IN CLASS: SITE:LOCATION ===========
@@ -3023,18 +3023,28 @@ Curve:Biquadratic,
 !-   ===========  ALL OBJECTS IN CLASS: OUTPUT:VARIABLEDICTIONARY ===========
 
 Output:VariableDictionary,
-    IDF;                     !- Key Field
+    IDF;                	 !- Key Field
 
 
 !-   ===========  ALL OBJECTS IN CLASS: OUTPUT:VARIABLE ===========
+Output:Variable,ENVIRONMENT,Site Outdoor Air Drybulb Temperature,timestep; !- Zone Average [C]
+Output:Variable,ENVIRONMENT,Site Outdoor Air Relative Humidity,timestep; !- Zone Average [%]
 
-Output:Variable,
-    Environment,             !- Key Value
-    Site Outdoor Air Drybulb Temperature,  !- Variable Name
-    timestep;                !- Reporting Frequency
+Output:Variable,    ZSF1,    Zone Mean Air Temperature,    timestep;
+Output:Variable,    ZNF1,    Zone Mean Air Temperature,    timestep;
+Output:Variable,    ZSF2,    Zone Mean Air Temperature,    timestep;
+Output:Variable,    ZNF2,    Zone Mean Air Temperature,    timestep;
+Output:Variable,    BASE-1,  Zone Mean Air Temperature,    timestep;
+	
+Output:Variable,    ZSF1,     Zone Operative Temperature,    timestep;
+Output:Variable,    ZNF1,     Zone Operative Temperature,    timestep;
+Output:Variable,    ZSF2,     Zone Operative Temperature,    timestep;
+Output:Variable,    ZNF2,     Zone Operative Temperature,    timestep;
+Output:Variable,    BASE-1,   Zone Operative Temperature,    timestep;
 
-Output:Variable,
-    ZSF1,                    !- Key Value
-    Zone Air Temperature,    !- Variable Name
-    timestep;                !- Reporting Frequency
+Output:Variable, ZSF1,  	Zone Windows Total Transmitted Solar Radiation Rate,timestep; !- Zone Average [W]
+Output:Variable, ZNF1,  	Zone Windows Total Transmitted Solar Radiation Rate,timestep; !- Zone Average [W]
+Output:Variable, ZSF2,  	Zone Windows Total Transmitted Solar Radiation Rate,timestep; !- Zone Average [W]
+Output:Variable, ZNF2,  	Zone Windows Total Transmitted Solar Radiation Rate,timestep; !- Zone Average [W]
+Output:Variable, BASE-1,	Zone Windows Total Transmitted Solar Radiation Rate,timestep; !- Zone Average [W]
 

@@ -1,4 +1,4 @@
-function writeSocketConfig(fullFilePath,serverSocket, hostname)
+function mlepWriteSocketConfig(fullFilePath, serverSocket, hostname)
 fid = fopen(fullFilePath, 'w');
 if fid == -1
     % error

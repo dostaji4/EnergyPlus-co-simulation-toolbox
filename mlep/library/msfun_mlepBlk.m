@@ -54,6 +54,9 @@ end
 %% Setup
 % Set up the S-function block's basic characteristics
 function setup(block)
+
+    if bdIsLibrary(bdroot), return; end  
+    
     %% Parameters
     % Register the number of parameters
     block.NumDialogPrms = 10;
@@ -144,6 +147,8 @@ end
 % Parse the dialog parameters and store them in the block user data
 function ParseParameters(block)
     
+    if bdIsLibrary(bdroot), return; end  
+    
     % Define names of dialog parameters (in order)
     dialogNames = { ...
         'work_dir', ...         % Working directory
@@ -214,7 +219,7 @@ function ParseParameters(block)
     d.idfFile = idfFile;
     d.epwFile = epwFile;
     d.workDir = workDir;
-    in = readIDF([idfFile '.idf'],'Timestep');
+    in = mlepReadIDF([idfFile '.idf'],'Timestep');
     d.timestep = 60/str2double(char(in(1).fields{1})) * 60 ;
     
     % Save to UserData of the block    
@@ -222,21 +227,17 @@ function ParseParameters(block)
     set_param(block.BlockHandle, 'UserDataPersistent', 'on');
 end
 
-
-
 %% Set sampling mode for input ports
 % Not sure if really needed?
 function SetInputPortSamplingMode(block, port, mode)
     block.InputPort(port).SamplingMode = mode;
 end
 
-
 %% Set dimension for input ports
 % Not sure if really needed?
 function SetInputPortDimensions(block, port, dimsInfo)
     block.InputPort(port).Dimensions = dimsInfo;
 end
-
 
 %% Start
 function Start(block)
@@ -299,13 +300,7 @@ function InitializeConditions(block)
         status == 0, ...
         'EnergyPlusCosim:startupError', ...
         'Cannot start EnergyPlus: %s.', msg );
-
-%     % Save processobj back to UserData of the block
-% COMMENTED OUT BY JD
-%     set_param(block.BlockHandle, 'UserData', d);
-
 end
-
 
 %% Outputs
 function Outputs(block)

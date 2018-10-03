@@ -43,18 +43,18 @@ function blkStruct = slblocks
 
     % Name of the subsystem which will show up in the Simulink Blocksets
     % and Toolboxes subsystem.
-    blkStruct.Name = sprintf('MLE+\nModels\nLibrary');
+    blkStruct.Name = sprintf('mlep\nLibrary');
 
     % The function that will be called when the user double-clicks on
     % this icon.
-    blkStruct.OpenFcn = 'open(''mlepLibrary.mdl'');';
+    blkStruct.OpenFcn = 'open(''mlepLibrary.slx'');';
 
     % The argument to be set as the Mask Display for the subsystem.
-    blkStruct.MaskDisplay = 'disp(''MLE+ Blocks'');';
+    blkStruct.MaskDisplay = 'disp(''mlep Library Blocks'');';
 
     % Library information for Simulink library browser
     blkStruct.Browser = struct();
     blkStruct.Browser.Library = 'mlepLibrary';
-    blkStruct.Browser.Name    = 'MLE+ Models';
+    blkStruct.Browser.Name    = 'mlep Blocks';
 
 % No end keyword for this function
