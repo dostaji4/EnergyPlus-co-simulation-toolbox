@@ -11,7 +11,7 @@ classdef so_mlepBlk < matlab.System &...
     end
     
     properties(DiscreteState)
-        
+        time;
     end
     
     properties (Nontunable)
@@ -56,10 +56,8 @@ classdef so_mlepBlk < matlab.System &...
         end
 
         function resetImpl(obj)
-            % Initialize / reset discrete-state properties
-            if ~obj.proc.isRunning
-                obj.proc.start;
-            end 
+            % Initialize / reset discrete-state properties            
+            obj.time = 0;
         end
         
         function validatePropertiesImpl(obj)
@@ -117,7 +115,7 @@ classdef so_mlepBlk < matlab.System &...
             
             % Write data
             outtime = obj.getCurrentTime;
-            if isempty(outtime), outtime = time; end
+            if isempty(outtime), outtime = obj.time; end
             obj.proc.write(mlepEncodeRealData(obj.proc.versionProtocol,...
                                               0, ...
                                               outtime,...
@@ -179,6 +177,7 @@ classdef so_mlepBlk < matlab.System &...
                     % Output vector
                     out = rValOut(:);
                 end
+                obj.time = time;
             end
         end
         
