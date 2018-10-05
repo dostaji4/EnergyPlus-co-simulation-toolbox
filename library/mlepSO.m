@@ -62,6 +62,7 @@ classdef mlepSO < matlab.System &...
         
         function validatePropertiesImpl(obj)
             
+%             if isLibraryMdl(bdroot), return, end
             % Validate related or interdependent property values
             if isempty(obj.proc)
                 obj.proc = mlep;
@@ -116,7 +117,7 @@ classdef mlepSO < matlab.System &...
             % Write data
             outtime = obj.getCurrentTime;
             if isempty(outtime), outtime = obj.time; end
-            obj.proc.write(mlepEncodeRealData(obj.proc.versionProtocol,...
+            obj.proc.write(mlep.encodeRealData(obj.proc.versionProtocol,...
                                               0, ...
                                               outtime,...
                                               rValIn));
@@ -141,21 +142,21 @@ classdef mlepSO < matlab.System &...
             
             % Decode data
             try
-                [flag, time, rValOut] = mlepDecodePacket(readPacket);
+                [flag, time, rValOut] = mlep.decodePacket(readPacket);
             catch me
                 obj.stopError(me); %'Error occured while decoding EnergyPlus packet.'
             end
             
             % Process outputs from EnergyPlus
             if flag ~= 0
-                err_str = sprintf('EnergyPlus process sent flag "%d" (%s).',...
+                err_str = sprintf('EnergyPlusCosim: EnergyPlus process sent flag "%d" (%s).',...
                     flag, mlep.epFlag2str(flag));
                 if flag < 0
                     [~,errFile] = fileparts(obj.idfFile);
                     errFile = [errFile '.err'];
                     errFilePath = fullfile(pwd,obj.proc.outputDir,errFile);
                     err_str = [err_str, ...
-                        sprintf(' Check the <a href="matlab:open %s">%s</a> file for further information.',...
+                        sprintf('Check the <a href="matlab:open %s">%s</a> file for further information.',...
                         errFilePath, errFile)];
                 end
                 obj.stopError(err_str);
@@ -166,16 +167,8 @@ classdef mlepSO < matlab.System &...
                 
                 if obj.useBus
                     % Create output bus
-                    tic
                     obj.outTable{1,:} = rValOut;
                     output = table2struct(obj.outTable);
-                    toc
-                    tic
-                    tbl = obj.outTable;
-                    tbl{1,:} = rValOut;
-                    output = table2struct(tbl);
-                    toc
-                    disp('--');
                     % Note: This is the fastest way compared to
                     % slower  out = cell2struct(num2cell(rValOut'),obj.outputSigName,1);
                     % slowest for i = 1:obj.nOut
@@ -233,7 +226,11 @@ classdef mlepSO < matlab.System &...
         
         function stopError(obj, msg, varargin)
             obj.proc.stop;
-            error(msg, varargin{:});
+            if isa(msg,'MException')
+                rethrow(msg);
+            else
+                error(msg, varargin{:});
+            end
         end
     end
     
@@ -318,6 +315,14 @@ classdef mlepSO < matlab.System &...
             out2 = true;
             out3 = true;
         end
+
+        function [sz,dt,cp] = getDiscreteStateSpecificationImpl(obj,name)
+            % Return size, data type, and complexity of discrete-state
+            % specified in name
+            sz = [1 1];
+            dt = "double";
+            cp = false;
+        end
         
         function [out,out2,out3] = getOutputSizeImpl(obj)
             % Return size for each output port
@@ -347,7 +352,7 @@ classdef mlepSO < matlab.System &...
     methods(Access = protected)
         function icon = getIconImpl(obj)
             % Define icon for System block
-            icon = matlab.system.display.Icon("mlepBlkIcon.jpg"); % Example: image file icon
+            icon = matlab.system.display.Icon("mlepIcon.jpg"); % Example: image file icon
         end
         
         function name = getInputNamesImpl(obj)
