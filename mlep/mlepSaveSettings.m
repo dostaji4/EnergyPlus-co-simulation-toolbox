@@ -1,4 +1,4 @@
-function mlepSaveSettings(homePath, eplusPath, javaPath, bcvtbPath);
+function mlepSaveSettings(mlepPath, eplusPath, eplusCommand, javaPath)
 % MLEPSAVESETTINGS code to save MLE+ Settings. 
 %
 %      Use: mlepSaveSettings 
@@ -17,7 +17,7 @@ function mlepSaveSettings(homePath, eplusPath, javaPath, bcvtbPath);
 global MLEPSETTINGS
 
 % Run MLE+ Initialization
-mlepInit(eplusPath, javaPath, bcvtbPath);
+mlepInit(eplusPath, eplusCommand, javaPath);
 
 % PC env
 if ispc
@@ -27,5 +27,5 @@ else
 end
 
 % Save MLE+ Settings
-save([homePath filesep 'MLEPSETTINGS.mat'],'-v7','MLEPSETTINGS');
+save(fullfile(mlepPath,'MLEPSETTINGS.mat'),'-v7','MLEPSETTINGS');
 end

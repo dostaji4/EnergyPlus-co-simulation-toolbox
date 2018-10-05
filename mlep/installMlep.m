@@ -18,32 +18,58 @@
 %      open Matlab or pass a path to the savepath function at the end of
 %      the script.
 %
-%   if ispc
-%       % Windows
-%       eplusPath = 'C:\EnergyPlusV8-3-0';
-%       javaPath = 'C:\Program Files\Java\jre1.8.0_51\bin';
-%   else
-%       % Unix
-%       eplusPath = '/Applications/EnergyPlus-8-3-0';
-%   end
-%
 % Last Modified by Willy Bernal - Willy.BernalHeredia@nrel.gov 30-Jul-2015
 
-%% MODIFY
-% true = Install Manually
-% fase = Install through GUI
-manualInstall = true;
+%% === Extract paths ======================================================
 
-% Paths
+selectByDialog = 1;
 if ispc
     % Windows
-    % EnergyPlus path
-    mlepFolder = mfilename('fullpath');    
-    toolboxPath = strsplit(mlepFolder,filesep);
-    toolboxPath = strjoin(toolboxPath(1:end-2),filesep);
-    eplusPath = fullfile(toolboxPath,'EnergyPlusV8-9-0'); 
     
-    % Java path    
+    % Toolbox path
+    mlepPath = fileparts(mfilename('full'));
+    
+    % EnergyPlus path    
+    rootFolder = 'C:\';
+    eplusDirList = dirPlus(rootFolder,...
+                    'ReturnDirs', true,...
+                    'Depth',0,...
+                    'DirFilter', '^EnergyPlusV\d-\d-\d$');
+    
+    % Ask for assistance if necessary
+    if numel(eplusDirList) == 1
+        eplusPath = eplusDirList{1};        
+        if validEnergyPlusDir(eplusPath)
+            answer = questdlg(sprintf('Found EnergyPlus installation "%s" do you want to use it?',eplusPath),...
+                   'EnergyPlus folder selection');
+            if strcmp(answer,'Yes')
+                selectByDialog = 0;
+            end                
+        end
+    else
+        if isempty(eplusDirList)
+            f = msgbox(['No EnergyPlus installation found.' newline ...
+                'Please select the installation folder manually.'],...
+                'EnergyPlus folder selection');
+            waitfor(f);
+        else
+            f = msgbox(sprintf('Multiple EnergyPlus installations found \n"%s". \nPlease select the desired installation manually.',...
+                strjoin(eplusDirList,'"\n"')),'EnergyPlus folder selection');
+            waitfor(f);
+        end
+    end
+    
+    % Select manually
+    if selectByDialog
+        eplusPath = getEplusDir(rootFolder);
+    end
+    
+    % Get EnergyPlus command 
+    eplusCommand = dirPlus(eplusPath,...
+                           'FileFilter','^(?i)energyplus.exe(?-i)$',...
+                           'PrependPath', false);
+    
+    % Java path (registry query)
     ver = winqueryreg('HKEY_LOCAL_MACHINE','software\JavaSoft\Java Runtime Environment','CurrentVersion');
     javaHome = winqueryreg('HKEY_LOCAL_MACHINE',['software\JavaSoft\Java Runtime Environment\' ver],'JavaHome');
     javaPath = fullfile(javaHome,'bin');  
@@ -51,57 +77,45 @@ if ispc
         error('Java Runtime Environment not found. Please install Java JRE.')
     end    
 else
+    warning('only Windows installation has been tested!');
+    f = msgbox('Select the EnergyPlus installation root folder',...
+                'EnergyPlus folder selection');            
+    waitfor(f);
+    eplusPath = getEplusDir(rootFolder);
     % Unix
-    eplusPath = '/EnergyPlusV8-9-0';
+%    eplusPath =     
+    eplusCommand = dirPlus(eplusPath,...
+                           'FileFilter','^(?i)energyplus.exe(?-i)$',...
+                           'PrependPath', false);
+    javaPath = '';
 end
 
-%% DO NOT MODIFY
-% Extract MLE+ Main Path
-filename = mfilename('fullpath');
-[mlepPath, ~, ~] = fileparts(filename);
+% === Save Settings =======================================================
+mlepSaveSettings(mlepPath, eplusPath, eplusCommand, javaPath);    
 
-% Add Path
-% addpath(mlepPath);
-addpath(genpath(fullfile(mlepPath,'mlep','core')));
-% addpath(fullfile(mlepPath,'gui'));
-addpath(genpath(fullfile(mlepPath,'mlep','install')));
-%addpath(fullfile(mlepPath,'settings'));
-addpath(genpath(fullfile(mlepPath,'mlep','version')));
-% addpath(fullfile(mlepPath,'mlepHelp'));
-addpath(genpath(fullfile(mlepPath,'mlep','library')));
-bcvtbPath = fullfile(mlepPath,'bcvtb');
-addpath(genpath(bcvtbPath));
-
-% Installation Dialog
-if ~manualInstall %========================================================
-    if ispc
-        % WIN
-        installationWin;
-    else
-        % UNIX
-        installationUnix;
-    end
-else %=====================================================================
-    % Manual Install
-    if ispc
-        % No Changes
-    else
-        % Java Path
-        javaPath = '';
-    end
-    
-    % Save Settings =======================================================
-    mlepSaveSettings(mlepPath, eplusPath, javaPath, bcvtbPath);
-    %%
-    %{
-    disp('================================');
-    disp('        MLE+ COSIMULATION       ');
-    disp('     INSTALLATION COMPLETED     ');    
-    disp('================================');
-    %}
+% EnergyPlus folder validation function
+function valid = validEnergyPlusDir(folder)
+    valid = ~isempty(dirPlus(folder,'Depth',1,'FileFilter','^Energy\+\.idd'));
 end
 
-% Save Paths
-savepath;
-
-
+function epPath = getEplusDir(rootFolder)
+        isValidEplusDir = 0;
+        while ~isValidEplusDir
+            folder = {uigetdir(rootFolder,...
+                                'Select EnergyPlus installation folder:')
+                                };
+            if folder{1} == 0 % Cancel button
+                return
+            end
+            isValidEplusDir = validEnergyPlusDir(folder{1});
+            if ~isValidEplusDir
+                f = msgbox(['Selected EnergyPlus folder is not valid.' newline ...
+                        'Please select the installation root folder (e.g. "EnergyPlusV8-9-0").'],...
+                        'EnergyPlus folder selection');
+                waitfor(f);
+            else
+                epPath = folder{1};
+            end
+            
+        end
+end
