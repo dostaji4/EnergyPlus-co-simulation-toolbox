@@ -1,4 +1,4 @@
-function [flag, timevalue, realvalues, intvalues, boolvalues] = mlepDecodePacket(packet)
+function [flag, timevalue, realvalues, intvalues, boolvalues] = decodePacket(packet)
 %MLEPDECODEPACKET Decode packet to data.
 %   [flag, timevalue, realvalues, intvalues, boolvalues] =
 %           mlepDecodePacket(packet)

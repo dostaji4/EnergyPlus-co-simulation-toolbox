@@ -193,7 +193,7 @@ classdef mlep < handle
             
             % Send stop signal
             if nargin < 2 || stopSignal
-                obj.write(mlepEncodeStatus(obj.versionProtocol, 1));
+                obj.write(mlep.encodeStatus(obj.versionProtocol, 1));
             end
             
             % Close connection
@@ -350,7 +350,7 @@ classdef mlep < handle
         % Load I/O variables from the IDF file
         function loadIdf(obj)
             %% COLLECT DATA IDF FILE
-            in = mlepReadIDF(obj.idfFullFilename,...
+            in = mlep.readIDF(obj.idfFullFilename,...
                 {'Timestep',...
                 'RunPeriod',...
                 'ExternalInterface:Schedule',...
@@ -442,7 +442,7 @@ classdef mlep < handle
                 % Create a new 'variables.cfg' file based on the input/output
                 % definition in the IDF file
                 
-                mlepWriteVariableConfig(obj.inputTable,...
+                mlep.writeVariableConfig(obj.inputTable,...
                     obj.outputTable,...
                     fullfile(obj.outputDirFullPath, obj.variablesFile));
                 
@@ -643,7 +643,7 @@ classdef mlep < handle
             obj.serverSocket.setSoTimeout(obj.acceptTimeout);
             
             % Write socket config file
-            mlepWriteSocketConfig(fullfile(obj.outputDirFullPath,obj.configFile),obj.serverSocket, hostname);
+            mlep.writeSocketConfig(fullfile(obj.outputDirFullPath,obj.configFile),obj.serverSocket, hostname);
             
             obj.commSocket = [];
         end
@@ -750,7 +750,7 @@ classdef mlep < handle
             if isempty(BInputs), BInputs = zeros(nRuns, 0); end
             
             % Run the first time to obtain the size of outputs
-            obj.write(mlepEncodeData(obj.versionProtocol, 0, TInputs(1),...
+            obj.write(mlep.encodeData(obj.versionProtocol, 0, TInputs(1),...
                 RInputs(1,:), IInputs(1,:), BInputs(1,:)));
             
             readpacket = obj.read;
@@ -760,7 +760,7 @@ classdef mlep < handle
                 status = -1;
                 return;
             else
-                [flag, timevalue, rvalues, ivalues, bvalues] = mlepDecodePacket(readpacket);
+                [flag, timevalue, rvalues, ivalues, bvalues] = mlep.decodePacket(readpacket);
                 switch flag
                     case 0
                         TOut(1) = timevalue;
@@ -782,7 +782,7 @@ classdef mlep < handle
             
             for kRun = 2:nRuns
                 fprintf('Run %d at time %g with U = %g.\n', kRun, TInputs(kRun), RInputs(kRun,:));
-                obj.write(mlepEncodeData(obj.versionProtocol, 0, TInputs(kRun),...
+                obj.write(mlep.encodeData(obj.versionProtocol, 0, TInputs(kRun),...
                     RInputs(kRun,:), IInputs(kRun,:), BInputs(kRun,:)));
                 
                 % Try to read a number of times (there is some problem with
@@ -802,7 +802,7 @@ classdef mlep < handle
                     status = -1;
                     break;
                 else
-                    [flag, timevalue, rvalues, ivalues, bvalues] = mlepDecodePacket(readpacket);
+                    [flag, timevalue, rvalues, ivalues, bvalues] = mlep.decodePacket(readpacket);
                     switch flag
                         case 0
                             TOut(kRun) = timevalue;
@@ -863,25 +863,25 @@ classdef mlep < handle
     
     methods (Static)
         % Decode BCVTB protocol packet
-        [flag, timevalue, realvalues, intvalues, boolvalues] = mlepDecodePacket(packet);
+        [flag, timevalue, realvalues, intvalues, boolvalues] = decodePacket(packet);
         
         % Encode BCVTB protocol packet
-        packet = mlepEncodeData(vernumber, flag, timevalue, realvalues, intvalues, boolvalues);
+        packet = encodeData(vernumber, flag, timevalue, realvalues, intvalues, boolvalues);
         
         % Encode BCVTB protocol packet with only real values
-        packet = mlepEncodeRealData(vernumber, flag, timevalue, realvalues);
+        packet = encodeRealData(vernumber, flag, timevalue, realvalues);
         
         % Encode BCVTB protocol simulation status
-        packet = mlepEncodeStatus(vernumber, flag);
+        packet = encodeStatus(vernumber, flag);
         
         % Parse IDF file
-        data = mlepReadIDF(filename, classnames);
+        data = readIDF(filename, classnames);
         
         % Make socket configuration file
-        mlepWriteSocketConfig(fullFilePath, serverSocket, hostname);
+        writeSocketConfig(fullFilePath, serverSocket, hostname);
         
         % Make co-simulation I/O configuration file
-        mlepWriteVariableConfig(inputTable, outputTable, fullFilePath);
+        writeVariableConfig(inputTable, outputTable, fullFilePath);
     end
   
 end
