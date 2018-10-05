@@ -105,24 +105,24 @@ classdef so_mlepBlk < matlab.System &...
             end
         end
         
-        function updateImpl(obj,in)
+        function updateImpl(obj,input)
             % Send signals to E+
-            if isstruct(in)
-                rValIn = struct2array(in);                
+            if isstruct(input)
+                rValIn = struct2array(input);                
             else
-                rValIn = in;
+                rValIn = input;
             end            
             
             % Write data
-            outtime = obj.getCurrentTime;
-            if isempty(outtime), outtime = obj.time; end
+%             outtime = obj.getCurrentTime;
+            if isempty(t), outtime = obj.time; end
             obj.proc.write(mlepEncodeRealData(obj.proc.versionProtocol,...
                                               0, ...
                                               outtime,...
                                               rValIn));
         end
 
-        function [flag, time, out] = outputImpl(obj,~)
+        function [flag, time, output] = outputImpl(obj,~)
             % Initialize
             if ~obj.proc.isRunning
                 % Create connection
@@ -166,8 +166,16 @@ classdef so_mlepBlk < matlab.System &...
                 
                 if obj.useBus
                     % Create output bus
+                    tic
                     obj.outTable{1,:} = rValOut;
-                    out = table2struct(obj.outTable);
+                    output = table2struct(obj.outTable);
+                    toc
+                    tic
+                    tbl = obj.outTable;
+                    tbl{1,:} = rValOut;
+                    output = table2struct(tbl);
+                    toc
+                    disp('--');
                     % Note: This is the fastest way compared to
                     % slower  out = cell2struct(num2cell(rValOut'),obj.outputSigName,1);
                     % slowest for i = 1:obj.nOut
@@ -175,8 +183,8 @@ classdef so_mlepBlk < matlab.System &...
                     %         end
                 else
                     % Output vector
-                    out = rValOut(:);
-                end
+                    output = rValOut(:);
+                end                
                 obj.time = time;
             end
         end
