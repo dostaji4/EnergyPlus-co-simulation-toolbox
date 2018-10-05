@@ -1,4 +1,4 @@
-function mlepInit(eplusDir, javaDir, bcvtbDir)
+function mlepInit(eplusPath, eplusCommand, javaPath)
 % This script sets up the environment for MLE+.
 % It should be modified to the actual settings of the computer,
 % including path to BCVTB, EnergyPlus, etc.
@@ -14,9 +14,7 @@ global MLEPSETTINGS
 if ispc
     % Windows
     MLEPSETTINGS = struct(...
-        'version', 2,...   % Version of the protocol
-        'program', [eplusDir filesep 'RunEplus'],...   % Path to the program to run EnergyPlus
-        'bcvtbDir', bcvtbDir,...   % Path to BCVTB installation
+        'version', 2,...   % Version of the protocol                
         'execcmd', 'system'...   % Use the system command to execute E+
         );
     MLEPSETTINGS.env = {...
