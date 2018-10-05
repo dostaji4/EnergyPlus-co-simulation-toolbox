@@ -1,4 +1,5 @@
-% INSTALLMLEP code to install MLE+
+% INSTALLMLEP code to install "mlep"
+function installMlep
 %      Run this script before using MLE+.
 %
 %      Use: installMlep
@@ -27,95 +28,126 @@ if ispc
     % Windows
     
     % Toolbox path
-    mlepPath = fileparts(mfilename('full'));
+    homePath = fileparts(mfilename('fullpath'));
     
-    % EnergyPlus path    
+    % EnergyPlus path
     rootFolder = 'C:\';
     eplusDirList = dirPlus(rootFolder,...
-                    'ReturnDirs', true,...
-                    'Depth',0,...
-                    'DirFilter', '^EnergyPlusV\d-\d-\d$');
+        'ReturnDirs', true,...
+        'Depth',0,...
+        'DirFilter', '^EnergyPlusV\d-\d-\d$');
     
     % Ask for assistance if necessary
     if numel(eplusDirList) == 1
-        eplusPath = eplusDirList{1};        
+        eplusPath = eplusDirList{1};
         if validEnergyPlusDir(eplusPath)
             answer = questdlg(sprintf('Found EnergyPlus installation "%s" do you want to use it?',eplusPath),...
-                   'EnergyPlus folder selection');
+                'Installing mlep');
             if strcmp(answer,'Yes')
                 selectByDialog = 0;
-            end                
+            end
         end
     else
         if isempty(eplusDirList)
-            f = msgbox(['No EnergyPlus installation found.' newline ...
+            f = helpdlg(['No EnergyPlus installation found.' newline ...
                 'Please select the installation folder manually.'],...
-                'EnergyPlus folder selection');
+                'Installing mlep');
             waitfor(f);
         else
-            f = msgbox(sprintf('Multiple EnergyPlus installations found \n"%s". \nPlease select the desired installation manually.',...
-                strjoin(eplusDirList,'"\n"')),'EnergyPlus folder selection');
+            f = helpdlg(sprintf('Multiple EnergyPlus installations found \n"%s". \nPlease select the desired installation manually.',...
+                strjoin(eplusDirList,'"\n"')),'Installing mlep');
             waitfor(f);
         end
     end
     
-    % Select manually
+    % Select manually by dialog
     if selectByDialog
         eplusPath = getEplusDir(rootFolder);
+        if isempty(eplusPath)
+            error('mlep installation failed.');            
+        end
     end
-    
-    % Get EnergyPlus command 
-    eplusCommand = dirPlus(eplusPath,...
-                           'FileFilter','^(?i)energyplus.exe(?-i)$',...
-                           'PrependPath', false);
     
     % Java path (registry query)
     ver = winqueryreg('HKEY_LOCAL_MACHINE','software\JavaSoft\Java Runtime Environment','CurrentVersion');
     javaHome = winqueryreg('HKEY_LOCAL_MACHINE',['software\JavaSoft\Java Runtime Environment\' ver],'JavaHome');
-    javaPath = fullfile(javaHome,'bin');  
+    javaPath = fullfile(javaHome,'bin');
     if ~exist(javaPath,'dir')
         error('Java Runtime Environment not found. Please install Java JRE.')
-    end    
+    end
+    
+    % Get EnergyPlus command
+    eplusCommand = dirPlus(eplusPath,...
+        'FileFilter','^(?i)energyplus.exe(?-i)$',...
+        'PrependPath', false);
 else
-    warning('only Windows installation has been tested!');
-    f = msgbox('Select the EnergyPlus installation root folder',...
-                'EnergyPlus folder selection');            
+    warndlg('Only Windows installation has been tested!','Installing mlep','modal');
+    f = helpdlg('Select the EnergyPlus installation root folder',...
+        'Installing mlep');
     waitfor(f);
     eplusPath = getEplusDir(rootFolder);
-    % Unix
-%    eplusPath =     
+    javaPath = 'usr/bin/java';
+    
+    % Get EnergyPlus command
     eplusCommand = dirPlus(eplusPath,...
-                           'FileFilter','^(?i)energyplus.exe(?-i)$',...
-                           'PrependPath', false);
-    javaPath = '';
+        'FileFilter','^(?i)energyplus(?-i)$',...
+        'PrependPath', false);
 end
 
-% === Save Settings =======================================================
-mlepSaveSettings(mlepPath, eplusPath, eplusCommand, javaPath);    
+%% === Save Settings ======================================================
+% into global variable and file to load in all the following runs
+global MLEPSETTINGS
 
+MLEPSETTINGS = struct;
+
+MLEPSETTINGS.versionProtocol = 2;     % Version of the BCVTB protocol
+
+MLEPSETTINGS.program = eplusCommand; % Program name
+
+bcvtbPath = fullfile(homePath,'bcvtb');
+
+MLEPSETTINGS.env = {...
+    {'ENERGYPLUS_DIR', eplusPath},...   % Path to the EnergyPlus folder
+    {'BCVTB_HOME', bcvtbPath},...       % Path to the BCVTB
+    {'PATH', [javaPath ';' eplusPath]}... % System path, should include E+ and JRE
+    };
+
+MLEPSETTINGS.eplusDir = eplusPath;
+MLEPSETTINGS.javaDir = javaPath;
+MLEPSETTINGS.homeDir = homePath;
+
+% Save mlep settings
+save(fullfile(homePath,'MLEPSETTINGS.mat'),'MLEPSETTINGS');
+
+disp('================ mlep installation succesful ================');
+
+%% =========================================================================
 % EnergyPlus folder validation function
-function valid = validEnergyPlusDir(folder)
-    valid = ~isempty(dirPlus(folder,'Depth',1,'FileFilter','^Energy\+\.idd'));
-end
+    function valid = validEnergyPlusDir(folder)
+        valid = ~isempty(dirPlus(folder,'Depth',1,'FileFilter','^Energy\+\.idd'));
+    end
 
-function epPath = getEplusDir(rootFolder)
+% Select EP dir dialog
+    function epPath = getEplusDir(rootFolder)
         isValidEplusDir = 0;
         while ~isValidEplusDir
             folder = {uigetdir(rootFolder,...
-                                'Select EnergyPlus installation folder:')
-                                };
+                'Select EnergyPlus installation folder')
+                };
             if folder{1} == 0 % Cancel button
+                epPath = [];
                 return
             end
             isValidEplusDir = validEnergyPlusDir(folder{1});
             if ~isValidEplusDir
-                f = msgbox(['Selected EnergyPlus folder is not valid.' newline ...
-                        'Please select the installation root folder (e.g. "EnergyPlusV8-9-0").'],...
-                        'EnergyPlus folder selection');
+                f = helpdlg(['Selected EnergyPlus folder is not valid.' newline ...
+                    'Please select the installation root folder (e.g. "EnergyPlusV8-9-0").'],...
+                    'EnergyPlus folder selection');
                 waitfor(f);
             else
                 epPath = folder{1};
             end
             
         end
+    end
 end

@@ -1,6 +1,6 @@
 
 %% Create an  instance and configure it
-ep = so_mlepBlk;
+ep = mlepSO;
 ep.idfFile = 'SmOffPSZ';
 ep.epwFile = 'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3';
 ep.useBus = false; % use vector I/O
