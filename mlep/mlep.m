@@ -1,23 +1,31 @@
 classdef mlep < handle
-    %mlep A class of a cosimulation process
-    %   The class represents a co-simulation process. It enables data
-    %   exchanges between the host (in Matlab) and the client (the
-    %   EnergyPlus process), using the communication protocol defined in
-    %   BCVTB.
-    %
-    % (C)   2009-2013 by Truong Nghiem(truong@seas.upenn.edu)
-    %       2010-2015 by Willy Bernal(Willy.BernalHeredia@nrel.gov)
-    %       2018      by Jiri Dostal (jiri.dostal@cvut.cz)
-    
-    
-    % Last update: 2018-10-01   Jiri Dostal (jiri.dostal@cvut.cz)
-    
-    % HISTORY:
-    %   2015-07-30  Standalone mlep (Willy Bernal)
-    %   2013-07-22  Split Start and Socket Accept Functions.
-    %   2011-07-13  Added global settings and execution command selection.
-    %   2011-04-28  Changed to use Java process for running E+.
-    %   2010-11-23  Changed to protocol version 2.
+%mlep A class of a cosimulation process
+%   The class represents a co-simulation process. It enables data
+%   exchanges between the host (in Matlab) and the client (the
+%   EnergyPlus process), using the communication protocol defined in
+%   BCVTB.
+
+% Copyright (c) 2018, Jiri Dostal (jiri.dostal@cvut.cz)
+% All rights reserved.
+%
+% Redistribution and use in source and binary forms, with or without
+% modification, are permitted provided that the following conditions are 
+% met:
+%
+% 1. Redistributions of source code must retain the above copyright notice,
+%    this list of conditions and the following disclaimer.
+% 2. Redistributions in binary form must reproduce the above copyright 
+%    notice, this list of conditions and the following disclaimer in the 
+%    documentation and/or other materials provided with the distribution.
+%
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+% "AS IS". NO WARRANTIES ARE GRANTED.
+%
+%    2009-2013 by Truong Nghiem(truong@seas.upenn.edu)
+%    2010-2015 by Willy Bernal(Willy.BernalHeredia@nrel.gov)
+%    2018      by Jiri Dostal (jiri.dostal@cvut.cz)
+
+
     
     properties
         versionProtocol = 2;  % Current version of the protocol
@@ -81,7 +89,7 @@ classdef mlep < handle
     %% =========================== MLEP ===================================
     methods
         function obj = mlep
-            default(obj);
+            settings(obj);
         end
         
         function initialize(obj)
@@ -212,52 +220,32 @@ classdef mlep < handle
             end
         end
 
-        function default(obj)
-            % Obtain default settings from the global variable MLEPSETTINGS
-            % If that variable does not exist, assign default values to
-            % settings.
+        function settings(obj)
+            % Obtain settings from the global variable MLEPSETTINGS
+            % If that variable does not exist, run installation 
             global MLEPSETTINGS
             
             noSettings = isempty(MLEPSETTINGS) || ~isstruct(MLEPSETTINGS);
-            if noSettings
-                % Try to run mlepInit
-                if exist('installMlep', 'file') == 2
-                    % Run installation script
-                    installMlep;
-                    noSettings = isempty(MLEPSETTINGS) || ~isstruct(MLEPSETTINGS);
-                end                
-                assert(~noSettings,'Error loading mlep settings: Load MLEPSETTINGS.mat or run installMlep.m again.');
+            % Try to load MLEPSETTING.mat file
+            if noSettings && exist('MLEPSETTINGS.mat','file')
+                load('MLEPSETTINGS.mat','MLEPSETTINGS');
+                noSettings = isempty(MLEPSETTINGS) || ~isstruct(MLEPSETTINGS);
             end
             
-            if noSettings || ~isfield(MLEPSETTINGS, 'version')
-                obj.versionProtocol = 2;    % Current version of the protocol
-            else
-                obj.versionProtocol = MLEPSETTINGS.version;
-            end
+            % Try to install mlep
+            if noSettings && exist('installMlep', 'file') == 2
+                % Run installation script
+                installMlep;
+                noSettings = isempty(MLEPSETTINGS) || ~isstruct(MLEPSETTINGS);
+            end 
             
-            if noSettings || ~isfield(MLEPSETTINGS, 'program')
-                obj.program = '';
-            else
-                obj.program = MLEPSETTINGS.program;
-            end
+            assert(~noSettings,'Error loading mlep settings: Load MLEPSETTINGS.mat or run installMlep.m again.');
             
-            if noSettings || ~isfield(MLEPSETTINGS, 'bcvtbDir')
-                obj.bcvtbDir = '';
-            else
-                obj.bcvtbDir = MLEPSETTINGS.bcvtbDir;
-            end
-            
-            if noSettings || ~isfield(MLEPSETTINGS, 'env')
-                obj.env = {};
-            else
-                obj.env = MLEPSETTINGS.env;
-            end
-            
-            if noSettings || ~isfield(MLEPSETTINGS, 'execcmd')
-                obj.execcmd = '';
-            else
-                obj.execcmd = MLEPSETTINGS.execcmd;
-            end
+            obj.versionProtocol = MLEPSETTINGS.versionProtocol; 
+            obj.program = MLEPSETTINGS.program;            
+            obj.env = MLEPSETTINGS.env;   
+            addpath(MLEPSETTINGS.eplusDir);
+            addpath(MLEPSETTINGS.javaDir);
         end
     end
     
@@ -297,19 +285,10 @@ classdef mlep < handle
     methods (Access = private)
         
         % Run the EnergyPlus process
-        function runEP(obj)
-            env_ = obj.env;
-            
-            % Set BCVTB_HOME environment
-            if ~isempty(obj.bcvtbDir)
-                env_ = [env_, {{'BCVTB_HOME', obj.bcvtbDir}}];
-            else
-                env_ = [env_, {{'BCVTB_HOME', pwd}}];
-            end
-            
+        function runEP(obj)                        
             % Set local environment
-            for i = 1:numel(env_)
-                setenv(env_{i}{1}, env_{i}{2});
+            for i = 1:numel(obj.env)
+                setenv(obj.env{i}{1}, obj.env{i}{2});
             end
             
             %% Create the EnergyPlus co-simulatin process
@@ -880,6 +859,29 @@ classdef mlep < handle
             obj.writer = java.io.BufferedWriter(java.io.OutputStreamWriter(obj.commSocket.getOutputStream));
             obj.reader = java.io.BufferedReader(java.io.InputStreamReader(obj.commSocket.getInputStream));
         end
+    end
+    
+    methods (Static)
+        % Decode BCVTB protocol packet
+        [flag, timevalue, realvalues, intvalues, boolvalues] = mlepDecodePacket(packet);
+        
+        % Encode BCVTB protocol packet
+        packet = mlepEncodeData(vernumber, flag, timevalue, realvalues, intvalues, boolvalues);
+        
+        % Encode BCVTB protocol packet with only real values
+        packet = mlepEncodeRealData(vernumber, flag, timevalue, realvalues);
+        
+        % Encode BCVTB protocol simulation status
+        packet = mlepEncodeStatus(vernumber, flag);
+        
+        % Parse IDF file
+        data = mlepReadIDF(filename, classnames);
+        
+        % Make socket configuration file
+        mlepWriteSocketConfig(fullFilePath, serverSocket, hostname);
+        
+        % Make co-simulation I/O configuration file
+        mlepWriteVariableConfig(inputTable, outputTable, fullFilePath);
     end
   
 end
