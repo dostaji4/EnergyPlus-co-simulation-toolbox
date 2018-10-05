@@ -907,7 +907,9 @@ tools\busObjectBusCreator\license.txt</param.exclude.filters>
     <param.docs />
     <param.getting.started.guide />
     <param.matlabpath.excludes />
-    <param.javaclasspath.excludes />
+    <param.javaclasspath.excludes>
+      <item>/mlep/bcvtb/lib/xml/build/jar/DTDValidator.jar</item>
+    </param.javaclasspath.excludes>
     <param.exported.on.package>false</param.exported.on.package>
     <param.release.start>R2018a</param.release.start>
     <param.release.end>latest</param.release.end>
@@ -933,7 +935,6 @@ tools\busObjectBusCreator\license.txt</param.exclude.filters>
       <param.docs />
       <param.getting.started.guide />
       <param.matlabpath.excludes />
-      <param.javaclasspath.excludes />
       <param.exported.on.package />
       <param.release.current.only />
       <param.compatiblity.windows />
