@@ -5,28 +5,25 @@ ep.idfFile = 'SmOffPSZ';
 ep.epwFile = 'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3';
 ep.useBus = false; % use vector I/O
 %% The main simulation loop
-try
-    ep.setup('init');
-    
-    endTime = 4*24*60*60;
-    nRows = ceil(endTime / ep.timestep);
-    % use timeseries
-    logTable = table('Size',[0, 1 + ep.nOut],...
-                        'VariableTypes',repmat({'double'},1,1 + ep.nOut),...
-                        'VariableNames',[{'Time'}; ep.outputSigName]);    
-    iLog = 1;
-    time = 0;    
-    while time < endTime
-        u = [20 25];
-        [flag, time, outputs] = ep.step(u);        
-        if flag ~= 0, break, end
-        logTable(iLog, :) = num2cell([time outputs']);
-        iLog = iLog + 1;
-    end
-catch me
-    % Stop EnergyPlus
-    ep.release;
-    rethrow(me)
+
+endTime = 4*24*60*60;
+nRows = ceil(endTime / ep.timestep);
+% use timeseries
+logTable = table('Size',[0, 1 + ep.nOut],...
+    'VariableTypes',repmat({'double'},1,1 + ep.nOut),...
+    'VariableNames',[{'Time'}; ep.outputSigName]);
+iLog = 1;
+t = 0;
+
+while t < endTime
+    % Calculate inputs
+    u = [20 25];
+    % Push inputs u(k+1), get outputs y(k)
+    [y, t] = ep.step(u);        
+
+    % Save data to table
+    logTable(iLog, :) = num2cell([t y']);
+    iLog = iLog + 1;    
 end
 ep.release;
 

@@ -1,4 +1,4 @@
-function packet = mlepEncodeStatus(vernumber, flag)
+function packet = encodeStatus(vernumber, flag)
 %MLEPENCODESTATUS Encode status flag to a packet.
 %   packet = mlepEncodeStatus(vernumber, flag)
 %

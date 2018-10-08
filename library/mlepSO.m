@@ -5,11 +5,6 @@ classdef mlepSO < matlab.System &...
         matlab.system.mixin.Nondirect
     %EnergyPlus co-simulation block for Simulink.
     
-    % Public, tunable properties
-    properties
-        
-    end
-    
     properties(DiscreteState)
         time;
     end
@@ -25,6 +20,11 @@ classdef mlepSO < matlab.System &...
         useBus = true;              % Use bus
     end
     
+    properties (SetAccess = private)
+        isRunning;
+        isInitialized;
+    end
+    
     properties (Hidden, SetAccess = private)
         nOut;
         nIn;
@@ -37,7 +37,7 @@ classdef mlepSO < matlab.System &...
     properties (Access = private)                            
         sigNameFcn = @(name,type) ['EP_' regexprep([name '__' type],'\W','_')];        
         inputMap;
-        proc;  %mlep instance
+        proc = [];  %mlep instance        
     end
     
     %% ======================= Runtime methods ============================
@@ -49,15 +49,15 @@ classdef mlepSO < matlab.System &...
     end
     
     methods (Access = protected)
-        function setupImpl(obj)            
+        function setupImpl(obj)
             if ~obj.proc.isRunning
-                obj.proc.start;
-            end            
-        end
-
-        function resetImpl(obj)
-            % Initialize / reset discrete-state properties            
-            obj.time = 0;
+                try
+                    obj.proc.start;                    
+                catch me
+                    pause(1); 
+                    obj.stopError(me); 
+                end
+            end
         end
         
         function validatePropertiesImpl(obj)
@@ -87,99 +87,113 @@ classdef mlepSO < matlab.System &...
         end
         
         function validateInputsImpl(obj,in)
-            % Validate inputs to the step method at initialization            
-            if obj.useBus && isstruct(in)
-                assert(isequal(obj.inputSigName,fieldnames(in)));                           
-            else
-                if obj.useBus && ~isstruct(in)
-                    warning('Input is not a bus. Assigning inputs by their order.');                    
-                end
-                if isnumeric(in)
-                    assert(numel(in) == obj.nIn,'The size of input %dx%d does not comply with the required size %dx%d.',...
-                        size(in,1),size(in,2),obj.nIn, 1);                                    
-                elseif ischar(in) && strcmpi(in,'init')
-                    %do nothing
+            try
+                % Validate inputs to the step method at initialization
+                if obj.useBus && isstruct(in)
+                    assert(isequal(obj.inputSigName,fieldnames(in)));
                 else
-                    error('Invalid input type "%s". Use either numerical vector of appropriate size or a string ''init''.',...
-                        class(in));
+                    if obj.useBus && ~isstruct(in)
+                        warning('Input is not a bus. Assigning inputs by their order.');
+                    end
+                    if isnumeric(in)
+                        assert(numel(in) == obj.nIn,'The size of input %dx%d does not comply with the required size %dx%d.',...
+                            size(in,1),size(in,2),obj.nIn, 1);
+                    elseif ischar(in) && strcmpi(in,'init')
+                        %do nothing
+                    else
+                        error('Invalid input type "%s". Use either numerical vector of appropriate size or a string ''init''.',...
+                            class(in));
+                    end
                 end
+            catch me
+                obj.stopError(me); 
             end
         end
         
         function updateImpl(obj,input)
-            % Send signals to E+
-            if isstruct(input)
-                rValIn = struct2array(input);                
-            else
-                rValIn = input;
-            end            
-            
-            % Write data
-            outtime = obj.getCurrentTime;
-            if isempty(outtime), outtime = obj.time; end
-            obj.proc.write(mlep.encodeRealData(obj.proc.versionProtocol,...
-                                              0, ...
-                                              outtime,...
-                                              rValIn));
-        end
-
-        function [flag, time, output] = outputImpl(obj,~)
-            % Initialize
-            if ~obj.proc.isRunning
-                % Create connection
-                obj.proc.acceptSocket;
-                assert( ...
-                    obj.proc.isRunning, ...
-                    'EnergyPlusCosim:startupError: Cannot start EnergyPlus.');
-            end
-            
-            % Read data from EnergyPlus
-            readPacket = obj.proc.read;
-            assert( ...
-                ~isempty(readPacket), ...
-                'EnergyPlusCosim:readError', ...
-                'Could not read data from EnergyPlus.' );
-            
-            % Decode data
             try
-                [flag, time, rValOut] = mlep.decodePacket(readPacket);
-            catch me
-                obj.stopError(me); %'Error occured while decoding EnergyPlus packet.'
-            end
-            
-            % Process outputs from EnergyPlus
-            if flag ~= 0
-                err_str = sprintf('EnergyPlusCosim: EnergyPlus process sent flag "%d" (%s).',...
-                    flag, mlep.epFlag2str(flag));
-                if flag < 0
-                    [~,errFile] = fileparts(obj.idfFile);
-                    errFile = [errFile '.err'];
-                    errFilePath = fullfile(pwd,obj.proc.outputDir,errFile);
-                    err_str = [err_str, ...
-                        sprintf('Check the <a href="matlab:open %s">%s</a> file for further information.',...
-                        errFilePath, errFile)];
-                end
-                obj.stopError(err_str);
-            else
-                if ~(numel(rValOut)==obj.nOut)
-                    obj.stopError('EnergyPlus data output dimension not correct.');
+                % Send signals to E+
+                if isstruct(input)
+                    rValIn = struct2array(input);
+                else
+                    rValIn = input;
                 end
                 
-                if obj.useBus
-                    % Create output bus
-                    obj.outTable{1,:} = rValOut;
-                    output = table2struct(obj.outTable);
-                    % Note: This is the fastest way compared to
-                    % slower  out = cell2struct(num2cell(rValOut'),obj.outputSigName,1);
-                    % slowest for i = 1:obj.nOut
-                    %            out.(obj.outputSigName{i}) = rValOut(i);
-                    %         end
-                else
-                    % Output vector
-                    output = rValOut(:);
-                end                
-                obj.time = time;
+                % Write data
+                outtime = obj.getCurrentTime;
+                if isempty(outtime), outtime = obj.time; end
+                obj.proc.write(mlep.encodeRealData(obj.proc.versionProtocol,...
+                    0, ...
+                    outtime,...
+                    rValIn));
+            catch me
+                ep.release;
+                rethrow(me)
             end
+        end
+
+        function [output, time, flag] = outputImpl(obj,~)
+            try
+                % Initialize
+                if ~obj.proc.isRunning
+                    % Create connection
+                    obj.proc.acceptSocket;
+                    assert( ...
+                        obj.proc.isRunning, ...
+                        'EnergyPlusCosim:startupError: Cannot start EnergyPlus.');
+                end
+                
+                % Read data from EnergyPlus
+                readPacket = obj.proc.read;
+                assert( ...
+                    ~isempty(readPacket), ...
+                    'EnergyPlusCosim:readError', ...
+                    'Could not read data from EnergyPlus.' );
+                
+                % Decode data
+                [flag, time, rValOut] = mlep.decodePacket(readPacket);
+                
+                % Process outputs from EnergyPlus
+                if flag ~= 0
+                    err_str = sprintf('EnergyPlusCosim: EnergyPlus process sent flag "%d" (%s).',...
+                        flag, mlep.epFlag2str(flag));
+                    if flag < 0
+                        [~,errFile] = fileparts(obj.idfFile);
+                        errFile = [errFile '.err'];
+                        errFilePath = fullfile(pwd,obj.proc.outputDir,errFile);
+                        err_str = [err_str, ...
+                            sprintf('Check the <a href="matlab:open %s">%s</a> file for further information.',...
+                            errFilePath, errFile)];
+                    end
+                    error(err_str);
+                else
+                    if ~(numel(rValOut)==obj.nOut)
+                        obj.stopError('EnergyPlus data output dimension not correct.');
+                    end
+                    
+                    if obj.useBus
+                        % Create output bus
+                        obj.outTable{1,:} = rValOut;
+                        output = table2struct(obj.outTable);
+                        % Note: This is the fastest way compared to
+                        % slower  out = cell2struct(num2cell(rValOut'),obj.outputSigName,1);
+                        % slowest for i = 1:obj.nOut
+                        %            out.(obj.outputSigName{i}) = rValOut(i);
+                        %         end
+                    else
+                        % Output vector
+                        output = rValOut(:);
+                    end
+                    obj.time = time;
+                end
+            catch me
+                obj.stopError(me);
+            end
+        end
+        
+        function resetImpl(obj)
+            % Initialize / reset discrete-state properties
+            obj.time = 0;
         end
         
         function releaseImpl(obj)
@@ -224,8 +238,9 @@ classdef mlepSO < matlab.System &...
             assignin('base',obj.inputBusName, bus);
         end
         
-        function stopError(obj, msg, varargin)
+        function stopError(obj, msg, varargin)                        
             obj.proc.stop;
+            set_param(bdroot,'SimulationCommand','stop')
             if isa(msg,'MException')
                 rethrow(msg);
             else
@@ -262,8 +277,25 @@ classdef mlepSO < matlab.System &...
             end
         end
         
-        function value = get.timestep(obj)
+        function value = get.timestep(obj) 
+            if ~obj.isInitialized, obj.setup('init'); end
             value = obj.proc.timestep;
+        end
+        
+        function value = get.isRunning(obj)
+            if isa(obj.proc,'mlep')
+                value = obj.proc.isRunning;
+            else
+                value = 0;
+            end
+        end
+        
+        function value = get.isInitialized(obj)
+            if isa(obj.proc,'mlep')
+                value = obj.proc.isInitialized;
+            else
+                value = 0;
+            end
         end
     end
     
@@ -298,15 +330,15 @@ classdef mlepSO < matlab.System &...
         %             num = 3;
         %         end
         %
-        function [out,out2,out3] = getOutputDataTypeImpl(obj)
-            % Return data type for each output port
-            out = "double";
-            out2 = "double";
+        function [out,time,flag] = getOutputDataTypeImpl(obj)
+            % Return data type for each output port            
             if obj.useBus
-                out3 = obj.outputBusName;
+                out = obj.outputBusName;
             else
-                out3 = "double";
+                out = "double";
             end
+            flag = "double";
+            time = "double";
         end
         
         function [out,out2,out3] = isOutputFixedSizeImpl(obj)
@@ -324,14 +356,14 @@ classdef mlepSO < matlab.System &...
             cp = false;
         end
         
-        function [out,out2,out3] = getOutputSizeImpl(obj)
+        function [out,time,flag] = getOutputSizeImpl(obj)
             % Return size for each output port
-            out = [1 1];
-            out2 = [1 1];
+            time = [1 1];
+            flag = [1 1];
             if obj.useBus
-                out3 = [1 1];
+                out = [1 1];
             else
-                out3 = [obj.nOut 1];
+                out = [obj.nOut 1];
             end
         end
         
@@ -360,11 +392,11 @@ classdef mlepSO < matlab.System &...
             name = obj.inputBusName;
         end
         
-        function [name,name2,name3] = getOutputNamesImpl(obj)
+        function [out,time,flag] = getOutputNamesImpl(obj)
             % Return output port names for System block
-            name = 'Flag';
-            name2 = 'Time';
-            name3 = obj.outputBusName;
+            flag = 'Flag';
+            time = 'Time';
+            out = obj.outputBusName;
         end
     end
     
