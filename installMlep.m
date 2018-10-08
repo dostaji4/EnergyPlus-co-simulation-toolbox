@@ -40,7 +40,7 @@ if ispc
     % Ask for assistance if necessary
     if numel(eplusDirList) == 1
         eplusPath = eplusDirList{1};
-        if validEnergyPlusDir(eplusPath)
+        if validateEnergyPlusDir(eplusPath)
             answer = questdlg(sprintf('Found EnergyPlus installation "%s" do you want to use it?',eplusPath),...
                 'Installing mlep');
             if strcmp(answer,'Yes')
@@ -68,6 +68,10 @@ if ispc
         end
     end
     
+    % Get EnergyPlus version
+    [~,iddPath] = validateEnergyPlusDir(eplusPath);
+    versionEnergyPlus = mlep.getEPversion(iddPath);        
+    
     % Java path (registry query)
     ver = winqueryreg('HKEY_LOCAL_MACHINE','software\JavaSoft\Java Runtime Environment','CurrentVersion');
     javaHome = winqueryreg('HKEY_LOCAL_MACHINE',['software\JavaSoft\Java Runtime Environment\' ver],'JavaHome');
@@ -80,7 +84,9 @@ if ispc
     eplusCommand = dirPlus(eplusPath,...
         'FileFilter','^(?i)energyplus.exe(?-i)$',...
         'PrependPath', false);
+    assert(~isempty(eplusCommand));
 else
+    rootFolder = '/';
     warndlg('Only Windows installation has been tested!','Installing mlep','modal');
     f = helpdlg('Select the EnergyPlus installation root folder',...
         'Installing mlep');
@@ -92,17 +98,18 @@ else
     eplusCommand = dirPlus(eplusPath,...
         'FileFilter','^(?i)energyplus(?-i)$',...
         'PrependPath', false);
+    assert(~isempty(eplusCommand));
 end
 
 %% === Save Settings ======================================================
-% into global variable and file to load in all the following runs
-global MLEPSETTINGS
-
+% into file to load in all the following runs
 MLEPSETTINGS = struct;
 
 MLEPSETTINGS.versionProtocol = 2;     % Version of the BCVTB protocol
 
-MLEPSETTINGS.program = eplusCommand; % Program name
+MLEPSETTINGS.versionEnergyPlus = versionEnergyPlus; % EnergyPlus version
+
+MLEPSETTINGS.program = eplusCommand{1}; % Program name
 
 bcvtbPath = fullfile(homePath,'bcvtb');
 
@@ -114,7 +121,7 @@ MLEPSETTINGS.env = {...
 
 MLEPSETTINGS.eplusDir = eplusPath;
 MLEPSETTINGS.javaDir = javaPath;
-MLEPSETTINGS.homeDir = homePath;
+MLEPSETTINGS.homeDir = homePath;        %#ok<STRNU>
 
 % Save mlep settings
 save(fullfile(homePath,'MLEPSETTINGS.mat'),'MLEPSETTINGS');
@@ -123,8 +130,12 @@ disp('================ mlep installation succesful ================');
 
 %% =========================================================================
 % EnergyPlus folder validation function
-    function valid = validEnergyPlusDir(folder)
-        valid = ~isempty(dirPlus(folder,'Depth',1,'FileFilter','^Energy\+\.idd'));
+    function [valid, idd_path] = validateEnergyPlusDir(folder)
+        idd_path = dirPlus(folder,'Depth',1,'FileFilter','^Energy\+\.idd');        
+        valid = ~isempty(idd_path);
+        if valid
+            idd_path = idd_path{1};
+        end
     end
 
 % Select EP dir dialog
@@ -138,7 +149,7 @@ disp('================ mlep installation succesful ================');
                 epPath = [];
                 return
             end
-            isValidEplusDir = validEnergyPlusDir(folder{1});
+            isValidEplusDir = validateEnergyPlusDir(folder{1});
             if ~isValidEplusDir
                 f = helpdlg(['Selected EnergyPlus folder is not valid.' newline ...
                     'Please select the installation root folder (e.g. "EnergyPlusV8-9-0").'],...

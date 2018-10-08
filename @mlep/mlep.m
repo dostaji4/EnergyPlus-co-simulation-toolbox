@@ -21,64 +21,53 @@ classdef mlep < handle
 % THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
 % "AS IS". NO WARRANTIES ARE GRANTED.
 %
+% History:
 %    2009-2013 by Truong Nghiem(truong@seas.upenn.edu)
 %    2010-2015 by Willy Bernal(Willy.BernalHeredia@nrel.gov)
 %    2018      by Jiri Dostal (jiri.dostal@cvut.cz)
-
-
     
-    properties
-        versionProtocol = 2;  % Current version of the protocol
-        program;
-        env;
-        arguments = {}; % Arguments to the client program
-        workDir = '.';   % Working directory (default is current directory)
-        outputDir = 'eplusout'; % EnergyPlus output directory (created under working folder)
-        outputDirFullPath;
-        epDir;          % EnergyPlus directory
-        epProgram = 'energyplus'; % EnergyPlus executable
-        port = 0;       % Socket port (default 0 = any free port)
-        host = '';      % Host name (default '' = localhost)
-        bcvtbDir;       % Directory to BCVTB (default '' means that if
-        % no environment variable exist, set it to current
-        % directory)
-        configFile = 'socket.cfg';  % Name of socket configuration file
-        variablesFile = 'variables.cfg'; % Contains ExternalInterface settings
-        iddFile = 'Energy+.idd'; % IDD file
-        idfFile = 'in.idf'; % Building specification IDF file (E+ default by default)
-        epwFile = 'in.epw'; % Weather profile EPW file (E+ default by default)
-        % for the first time and when server
-        % socket changes.
-        acceptTimeout = 6000;  % Timeout for waiting for the client to connect        
-        execcmd;        % How to execute EnergyPlus from Matlab (system/Java)
-        status = 0;
-        verboseEP = true; % Print standard output of the E+ process into Matlab
-        versionEnergyPlus = ''; % EnergyPlus version found
-        msg = '';
-        timestep;       %[s] Timestep specified in the IDF file (Co-simulation timestep must adhere to this value)
-        checkAndKillExistingEPprocesses = 1;    % If selected, mlep will check on startup for other energyplus processes and kill them
+    properties                
+        workDir = '.';          % Working directory (default is current directory)
+        outputDir = 'eplusout'; % EnergyPlus output directory (created under working folder)                                        
+        idfFile = 'in.idf';     % Building specification IDF file (E+ default by default)
+        epwFile = 'in.epw';     % Weather profile EPW file (E+ default by default)                
     end
     
     properties (Hidden)
-        initialized = false;    % Initialization flag
+        versionProtocol = 2;    % Current version of the protocol
+        versionEnergyPlus;      % EnergyPlus version (identified during intallation)                
+        rwTimeout = 10000;      % Timeout for sending/receiving data (0 = infinite)        
+        acceptTimeout = 6000;   % Timeout for waiting for the client to connect                                
+        port = 0;               % Socket port (default 0 = any free port)
+        host = '';              % Host name (default '' = localhost)
+        verboseEP = true;       % Print standard output of the E+ process into Matlab                
+        checkAndKillExistingEPprocesses = 1;    % If selected, mlep will check on startup for other energyplus processes and kill them        
+        epDir;                  % EnergyPlus directory              
     end
     
     properties (SetAccess=private, GetAccess=public)
-        rwTimeout = 10000;  % Timeout for sending/receiving data (0 = infinite)        
+        timestep;           % [s] Simulation timestep (loaded from IDF, co-simulation timesteps must adhere)
         isRunning = false;  % Is co-simulation running?
-        serverSocket = [];  % Server socket to listen to client
-        commSocket = [];    % Socket for sending/receiving data
+        isInitialized = false;  % Initialization flag
+        serverSocket;       % Server socket to listen to client
+        commSocket;         % Socket for sending/receiving data
         writer;             % Buffered writer stream
         reader;             % Buffered reader stream
-        process = [];       % Process object for E+
-        idfData = [];       % Structure with data from parsed IDF
+        process;            % Process object for E+        
+        env;                % Variable containing Environment settings for process run
+        program;            % EnergyPlus executable (detected during installation)  
+        idfData;            % Structure with data from parsed IDF
         inputTable;         % Table of inputs to EnergyPlus
         outputTable;        % Table of outputs from EnergyPlus
+        isUserVarFile;      % True if user-defined variables.cfg file is present
+        configFile = 'socket.cfg';  % Name of socket configuration file
+        variablesFile = 'variables.cfg'; % Contains ExternalInterface settings
+        iddFile = 'Energy+.idd'; % IDD file
         idfFullFilename;
         epwFullFilename;
         iddFullFilename;
         varFullFilename;
-        isUserVarFile;      % True if user-defined variables.cfg file is present
+        outputDirFullPath;        
     end
     
     properties (Constant, GetAccess = private)
@@ -93,7 +82,7 @@ classdef mlep < handle
         end
         
         function initialize(obj)
-            if obj.initialized
+            if obj.isInitialized
                 return
             end
             % Check parameters
@@ -110,15 +99,16 @@ classdef mlep < handle
             % Load IDF file
             obj.loadIdf;            
                         
-            % Check IDF version 
-            obj.versionEnergyPlus = mlep.getEPversion(obj.iddFullFilename);        
-            if ~strcmp(obj.versionEnergyPlus,obj.idfData.version{1})
-                warning('IDF file of version "%s" is being simulated by EnergyPlus of version "%s".',obj.idfData.version{1}, obj.versionEnergyPlus);
+            % Check IDF version             
+            if ~strcmp(obj.versionEnergyPlus,obj.idfData.version{1}{1})
+                warning('IDF file of version "%s" is being simulated by an EnergyPlus of version "%s".\n This may cause severe errors in the EnergyPlus simulation.\n Use IDFVersionUpdate utility to upgrade the file (<EP_dir>/PreProcess/IDFVersionUpdater/..).',...
+                    obj.idfData.version{1}{1}, obj.versionEnergyPlus);
             end
             
             % Check for possible hanging EP processes
             if obj.checkAndKillExistingEPprocesses
-                mlep.killProcess(obj.epProgram);
+                [~,progname] = fileparts(obj.program);
+                mlep.killProcessByName(progname);
             end
             
             % Create E+ output folder
@@ -149,7 +139,7 @@ classdef mlep < handle
             obj.makeVariablesConfigFile;
             
             % Stop further initializations
-            obj.initialized = true;
+            obj.isInitialized = true;
         end
         
         function start(obj)
@@ -163,49 +153,49 @@ classdef mlep < handle
             % Save current directory and change directory if necessary
             changeDir = ~strcmp(obj.workDir,'.');
             if changeDir
-                runDir = cd(obj.workDir);
+                runDir = cd(obj.workDir); % actual dir returned by cd
             else
                 runDir = pwd;
             end
             
-            try
+            try                
                 % Create server socket if necessary
                 obj.makeSocket;                                   
                 % Run the EnergyPlus process
-                obj.runEP;
-                
+                obj.runEP;                
             catch ErrObj
                 obj.closeSocket;
-                if changeDir
-                    cd(runDir);
-                end
+                if changeDir,cd(runDir); end
                 rethrow(ErrObj);
             end
             
             % Revert current folder
-            if changeDir
-                cd(runDir);
-            end
+            if changeDir,cd(runDir); end
         end
         
         function stop(obj, stopSignal)
-            if ~obj.isRunning, return; end
-            
-            % Send stop signal
-            if nargin < 2 || stopSignal
-                obj.write(mlep.encodeStatus(obj.versionProtocol, 1));
+            if obj.isInitialized 
+                % There can be errors prior to "running" status, where the
+                % process has already been started
+                
+                % Destroy process E+
+                if isa(obj.process, 'processManager') && obj.process.running
+                    obj.process.stop;
+                end
             end
             
-            % Close connection
-            obj.closeSocket;
+            if obj.isRunning
+                % Send stop signal
+                if nargin < 2 || stopSignal
+                    obj.write(mlep.encodeStatus(obj.versionProtocol, 1));
+                end
             
-            % Destroy process E+
-            if isa(obj.process, 'processManager') && obj.process.running
-                obj.process.stop;
+                % Close connection
+                obj.closeSocket;
             end
             
             obj.isRunning = false;
-            obj.initialized = false;
+            obj.isInitialized = false;
         end
         
         function delete(obj)
@@ -221,45 +211,50 @@ classdef mlep < handle
         end
 
         function settings(obj)
-            % Obtain settings from the global variable MLEPSETTINGS
-            % If that variable does not exist, run installation 
-            global MLEPSETTINGS
+            % Obtain settings from variable MLEPSETTINGS
+            % If that variable does not exist load settings from file or
+            % run installation             
             
-            noSettings = isempty(MLEPSETTINGS) || ~isstruct(MLEPSETTINGS);
             % Try to load MLEPSETTING.mat file
-            if noSettings && exist('MLEPSETTINGS.mat','file')
-                load('MLEPSETTINGS.mat','MLEPSETTINGS');
-                noSettings = isempty(MLEPSETTINGS) || ~isstruct(MLEPSETTINGS);
-            end
-            
-            % Try to install mlep
-            if noSettings && exist('installMlep', 'file') == 2
+            if exist('MLEPSETTINGS.mat','file')
+                S = load('MLEPSETTINGS.mat','MLEPSETTINGS');
+                mlepSetting = S.MLEPSETTINGS;
+                
+            elseif exist('installMlep.m', 'file')
                 % Run installation script
-                installMlep;
-                noSettings = isempty(MLEPSETTINGS) || ~isstruct(MLEPSETTINGS);
+                installMlep();
+                if exist('MLEPSETTINGS.mat','file')
+                    S = load('MLEPSETTINGS.mat','MLEPSETTINGS');
+                    mlepSetting = S.MLEPSETTINGS;
+                else
+                    error('Error loading mlep settings. Run "installMlep.m" again and check that the file "MLEPSETTINGS.mat" is in your search path.');                
+                end
+            else            
+                error('Error loading mlep settings. Run "installMlep.m" again and check that the file "MLEPSETTINGS.mat" is in your search path.');            
             end 
             
-            assert(~noSettings,'Error loading mlep settings: Load MLEPSETTINGS.mat or run installMlep.m again.');
-            
-            obj.versionProtocol = MLEPSETTINGS.versionProtocol; 
-            obj.program = MLEPSETTINGS.program;            
-            obj.env = MLEPSETTINGS.env;   
-            addpath(MLEPSETTINGS.eplusDir);
-            addpath(MLEPSETTINGS.javaDir);
+            if isfield(mlepSetting,'versionProtocol') && ...
+                    isfield(mlepSetting,'versionEnergyPlus') && ...
+                    isfield(mlepSetting,'program') && ...
+                    isfield(mlepSetting,'env') && ...
+                    isfield(mlepSetting,'eplusDir') && ...
+                    isfield(mlepSetting,'javaDir')
+                
+                obj.versionProtocol = mlepSetting.versionProtocol;
+                obj.versionEnergyPlus = mlepSetting.versionEnergyPlus;
+                obj.program = mlepSetting.program;
+                obj.env = mlepSetting.env;
+                obj.epDir = mlepSetting.eplusDir;
+                addpath(mlepSetting.eplusDir);
+                addpath(mlepSetting.javaDir);
+            else
+                error('Error loading mlep settings. Please run "installMlep.m" again.');
+            end
         end
     end
     
     % ---------------------- Get/Set methods ------------------------------
     methods
-        
-        function value = get.epDir(obj)
-            if exist(obj.iddFile,'file')
-                value = fileparts(which(obj.iddFile));
-            else
-                error('EnergyPlus directory not found. Please make sure it is on the search path.');
-            end
-        end
-        
         function set.idfFile(obj, file)
             assert(~isempty(file),'IDF file not specified.');
             assert(ischar(file) || isstring(file),'Invalid file name.');
@@ -298,7 +293,7 @@ classdef mlep < handle
             
             % Prepare EP command
             epcmd = javaArray('java.lang.String',11);
-            epcmd(1) = java.lang.String(fullfile(obj.epDir,obj.epProgram));
+            epcmd(1) = java.lang.String(fullfile(obj.epDir,obj.program));
             epcmd(2) = java.lang.String('-w'); % weather file
             epcmd(3) = java.lang.String(obj.epwFullFilename);
             epcmd(4) = java.lang.String('-i'); % IDD file
@@ -384,7 +379,7 @@ classdef mlep < handle
                     break;
                 end
                 obj.idfData.inputTable(cInput+i) = {'actuator',...           % Name
-                                                obj.idfData.actuator{i}{1}}; % Tyoe
+                                                obj.idfData.actuator{i}{1}}; % Type
             end
             
             % List Variable
@@ -542,25 +537,8 @@ classdef mlep < handle
             end
         end
         
-        % Get EnergyPlus version out of Energy+.idd file
-        function [ver, minor] = getEPversion(iddFullpath)
-            % Parse EnergyPlus version out of Energy+.idd file
-            assert(exist(iddFullpath,'file')>0,'Could not find "%s" file. Please correct the file path or make sure it is on the Matlab search path.',iddFullpath);
-            % Read file
-            fid = fopen(iddFullpath);
-            if fid == -1, error('Cannot open file "%s".', iddFullpath); end
-            str = fread(fid,100,'*char')';
-            fclose(fid);
-            % Parse the string
-            expr = '(?>^!IDD_Version\s+|\G)(\d{1}\.\d{1}|\G)\.(\d+)';
-            tokens = regexp(str,expr,'tokens');
-            assert(~isempty(tokens)&&size(tokens{1},2)==2,' Error while parsing "%s" for EnergyPlus version',iddFullpath);
-            ver = tokens{1}{1};
-            minor = tokens{1}{2};
-        end
-        
         % Helper function for killing processes identified by name
-        function killProcess(name)
+        function killProcessByName(name)
             p = System.Diagnostics.Process.GetProcessesByName(name);
             for i = 1:p.Length
                 try
@@ -609,6 +587,23 @@ classdef mlep < handle
                     str = sprintf('Unknown flag "%d".',flag);
             end
         end
+        
+        % Get EnergyPlus version out of Energy+.idd file
+        function [ver, minor] = getEPversion(iddFullpath)
+            % Parse EnergyPlus version out of Energy+.idd file
+            assert(exist(iddFullpath,'file')>0,'Could not find "%s" file. Please correct the file path or make sure it is on the Matlab search path.',iddFullpath);
+            % Read file
+            fid = fopen(iddFullpath);
+            if fid == -1, error('Cannot open file "%s".', iddFullpath); end
+            str = fread(fid,100,'*char')';
+            fclose(fid);
+            % Parse the string
+            expr = '(?>^!IDD_Version\s+|\G)(\d{1}\.\d{1}|\G)\.(\d+)';
+            tokens = regexp(str,expr,'tokens');
+            assert(~isempty(tokens)&&size(tokens{1},2)==2,' Error while parsing "%s" for EnergyPlus version',iddFullpath);
+            ver = tokens{1}{1};
+            minor = tokens{1}{2};
+        end
     end
     
     %% ======================= Communication ==============================
@@ -650,7 +645,7 @@ classdef mlep < handle
         
         % Establish connection by accepting socket
         function acceptSocket(obj)
-            assert(obj.initialized, 'Initialize the object first.');
+            assert(obj.isInitialized, 'Initialize the object first.');
             % Accept Socket
             obj.commSocket = obj.serverSocket.accept;
             

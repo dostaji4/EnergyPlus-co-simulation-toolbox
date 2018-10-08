@@ -1,4 +1,4 @@
-function mlepWriteVariableConfig(inputTable, outputTable, fullFilePath)
+function writeVariableConfig(inputTable, outputTable, fullFilePath)
 % Create XML definition of the variable exchange for the BCVTB protocol
 docType = com.mathworks.xml.XMLUtils.createDocumentType('SYSTEM', [],'variables.dtd');
 docNode = com.mathworks.xml.XMLUtils.createDocument([], 'BCVTB-variables', docType);

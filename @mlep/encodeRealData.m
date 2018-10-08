@@ -1,4 +1,4 @@
-function packet = mlepEncodeRealData(vernumber, flag, timevalue, realvalues)
+function packet = encodeRealData(vernumber, flag, timevalue, realvalues)
 %MLEPENCODEREALDATA Encode real value data to packet.
 %   packet = mlepEncodeRealData(vernumber, flag, timevalue, realvalues)
 %
