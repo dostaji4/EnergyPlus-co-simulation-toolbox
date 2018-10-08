@@ -62,7 +62,7 @@ classdef mlepSO < matlab.System &...
         
         function validatePropertiesImpl(obj)
             
-%             if isLibraryMdl(bdroot), return, end
+            if isLibraryMdl(bdroot), return, end
             % Validate related or interdependent property values
             if isempty(obj.proc)
                 obj.proc = mlep;
@@ -132,7 +132,7 @@ classdef mlepSO < matlab.System &...
             end
         end
 
-        function [output, time, flag] = outputImpl(obj,~)
+        function [output, time] = outputImpl(obj,~)
             try
                 % Initialize
                 if ~obj.proc.isRunning
@@ -330,22 +330,20 @@ classdef mlepSO < matlab.System &...
         %             num = 3;
         %         end
         %
-        function [out,time,flag] = getOutputDataTypeImpl(obj)
+        function [out,time] = getOutputDataTypeImpl(obj)
             % Return data type for each output port            
             if obj.useBus
                 out = obj.outputBusName;
             else
                 out = "double";
-            end
-            flag = "double";
+            end            
             time = "double";
         end
         
-        function [out,out2,out3] = isOutputFixedSizeImpl(obj)
+        function [out,out2] = isOutputFixedSizeImpl(obj)
             % Return true for each output port with fixed size
             out = true;
-            out2 = true;
-            out3 = true;
+            out2 = true;            
         end
 
         function [sz,dt,cp] = getDiscreteStateSpecificationImpl(obj,name)
@@ -356,10 +354,9 @@ classdef mlepSO < matlab.System &...
             cp = false;
         end
         
-        function [out,time,flag] = getOutputSizeImpl(obj)
+        function [out,time] = getOutputSizeImpl(obj)
             % Return size for each output port
-            time = [1 1];
-            flag = [1 1];
+            time = [1 1];            
             if obj.useBus
                 out = [1 1];
             else
@@ -367,11 +364,10 @@ classdef mlepSO < matlab.System &...
             end
         end
         
-        function [out,out2,out3] = isOutputComplexImpl(obj)
+        function [out,out2] = isOutputComplexImpl(obj)
             % Return true for each output port with complex data
             out = false;
-            out2 = false;
-            out3 = false;
+            out2 = false;            
         end
         
         function sts = getSampleTimeImpl(obj)            
@@ -392,9 +388,8 @@ classdef mlepSO < matlab.System &...
             name = obj.inputBusName;
         end
         
-        function [out,time,flag] = getOutputNamesImpl(obj)
-            % Return output port names for System block
-            flag = 'Flag';
+        function [out,time] = getOutputNamesImpl(obj)
+            % Return output port names for System block            
             time = 'Time';
             out = obj.outputBusName;
         end
