@@ -42,7 +42,7 @@ classdef mlepSO < matlab.System &...
     
     %% ======================= Runtime methods ============================
     methods
-        function obj = so_mlepBlk(varargin)
+        function obj = so_mlepBlk(varargin) %#ok<STOUT>
             % Support name-value pair arguments when constructing object
             setProperties(obj,nargin,varargin{:})
         end
@@ -62,7 +62,7 @@ classdef mlepSO < matlab.System &...
         
         function validatePropertiesImpl(obj)
             
-            if isLibraryMdl(bdroot), return, end
+%             if isLibraryMdl(bdroot), return, end
             % Validate related or interdependent property values
             if isempty(obj.proc)
                 obj.proc = mlep;
@@ -132,7 +132,7 @@ classdef mlepSO < matlab.System &...
             end
         end
 
-        function [output, time] = outputImpl(obj,~)
+        function output = outputImpl(obj,~)
             try
                 % Initialize
                 if ~obj.proc.isRunning
@@ -151,7 +151,7 @@ classdef mlepSO < matlab.System &...
                     'Could not read data from EnergyPlus.' );
                 
                 % Decode data
-                [flag, time, rValOut] = mlep.decodePacket(readPacket);
+                [flag, obj.time, rValOut] = mlep.decodePacket(readPacket);
                 
                 % Process outputs from EnergyPlus
                 if flag ~= 0
@@ -184,7 +184,6 @@ classdef mlepSO < matlab.System &...
                         % Output vector
                         output = rValOut(:);
                     end
-                    obj.time = time;
                 end
             catch me
                 obj.stopError(me);
@@ -330,23 +329,21 @@ classdef mlepSO < matlab.System &...
         %             num = 3;
         %         end
         %
-        function [out,time] = getOutputDataTypeImpl(obj)
+        function [out] = getOutputDataTypeImpl(obj)
             % Return data type for each output port            
             if obj.useBus
                 out = obj.outputBusName;
             else
                 out = "double";
-            end            
-            time = "double";
+            end                        
         end
         
-        function [out,out2] = isOutputFixedSizeImpl(obj)
+        function [out] = isOutputFixedSizeImpl(obj) %#ok<MANU>
             % Return true for each output port with fixed size
-            out = true;
-            out2 = true;            
+            out = true;            
         end
 
-        function [sz,dt,cp] = getDiscreteStateSpecificationImpl(obj,name)
+        function [sz,dt,cp] = getDiscreteStateSpecificationImpl(obj,name) %#ok<INUSD>
             % Return size, data type, and complexity of discrete-state
             % specified in name
             sz = [1 1];
@@ -354,9 +351,8 @@ classdef mlepSO < matlab.System &...
             cp = false;
         end
         
-        function [out,time] = getOutputSizeImpl(obj)
-            % Return size for each output port
-            time = [1 1];            
+        function [out] = getOutputSizeImpl(obj)
+            % Return size for each output port            
             if obj.useBus
                 out = [1 1];
             else
@@ -364,7 +360,7 @@ classdef mlepSO < matlab.System &...
             end
         end
         
-        function [out,out2] = isOutputComplexImpl(obj)
+        function [out,out2] = isOutputComplexImpl(obj) %#ok<MANU>
             % Return true for each output port with complex data
             out = false;
             out2 = false;            
@@ -378,7 +374,7 @@ classdef mlepSO < matlab.System &...
     
     %% ================== Simulink Block Appearence =======================
     methods(Access = protected)
-        function icon = getIconImpl(obj)
+        function icon = getIconImpl(obj) %#ok<MANU>
             % Define icon for System block
             icon = matlab.system.display.Icon("mlepIcon.jpg"); % Example: image file icon
         end
@@ -388,27 +384,26 @@ classdef mlepSO < matlab.System &...
             name = obj.inputBusName;
         end
         
-        function [out,time] = getOutputNamesImpl(obj)
-            % Return output port names for System block            
-            time = 'Time';
+        function [out] = getOutputNamesImpl(obj)
+            % Return output port names for System block                        
             out = obj.outputBusName;
         end
     end
     
     methods(Access = protected, Static)
-        function header = getHeaderImpl(obj)
+        function header = getHeaderImpl(obj) %#ok<INUSD>
             % Define header panel for System block dialog
             header = matlab.system.display.Header(mfilename("class"));
         end
         
-        function groups = getPropertyGroupsImpl(obj)
+        function groups = getPropertyGroupsImpl(obj) %#ok<INUSD>
             simGroup = matlab.system.display.Section(...
                 'Title','Simulation settings',...
                 'PropertyList',{'idfFile','epwFile'});
             
             simTab = matlab.system.display.SectionGroup(...
                 'Title','Simulation', ...
-                'Sections',[simGroup]);
+                'Sections',simGroup);
             
             busGroup = matlab.system.display.Section(...
                 'Title','Bus',...
@@ -416,7 +411,7 @@ classdef mlepSO < matlab.System &...
             
             busTab = matlab.system.display.SectionGroup(...
                 'Title','Bus', ...
-                'Sections',[busGroup]);
+                'Sections',busGroup);
             groups = [simTab,busTab];
         end
     end
