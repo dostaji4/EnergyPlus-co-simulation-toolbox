@@ -3,10 +3,57 @@ classdef mlepSO < matlab.System &...
         matlab.system.mixin.Propagates &...
         matlab.system.mixin.CustomIcon &...
         matlab.system.mixin.Nondirect
-    %EnergyPlus co-simulation block for Simulink.
+    %MLEPSO - EnergyPlus co-simulation system object.
+    %Simulate EnergyPlus models in Matlab/Simulink using a loose coupling
+    %co-simulation mechanism.    
+    %
+    % Selected Properties and Methods:
+    %
+    % MLEPSO Properties:
+    %   idfFile       - EnergyPlus simulation configuration file (*.IDF)
+    %   epwFile       - Weather file (*.EPW).
+    %   useBus        - Logical switch determining if input and output are
+    %                   buses. (Default: true)
+    %   inputBusName  - Name of a Simulink.Bus object created from the
+    %                   interface input specification (IDF/variables.cfg).
+    %   outputBusName - Name of a Simulink.Bus object created from the
+    %                   interface output specification (IDF/variables.cfg).
+    %   time          - Current simulation time.
+    %
+    % MLEPSO Methods:    
+    %   y = step(u)   - Send variables "u" to EnergyPlus and get variables
+    %                   "y" from EnergyPlus. If useBus = true, then "u" 
+    %                   must be an appropriate buses/structure and "y" is
+    %                   a bus/structure, otherwise "u" and "y" are vectors
+    %                   of appriate sizes.
+    %   setup('init') - Initialize system object manually when necessary.
+    %                   The routine will start the EnergyPlus process and
+    %                   initialize communication. The setup routine is
+    %                   called automatically during the first "step" call
+    %                   if not ran manually. 
+    %
+    % See also: MLEP
+    %
+    %
+    % Copyright (c) 2018, Jiri Dostal (jiri.dostal@cvut.cz)
+    % All rights reserved.
+        
+    % Redistribution and use in source and binary forms, with or without
+    % modification, are permitted provided that the following conditions are
+    % met:
+    %
+    % 1. Redistributions of source code must retain the above copyright notice,
+    %    this list of conditions and the following disclaimer.
+    % 2. Redistributions in binary form must reproduce the above copyright
+    %    notice, this list of conditions and the following disclaimer in the
+    %    documentation and/or other materials provided with the distribution.
+    %
+    % THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+    % "AS IS". NO WARRANTIES ARE GRANTED.
+    %
     
     properties(DiscreteState)
-        time;
+        time;                       % Current simulation time
     end
     
     properties (Nontunable)
@@ -21,17 +68,17 @@ classdef mlepSO < matlab.System &...
     end
     
     properties (SetAccess = private)
-        isRunning;
-        isInitialized;
+        isRunning;          % Is co-simulation connection established?
+        isInitialized;      % Is system object initialized?
+        timestep;           % Simulation timestep (defined in IDF file)
     end
     
     properties (Hidden, SetAccess = private)
-        nOut;
-        nIn;
-        timestep;
-        outputSigName;
-        inputSigName;
-        outTable;        
+        nOut;               % Number of outputs
+        nIn;                % Number of inputs
+        outputSigName;      % List of output signal names
+        inputSigName;       % List of input signal names
+        outTable;           % Prototype of output bus (to save time)
     end
     
     properties (Access = private)                            
@@ -50,7 +97,7 @@ classdef mlepSO < matlab.System &...
     
     methods (Access = protected)
         function setupImpl(obj)
-            if ~obj.proc.isRunning
+            if ~obj.isRunning
                 try
                     obj.proc.start;                    
                 catch me
@@ -111,83 +158,42 @@ classdef mlepSO < matlab.System &...
         end
         
         function updateImpl(obj,input)
-            try
-                % Send signals to E+
-                if isstruct(input)
-                    rValIn = struct2array(input);
-                else
-                    rValIn = input;
-                end
-                
-                % Write data
-                outtime = obj.getCurrentTime;
-                if isempty(outtime), outtime = obj.time; end
-                obj.proc.write(mlep.encodeRealData(obj.proc.versionProtocol,...
-                    0, ...
-                    outtime,...
-                    rValIn));
-            catch me
-                ep.release;
-                rethrow(me)
+            % Send signals to E+
+            if isstruct(input)
+                inputs = struct2array(input);
+            else
+                inputs = input;
             end
+            
+            outtime = obj.getCurrentTime;
+            if isempty(outtime), outtime = obj.time; end
+
+            % Write data
+            obj.proc.write(inputs, outtime);           
         end
 
-        function output = outputImpl(obj,~)
-            try
-                % Initialize
-                if ~obj.proc.isRunning
-                    % Create connection
-                    obj.proc.acceptSocket;
-                    assert( ...
-                        obj.proc.isRunning, ...
-                        'EnergyPlusCosim:startupError: Cannot start EnergyPlus.');
-                end
-                
-                % Read data from EnergyPlus
-                readPacket = obj.proc.read;
-                assert( ...
-                    ~isempty(readPacket), ...
-                    'EnergyPlusCosim:readError', ...
-                    'Could not read data from EnergyPlus.' );
-                
-                % Decode data
-                [flag, obj.time, rValOut] = mlep.decodePacket(readPacket);
-                
-                % Process outputs from EnergyPlus
-                if flag ~= 0
-                    err_str = sprintf('EnergyPlusCosim: EnergyPlus process sent flag "%d" (%s).',...
-                        flag, mlep.epFlag2str(flag));
-                    if flag < 0
-                        [~,errFile] = fileparts(obj.idfFile);
-                        errFile = [errFile '.err'];
-                        errFilePath = fullfile(pwd,obj.proc.outputDir,errFile);
-                        err_str = [err_str, ...
-                            sprintf('Check the <a href="matlab:open %s">%s</a> file for further information.',...
-                            errFilePath, errFile)];
-                    end
-                    error(err_str);
-                else
-                    if ~(numel(rValOut)==obj.nOut)
-                        obj.stopError('EnergyPlus data output dimension not correct.');
-                    end
-                    
-                    if obj.useBus
-                        % Create output bus
-                        obj.outTable{1,:} = rValOut;
-                        output = table2struct(obj.outTable);
-                        % Note: This is the fastest way compared to
-                        % slower  out = cell2struct(num2cell(rValOut'),obj.outputSigName,1);
-                        % slowest for i = 1:obj.nOut
-                        %            out.(obj.outputSigName{i}) = rValOut(i);
-                        %         end
-                    else
-                        % Output vector
-                        output = rValOut(:);
-                    end
-                end
-            catch me
-                obj.stopError(me);
+        function output = outputImpl(obj,~)            
+            assert(obj.isRunning, 'EnergyPlusCosim: Co-simulation process in not running.');
+            
+            % Read data from EnergyPlus
+            [outputs, obj.time] = read(obj.proc);
+            if ~(numel(outputs)==obj.nOut)
+                obj.stopError('EnergyPlus data output dimension not correct.');
             end
+            
+            if obj.useBus
+                % Create output bus
+                obj.outTable{1,:} = outputs;
+                output = table2struct(obj.outTable);
+                % Note: This is the fastest way compared to
+                % slower  out = cell2struct(num2cell(rValOut'),obj.outputSigName,1);
+                % slowest for i = 1:obj.nOut
+                %            out.(obj.outputSigName{i}) = rValOut(i);
+                %         end
+            else
+                % Output vector
+                output = outputs(:);
+            end        
         end
         
         function resetImpl(obj)
@@ -300,35 +306,7 @@ classdef mlepSO < matlab.System &...
     
     %% ===================== Simulink I/O methods =========================
     methods (Access = protected)
-        %         function flag = isInputSizeMutableImpl(obj,index)
-        %             % Return false if input size cannot change
-        %             % between calls to the System object
-        %             flag = false;
-        %         end
-        %
-        %         function flag = isInputComplexityMutableImpl(obj,index)
-        %             % Return false if input complexity cannot change
-        %             % between calls to the System object
-        %             flag = false;
-        %         end
-        %
-        %         function flag = isInputDataTypeMutableImpl(obj,index)
-        % Return false if input data type cannot change
-        % between calls to the System object
-        %             flag = false;
-        %         end
-        %
-        %         function num = getNumInputsImpl(obj)
-        %             % Define total number of inputs for system with optional inputs
-        %             num = 1;
-        %         end
-        %
-        %         function num = getNumOutputsImpl(obj)
-        %             % Define total number of outputs for system with optional
-        %             % outputs
-        %             num = 3;
-        %         end
-        %
+
         function [out] = getOutputDataTypeImpl(obj)
             % Return data type for each output port            
             if obj.useBus
@@ -366,7 +344,8 @@ classdef mlepSO < matlab.System &...
             out2 = false;            
         end
         
-        function sts = getSampleTimeImpl(obj)            
+        function sts = getSampleTimeImpl(obj)     
+            % Specify sampling time
             sts = obj.createSampleTime("Type", "Discrete", ...
                 "SampleTime", obj.timestep);
         end

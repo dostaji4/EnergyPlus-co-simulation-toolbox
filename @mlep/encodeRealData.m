@@ -1,25 +1,25 @@
 function packet = encodeRealData(vernumber, flag, timevalue, realvalues)
-%MLEPENCODEREALDATA Encode real value data to packet.
-%   packet = mlepEncodeRealData(vernumber, flag, timevalue, realvalues)
+%ENCODEREALDATA Encode real value data to packet.
+%Encode real value data to a packet (a string) that can be sent to the
+%external program.  This function is a special version of
+%mlep.encodeData in which integer and boolean data does not exist.
 %
-%   Encode real value data to a packet (a string) that can be sent to the
-%   external program.  This function is a special version of
-%   mlepEncodeData in which integer and boolean data does not exist.
+%   Syntax: packet = encodeRealData(vernumber, flag, timevalue, realvalues)
 %
 %   Inputs:
-%       vernumber: version of the protocol to be used. Currently, version 1
+%       vernumber - Version of the protocol to be used. Currently, version 1
 %                   and 2 are supported.
-%       flag: an integer specifying the (status) flag. Refer to the BCVTB
+%            flag - An integer specifying the (status) flag. Refer to the BCVTB
 %                   protocol for allowed flag values.
-%       timevalue: a real value which is the current simulation time in
+%       timevalue - A real value which is the current simulation time in
 %                   seconds.
-%       realvalues: a vector of real value data to be sent. Can be empty.
+%      realvalues - A vector of real value data to be sent. Can be empty.
 %
-%   Output:
-%       packet is a string that contains the encoded data.
+%  Outputs:
+%          packet - A string that contains the encoded data.
 %
 %   See also:
-%       MLEPDECODEPACKET, MLEPENCODEDATA, MLEPENCODESTATUS
+%       MLEP.DECODEPACKET, MLEP.ENCODEDATA, MLEP.ENCODESTATUS
 %
 % (C) 2010 by Truong Nghiem (nghiem@seas.upenn.edu)
 

@@ -6,7 +6,7 @@
     <param.company />
     <param.summary>Interface for co-simulation of EnergyPlus models in Matlab/Simulink.</param.summary>
     <param.description>Interface with EnergyPlus models via socket connection (BCVTB protocol). EnergyPlus and Matlab/Simulink are co-simulated using loose coupling. See to legacy_example folder for introductory examples.</param.description>
-    <param.screenshot>${PROJECT_ROOT}\mlep\library\building.png</param.screenshot>
+    <param.screenshot>${PROJECT_ROOT}\library\mlepIcon.jpg</param.screenshot>
     <param.version>1.0</param.version>
     <param.output>${PROJECT_ROOT}\EnergyPlus co-simulation toolbox.mltbx</param.output>
     <param.products.name />
@@ -14,8 +14,9 @@
     <param.products.version />
     <param.platforms />
     <param.guid>f0f50fa4-c72a-4978-a241-7933910859fa</param.guid>
-    <param.exclude.filters>^.*
-**\.git
+    <param.exclude.filters>*.asv
+*.mat
+.*
 EnergyPlusV8-9-0\api-ms-win-core-console-l1-1-0.dll
 EnergyPlusV8-9-0\api-ms-win-core-datetime-l1-1-0.dll
 EnergyPlusV8-9-0\api-ms-win-core-debug-l1-1-0.dll
@@ -894,7 +895,6 @@ examples\legacy_example\SmOffPSZ - Copy.idf
 examples\legacy_example\variables_.cfg
 examples\legacy_example\variables_Copy.cfg
 mlep\library\so_mlepBlk.asv
-mlep\MLEPSETTINGS.mat
 progress.md
 tools\busObjectBusCreator\BOBCReadMe.txt
 tools\busObjectBusCreator\BusObjectBusCreator.slx
@@ -909,6 +909,7 @@ tools\busObjectBusCreator\license.txt</param.exclude.filters>
     <param.matlabpath.excludes />
     <param.javaclasspath.excludes>
       <item>/mlep/bcvtb/lib/xml/build/jar/DTDValidator.jar</item>
+      <item>/bcvtb/lib/xml/build/jar/DTDValidator.jar</item>
     </param.javaclasspath.excludes>
     <param.exported.on.package>false</param.exported.on.package>
     <param.release.start>R2018a</param.release.start>
@@ -944,13 +945,15 @@ tools\busObjectBusCreator\license.txt</param.exclude.filters>
       <file>C:\work\projects\Hydronics_4_0\Matlab\Building_cosimulation\EnergyPlus_cosimulation_toolbox</file>
     </fileset.rootdir>
     <fileset.rootfiles>
-      <file>${PROJECT_ROOT}\EnergyPlusV8-9-0</file>
+      <file>${PROJECT_ROOT}\@mlep</file>
+      <file>${PROJECT_ROOT}\bcvtb</file>
+      <file>${PROJECT_ROOT}\cleanup.m</file>
       <file>${PROJECT_ROOT}\examples</file>
+      <file>${PROJECT_ROOT}\installMlep.m</file>
+      <file>${PROJECT_ROOT}\library</file>
       <file>${PROJECT_ROOT}\manuals_and_articles</file>
-      <file>${PROJECT_ROOT}\mlep</file>
-      <file>${PROJECT_ROOT}\mlep_cleanup.m</file>
-      <file>${PROJECT_ROOT}\mlep_startup.m</file>
-      <file>${PROJECT_ROOT}\tools</file>
+      <file>${PROJECT_ROOT}\startup.m</file>
+      <file>${PROJECT_ROOT}\third_party</file>
     </fileset.rootfiles>
     <fileset.depfun.included />
     <fileset.depfun.excluded />

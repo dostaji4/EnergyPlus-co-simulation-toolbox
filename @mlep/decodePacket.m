@@ -1,34 +1,47 @@
 function [flag, timevalue, realvalues, intvalues, boolvalues] = decodePacket(packet)
-%MLEPDECODEPACKET Decode packet to data.
-%   [flag, timevalue, realvalues, intvalues, boolvalues] =
-%           mlepDecodePacket(packet)
+%DECODEPACKET - Decode packet to data.
+%Decode a packet (a string) to data.  The packet format follows the
+%BCVTB co-simulation communication protocol .
 %
-%   Decode a packet (a string) to data.  The packet format follows the
-%   BCVTB co-simulation communication protocol.
+%   Syntax: [flag, timevalue, realvalues, intvalues, boolvalues] = mlepDecodePacket(packet)
 %
 %   Inputs:
 %       packet: the packet to be decoded (a string).
 %
 %   Outputs:
-%       flag: an integer specifying the (status) flag. Refer to the BCVTB
-%                   protocol for allowed flag values.
-%       timevalue: a real value which is the current simulation time in
-%                   seconds.
-%       realvalues: a vector of received real value data.
-%       intvalues: a vector of received integer value data.
-%       boolvalues: a vector of received boolean value data.
+%             flag - An integer specifying the (status) flag. Refer to the BCVTB
+%                    protocol for allowed flag values.
+%        timevalue - A real value which is the current simulation time in
+%                    seconds.
+%       realvalues - A vector of received real value data.
+%        intvalues - a vector of received integer value data.
+%       boolvalues - a vector of received boolean value data.
 %
 %       Each of the received data vector can be empty if there is no data
 %       of that type sent.
 %
-%   See also:
-%       MLEPENCODEDATA, MLEPENCODEREALDATA, MLEPENCODESTATUS
+% Protocol Version 1 & 2:
+% Packet has the form:
+%       "v f dr di db t r1 r2 ... i1 i2 ... b1 b2 ... \n"
+% where
+%   v    - version number (1,2)
+%   f    - flag (0: communicate, 1: finish, -10: initialization error,
+%                -20: time integration error, -1: unknown error)
+%   dr   - number of real values
+%   di   - number of integer values
+%   db   - number of boolean values
+%   t    - current simulation time in seconds (format %20.15e)
+%   r1 r2 ... are real values (format %20.15e)
+%   i1 i2 ... are integer values (format %d)
+%   b1 b2 ... are boolean values (format %d)
+%   \n   - carriage return
 %
-% (C) 2010 by Truong Nghiem (nghiem@seas.upenn.edu)
-
-% HISTORY:
-%   2010-11-23  Remove non-printable characters from packet before
-%               processing it (maybe a bug of E+).
+% Note that if f is non-zero, other values after it will not be processed.
+%
+%   See also: MLEP.ENCODEDATA, MLEP.ENCODEREALDATA, MLEP.ENCODESTATUS,
+%             READ
+%
+% (C) 2010, Truong Nghiem (nghiem@seas.upenn.edu)
 
 % Remove non-printable characters from packet, then
 % convert packet string to a vector of numbers
@@ -80,20 +93,3 @@ end
 
 end
 
-% Protocol Version 1 & 2:
-% Packet has the form:
-%       v f dr di db t r1 r2 ... i1 i2 ... b1 b2 ... \n
-% where
-%   v    - version number (1,2)
-%   f    - flag (0: communicate, 1: finish, -10: initialization error,
-%                -20: time integration error, -1: unknown error)
-%   dr   - number of real values
-%   di   - number of integer values
-%   db   - number of boolean values
-%   t    - current simulation time in seconds (format %20.15e)
-%   r1 r2 ... are real values (format %20.15e)
-%   i1 i2 ... are integer values (format %d)
-%   b1 b2 ... are boolean values (format %d)
-%   \n   - carriage return
-%
-% Note that if f is non-zero, other values after it will not be processed.
