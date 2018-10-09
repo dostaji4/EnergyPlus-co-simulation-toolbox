@@ -19,7 +19,6 @@ function writeSocketConfig(fullFilePath, hostname, port)
 fid = fopen(fullFilePath, 'w');
 if fid == -1
     % error
-    serverSocket.close;
     error('Error while creating socket config file: %s', ferror(fid));
 end
 
