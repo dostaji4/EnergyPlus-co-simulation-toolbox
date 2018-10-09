@@ -56,9 +56,12 @@ classdef mlepSO < matlab.System &...
         time;                       % Current simulation time
     end
     
-    properties (Nontunable)
-        idfFile = 'in.idf';         % Specify IDF file
-        epwFile = 'in.epw';         % Specify EPW file        
+    properties (Nontunable, Abstract)
+        idfFile;                    % Specify IDF file
+        epwFile;                    % Specify EPW file        
+    end
+    
+    properties (Nontunable)      
         inputBusName = 'epInbus';   % Input bus name
         outputBusName = 'epOutbus'; % Output bus name                
     end
@@ -67,10 +70,8 @@ classdef mlepSO < matlab.System &...
         useBus = true;              % Use bus
     end
     
-    properties (SetAccess = private)
-        isRunning;          % Is co-simulation connection established?
-        isInitialized;      % Is system object initialized?
-        timestep;           % Simulation timestep (defined in IDF file)
+    properties (SetAccess = private, Abstract)
+        timestep;                   % Simulation timestep
     end
     
     properties (Hidden, SetAccess = private)
@@ -83,44 +84,34 @@ classdef mlepSO < matlab.System &...
     
     properties (Access = private)                            
         sigNameFcn = @(name,type) ['EP_' regexprep([name '__' type],'\W','_')];        
-        inputMap;
-        proc = [];  %mlep instance        
+        inputMap;            
     end
+    
+    %% ====================== Abstract methods ============================
+%     methods (Abstract)
+%         initialize(obj);                
+%     end
     
     %% ======================= Runtime methods ============================
     methods
-        function obj = so_mlepBlk(varargin) %#ok<STOUT>
+        function obj = mlepSO(varargin) 
             % Support name-value pair arguments when constructing object
             setProperties(obj,nargin,varargin{:})
         end
     end
     
     methods (Access = protected)
-        function setupImpl(obj)
-            if ~obj.isRunning
-                try
-                    obj.proc.start;                    
-                catch me
-                    pause(1); 
-                    obj.stopError(me); 
-                end
-            end
+        
+        function setupImpl(obj)        
+            obj.start;                    
         end
         
         function validatePropertiesImpl(obj)
-            
-%             if isLibraryMdl(bdroot), return, end
-            % Validate related or interdependent property values
-            if isempty(obj.proc)
-                obj.proc = mlep;
-            end
-            
-            % Validate files
-            obj.proc.idfFile = obj.idfFile;
-            obj.proc.epwFile = obj.epwFile;
+           
+            if ~isempty(bdroot) && isLibraryMdl(bdroot), return, end
             
             % Initialize
-            obj.proc.initialize;
+            obj.initialize;
             
             % Create output bus object
             if obj.useBus
@@ -153,7 +144,8 @@ classdef mlepSO < matlab.System &...
                     end
                 end
             catch me
-                obj.stopError(me); 
+                obj.stop;
+                rethrow(me);
             end
         end
         
@@ -169,14 +161,14 @@ classdef mlepSO < matlab.System &...
             if isempty(outtime), outtime = obj.time; end
 
             % Write data
-            obj.proc.write(inputs, outtime);           
+            obj.write(inputs, outtime);           
         end
 
         function output = outputImpl(obj,~)            
             assert(obj.isRunning, 'EnergyPlusCosim: Co-simulation process in not running.');
             
             % Read data from EnergyPlus
-            [outputs, obj.time] = read(obj.proc);
+            [outputs, obj.time] = read(obj);
             if ~(numel(outputs)==obj.nOut)
                 obj.stopError('EnergyPlus data output dimension not correct.');
             end
@@ -204,7 +196,7 @@ classdef mlepSO < matlab.System &...
         function releaseImpl(obj)
             % Release resources, such as file handles
             % Stop the process
-            obj.proc.stop;
+            obj.stop;
         end
         
     end
@@ -219,7 +211,7 @@ classdef mlepSO < matlab.System &...
                 elem.Dimensions = 1;
                 elem.DimensionsMode = 'Fixed';
                 elem.DataType = 'double';
-                elem.SampleTime = obj.proc.timestep;
+                elem.SampleTime = obj.timestep;
                 elem.Complexity = 'real';
                 % Add to bus
                 bus.Elements(i) = elem;
@@ -235,73 +227,43 @@ classdef mlepSO < matlab.System &...
                 elem.Dimensions = 1;
                 elem.DimensionsMode = 'Fixed';
                 elem.DataType = 'double';
-                elem.SampleTime = obj.proc.timestep;
+                elem.SampleTime = obj.timestep;
                 elem.Complexity = 'real';
                 % Add to bus
                 bus.Elements(i) = elem;
             end
             assignin('base',obj.inputBusName, bus);
         end
-        
-        function stopError(obj, msg, varargin)                        
-            obj.proc.stop;
-            set_param(bdroot,'SimulationCommand','stop')
-            if isa(msg,'MException')
-                rethrow(msg);
-            else
-                error(msg, varargin{:});
-            end
-        end
     end
     
     % ----------------------- Get/Set methods -----------------------------
     methods
         function value = get.nIn(obj)
-            value = height(obj.proc.inputTable);
+            value = height(obj.inputTable);
         end
         
         function value = get.inputSigName(obj)
             value = cell(obj.nIn,1);
             for i = 1: obj.nIn
-                signame = obj.sigNameFcn(obj.proc.inputTable.Name{i},...
-                    obj.proc.inputTable.Type{i});
+                signame = obj.sigNameFcn(obj.inputTable.Name{i},...
+                    obj.inputTable.Type{i});
                 value{i} = signame;
             end
         end
         
         function value = get.nOut(obj)
-            value = height(obj.proc.outputTable);
+            value = height(obj.outputTable);
         end
         
         function value = get.outputSigName(obj)
             value = cell(obj.nOut,1);
             for i = 1: obj.nOut
-                signame = obj.sigNameFcn(obj.proc.outputTable.Name{i},...
-                    obj.proc.outputTable.Type{i});
+                signame = obj.sigNameFcn(obj.outputTable.Name{i},...
+                    obj.outputTable.Type{i});
                 value{i} = signame;
             end
         end
         
-        function value = get.timestep(obj) 
-            if ~obj.isInitialized, obj.setup('init'); end
-            value = obj.proc.timestep;
-        end
-        
-        function value = get.isRunning(obj)
-            if isa(obj.proc,'mlep')
-                value = obj.proc.isRunning;
-            else
-                value = 0;
-            end
-        end
-        
-        function value = get.isInitialized(obj)
-            if isa(obj.proc,'mlep')
-                value = obj.proc.isInitialized;
-            else
-                value = 0;
-            end
-        end
     end
     
     %% ===================== Simulink I/O methods =========================

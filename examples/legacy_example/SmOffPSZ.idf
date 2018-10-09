@@ -3035,6 +3035,12 @@ Output:Variable,    ZNF1,    Zone Mean Air Temperature,    timestep;
 Output:Variable,    ZSF1,     Zone Operative Temperature,    timestep;
 Output:Variable,    ZNF1,     Zone Operative Temperature,    timestep;
 
-!- Output:Variable, ZSF1,  	Zone Windows Total Transmitted Solar Radiation Rate,timestep; !- Zone Average [W]
-!- Output:Variable, ZNF1,  	Zone Windows Total Transmitted Solar Radiation Rate,timestep; !- Zone Average [W]
+Output:Variable, ZSF1, Zone Air System Sensible Heating Rate,timestep; !- HVAC Average [W]
+Output:Variable, ZNF1, Zone Air System Sensible Heating Rate,timestep; !- HVAC Average [W]
+
+Output:Variable, ZSF1, Zone Air System Sensible Cooling Rate,timestep; !- HVAC Average [W]
+Output:Variable, ZNF1, Zone Air System Sensible Cooling Rate,timestep; !- HVAC Average [W]
+
+Output:Variable, ZSF1,  	Zone Windows Total Transmitted Solar Radiation Rate,timestep; !- Zone Average [W]
+Output:Variable, ZNF1,  	Zone Windows Total Transmitted Solar Radiation Rate,timestep; !- Zone Average [W]
 
