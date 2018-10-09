@@ -1,31 +1,48 @@
 function packet = encodeData(vernumber, flag, timevalue, realvalues, intvalues, boolvalues)
-%MLEPENCODEDATA Encode data to packet.
-%   packet = mlepEncodeData(vernumber, flag, timevalue, realvalues,
-%                            intvalues, boolvalues)
+%ENCODEDATA - Encode data to packet.
+%Encode data to a packet (a string) that can be sent to the external
+%program.  The packet format follows the BCVTB co-simulation
+%communication protocol.
 %
-%   Encode data to a packet (a string) that can be sent to the external
-%   program.  The packet format follows the BCVTB co-simulation
-%   communication protocol.
+%   Syntax: packet = encodeData(vernumber, flag, timevalue, realvalues, intvalues, boolvalues)
 %
 %   Inputs:
-%       vernumber: version of the protocol to be used. Currently, version 1
-%                   and 2 are supported.
-%       flag: an integer specifying the (status) flag. Refer to the BCVTB
-%                   protocol for allowed flag values.
-%       timevalue: a real value which is the current simulation time in
-%                   seconds.
-%       realvalues: a vector of real value data to be sent. Can be empty.
-%       intvalues: a vector of integer value data to be sent. Can be empty.
-%       boolvalues: a vector of boolean value data to be sent. Can be
-%                   empty.
+%        vernumber - Version of the protocol to be used. Currently, version 1
+%                    and 2 are supported.
+%             flag - An integer specifying the (status) flag. Refer to the BCVTB
+%                    protocol for allowed flag values.
+%        timevalue - A real value which is the current simulation time in
+%                    seconds.
+%       realvalues - A vector of real value data to be sent. Can be empty.
+%        intvalues - A vector of integer value data to be sent. Can be empty.
+%       boolvalues - A vector of boolean value data to be sent. Can be
+%                    empty.
 %
-%   Output:
-%       packet is a string that contains the encoded data.
+% Outputs:
+%           packet - String that contains the encoded data.
 %
-%   See also:
-%       MLEPDECODEPACKET, MLEPENCODEREALDATA, MLEPENCODESTATUS
+% Protocol Version 1 & 2:
+% Packet has the form:
+%       "v f dr di db t r1 r2 ... i1 i2 ... b1 b2 ... \n"
+% where
+%   v    - version number (1,2)
+%   f    - flag (0: communicate, 1: finish, -10: initialization error,
+%                -20: time integration error, -1: unknown error)
+%   dr   - number of real values
+%   di   - number of integer values
+%   db   - number of boolean values
+%   t    - current simulation time in seconds (format %20.15e)
+%   r1 r2 ... are real values (format %20.15e)
+%   i1 i2 ... are integer values (format %d)
+%   b1 b2 ... are boolean values (format %d)
+%   \n   - carriage return
 %
-% (C) 2010 by Truong Nghiem (nghiem@seas.upenn.edu)
+% Note that if f is non-zero, other values after it will not be processed.
+%
+%   See also: MLEP.DECODEPACKET, MLEP.ENCODEREALDATA, MLEP.ENCODESTATUS,
+%             WRITE
+%
+% (C) 2010, Truong Nghiem (nghiem@seas.upenn.edu)
 
 ni = nargin;
 if ni < 2

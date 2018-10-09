@@ -1,24 +1,24 @@
 function packet = encodeStatus(vernumber, flag)
-%MLEPENCODESTATUS Encode status flag to a packet.
-%   packet = mlepEncodeStatus(vernumber, flag)
+%ENCODESTATUS - Encode status flag to a packet.
+%Encode a status flag to a packet (a string) that can be sent to the
+%external program.  This function is a special version of
+%mlepEncodeData in which only a flag (non-zero) is transferred. 
 %
-%   Encode a status flag to a packet (a string) that can be sent to the
-%   external program.  This function is a special version of
-%   mlepEncodeData in which only a flag (non-zero) is transferred. 
+%   Syntax: packet = mlepEncodeStatus(vernumber, flag)
 %
 %   Inputs:
-%       vernumber: version of the protocol to be used. Currently, version 1
-%                   and 2 are supported.
-%       flag: an integer specifying the (status) flag. Refer to the BCVTB
-%                   protocol for allowed flag values.
+%  vernumber - Version of the protocol to be used. Currently, version 1
+%              and 2 are supported.
+%       flag - An integer specifying the (status) flag. Refer to the BCVTB
+%              protocol for allowed flag values.
 %
 %   Output:
-%       packet is a string that contains the encoded data.
+%     packet - A string that contains the encoded data.
 %
-%   See also:
-%       MLEPDECODEPACKET, MLEPENCODEDATA, MLEPENCODEREALDATA
+%   See also: MLEP.DECODEPACKET, MLEP.ENCODEDATA, MLEP.ENCODEREALDATA,
+%             WRITE
 %
-% (C) 2010 by Truong Nghiem (nghiem@seas.upenn.edu)
+% (C) 2010, Truong Nghiem (nghiem@seas.upenn.edu)
 
 ni = nargin;
 if ni < 2

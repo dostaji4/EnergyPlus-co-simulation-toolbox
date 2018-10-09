@@ -16,10 +16,12 @@ iLog = 1;
 t = 0;
 
 while t < endTime
-    % Calculate inputs
+    
     u = [20 25];
-    % Push inputs u(k+1), get outputs y(k)
-    [y, t] = ep.step(u);        
+    
+    % Send u, get y
+    y = ep.step(u);        
+    t = ep.time;
 
     % Save data to table
     logTable(iLog, :) = num2cell([t y']);

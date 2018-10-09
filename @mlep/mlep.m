@@ -1,13 +1,32 @@
 classdef mlep < handle
-%mlep A class of a cosimulation process
-%   The class represents a co-simulation process. It enables data
-%   exchanges between the host (in Matlab) and the client (the
-%   EnergyPlus process), using the communication protocol defined in
-%   BCVTB.
-
+%MLEP - EnergyPlus co-simulation toolbox. 
+%The class contains all necesary tools for starting the co-simulation with
+%EnergyPlus (E+). It enables data exchanges between the host (in Matlab) and
+%the client (the E+ process), using the communication protocol 
+%defined by Building Control Virtual Test Bed (BCVTB).
+%
+% Selected Properties and Methods:
+% 
+% MLEP Properties:
+%         workDir - A directory, where the EnergyPlus process is started.
+%                   (Default: '.' meaning the current directory)
+%   outputDirName - Name of the directory, where all outputs of EnergyPlus 
+%                   will be put. The directory is created under the working 
+%                   directory. (Default: "eplusout")
+%           
+%           
+% MLEP Methods:
+%  initialize - Load and validate input files. Write configuration files. 
+%       start - Start the EnergyPlus process and establish communication.
+%        read - Read outputs from EnergyPlus. 
+%       write - Write input to EnergyPlus.
+%        stop - Close communication and terminate the EnergyPlus process.    
+%
+% See also: OTHER_CLASS_NAME1,  OTHER_CLASS_NAME2
+%    
 % Copyright (c) 2018, Jiri Dostal (jiri.dostal@cvut.cz)
 % All rights reserved.
-%
+
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted provided that the following conditions are 
 % met:
@@ -21,70 +40,87 @@ classdef mlep < handle
 % THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
 % "AS IS". NO WARRANTIES ARE GRANTED.
 %
+%
 % History:
 %    2009-2013 by Truong Nghiem(truong@seas.upenn.edu)
 %    2010-2015 by Willy Bernal(Willy.BernalHeredia@nrel.gov)
 %    2018      by Jiri Dostal (jiri.dostal@cvut.cz)
     
     properties                
-        workDir = '.';          % Working directory (default is current directory)
-        outputDir = 'eplusout'; % EnergyPlus output directory (created under working folder)                                        
         idfFile = 'in.idf';     % Building specification IDF file (E+ default by default)
         epwFile = 'in.epw';     % Weather profile EPW file (E+ default by default)                
+        workDir = '.';          % Working directory (default is current directory)
+        outputDirName = 'eplusout'; % EnergyPlus output directory (created under working folder)                                        
     end
     
-    properties (Hidden)
-        versionProtocol = 2;    % Current version of the protocol
-        versionEnergyPlus;      % EnergyPlus version (identified during intallation)                
-        rwTimeout = 10000;      % Timeout for sending/receiving data (0 = infinite)        
-        acceptTimeout = 6000;   % Timeout for waiting for the client to connect                                
-        port = 0;               % Socket port (default 0 = any free port)
-        host = '';              % Host name (default '' = localhost)
-        verboseEP = true;       % Print standard output of the E+ process into Matlab                
-        checkAndKillExistingEPprocesses = 1;    % If selected, mlep will check on startup for other energyplus processes and kill them        
-        epDir;                  % EnergyPlus directory              
+    properties (Hidden)                      
     end
     
     properties (SetAccess=private, GetAccess=public)
-        timestep;           % [s] Simulation timestep (loaded from IDF, co-simulation timesteps must adhere)
-        isRunning = false;  % Is co-simulation running?
-        isInitialized = false;  % Initialization flag
-        serverSocket;       % Server socket to listen to client
-        commSocket;         % Socket for sending/receiving data
-        writer;             % Buffered writer stream
-        reader;             % Buffered reader stream
-        process;            % Process object for E+        
-        env;                % Variable containing Environment settings for process run
-        program;            % EnergyPlus executable (detected during installation)  
-        idfData;            % Structure with data from parsed IDF
-        inputTable;         % Table of inputs to EnergyPlus
-        outputTable;        % Table of outputs from EnergyPlus
-        isUserVarFile;      % True if user-defined variables.cfg file is present
-        configFile = 'socket.cfg';  % Name of socket configuration file
-        variablesFile = 'variables.cfg'; % Contains ExternalInterface settings
-        iddFile = 'Energy+.idd'; % IDD file
-        idfFullFilename;
-        epwFullFilename;
-        iddFullFilename;
-        varFullFilename;
-        outputDirFullPath;        
+        timestep;               % [s] Simulation timestep (loaded from IDF, co-simulation timesteps must adhere)
+        isRunning = false;      % Is co-simulation running?
+        isInitialized = false;  % Initialization flag        
+        inputTable;             % Table of inputs to EnergyPlus
+        outputTable;            % Table of outputs from EnergyPlus       
+        versionEnergyPlus;      % EnergyPlus version (identified during intallation)                        
+        versionProtocol;        % Current version of the protocol        
     end
     
-    properties (Constant, GetAccess = private)
-        CRChar = newline;      % Defined marker by the BCVTB protocol (newline = char(10))
+    properties (Access = private)
+        serverSocket;           % Server socket to listen to client
+        commSocket;             % Socket for sending/receiving data
+        writer;                 % Buffered writer stream
+        reader;                 % Buffered reader stream
+        process;                % Process object for E+        
+        env;                    % Variable containing Environment settings for process run
+        program;                % EnergyPlus executable (detected during installation)  
+        isUserVarFile;          % True if user-defined variables.cfg file is present        
+        idfData;                % Structure with data from parsed IDF
+        idfFullFilename;        % Full path to IDF file
+        epwFullFilename;        % Full path to EPW file
+        iddFullFilename;        % Full path to IDD file
+        varFullFilename;        % Full path to variables config file
+        outputDirFullPath;      % Full path to the output directory
+        epDir;                  % EnergyPlus directory          
+    end
+    
+    properties (Constant, GetAccess = private)       
+        rwTimeout = 10000;      % Timeout for sending/receiving data (0 = infinite) [ms]        
+        acceptTimeout = 6000;   % Timeout for waiting for the client to connect [ms]                       
+        port = 0;               % Socket port (default 0 = any free port)
+        host = '';              % Host name (default '' = localhost)
+        verboseEP = true;       % Print standard output of the E+ process into Matlab                        
+        checkAndKillExistingEPprocesses = 1;       % If selected, mlep will check on startup for other energyplus processes and kill them        
+        
+        socketConfigFileName = 'socket.cfg';       % Socket configuration file name
+        variablesConfigFileName = 'variables.cfg'; % ExternalInterface configuration file name
+        iddFile = 'Energy+.idd';                   % IDD file name            
+        CRChar = newline;                          % Defined marker by the BCVTB protocol (newline = char(10))
         file_not_found_str = 'Could not find "%s" file. Please correct the file path or make sure it is on the Matlab search path.';
     end
     
     %% =========================== MLEP ===================================
     methods
         function obj = mlep
-            settings(obj);
-        end
+            loadSettings(obj);
+        end % /constructor
         
         function initialize(obj)
+            %INITIALIZE - Load and parse all input files, make interface I/O configuration            
+            %
+            % Syntax:  initialize(obj)
+            %
+            % See also: START, READ, WRITE, STOP
+            
             if obj.isInitialized
                 return
             end
+            
+            if obj.isRunning
+                obj.stop;
+                obj.isRunning = 0;
+            end
+            
             % Check parameters
             if isempty(obj.program)
                 error('Program name must be specified.');
@@ -112,15 +148,15 @@ classdef mlep < handle
             end
             
             % Create E+ output folder
-            obj.cleanEP(obj.workDir);
-            obj.outputDirFullPath = fullfile(obj.workDir,obj.outputDir);
+            obj.cleanEP;
+            obj.outputDirFullPath = fullfile(obj.workDir,obj.outputDirName);
             [st,ms] = mkdir(obj.outputDirFullPath);
             assert(st,'%s',ms);
             
             % Determine co-simulation inputs and outputs out of IDF or
             % varibles.cfg files
             idfDir = fileparts(obj.idfFullFilename);
-            obj.varFullFilename = fullfile(idfDir, obj.variablesFile);
+            obj.varFullFilename = fullfile(idfDir, obj.variablesConfigFileName);
             obj.isUserVarFile = (exist(obj.varFullFilename,'file') == 2);
             
             if obj.isUserVarFile
@@ -143,8 +179,12 @@ classdef mlep < handle
         end
         
         function start(obj)
-            % status and msg are returned from the client process
-            % status = 0 --> success
+            %START - Start the EnergyPlus process and establish connection.
+            %
+            % Syntax:  start(obj)
+            %
+            % See also: INITIALIZE, READ, WRITE, STOP
+            
             if obj.isRunning, return; end
             
             % Initialize
@@ -161,8 +201,14 @@ classdef mlep < handle
             try                
                 % Create server socket if necessary
                 obj.makeSocket;                                   
+                
                 % Run the EnergyPlus process
-                obj.runEP;                
+                obj.runEnergyPlus;        
+                
+                % Establish connection
+                pause(0.5);
+                obj.acceptSocket;
+                
             catch ErrObj
                 obj.closeSocket;
                 if changeDir,cd(runDir); end
@@ -173,7 +219,98 @@ classdef mlep < handle
             if changeDir,cd(runDir); end
         end
         
+        function [outputs, time] = read(obj)
+            %READ - Read outputs from the EnergyPlus simulation.
+            %
+            %  Syntax:   [outputs, time] = read(obj)
+            %
+            % Outputs:
+            %      outputs - Vector of real values sent by EnergyPlus.
+            %         time - Time mark sent by EnergyPlus simulation.
+            %
+            % See also: INITIALIZE, START, WRITE
+            
+            try
+                % Read data from EnergyPlus
+                readPacket = obj.readSocket;
+                assert( ...
+                    ~isempty(readPacket), ...
+                    'EnergyPlusCosim:readError', ...
+                    'Could not read data from EnergyPlus.' );
+                
+                % Decode data
+                [flag, time, rValOut] = mlep.decodePacket(readPacket);
+                outputs = rValOut;
+                
+                % Process outputs from EnergyPlus
+                if flag ~= 0
+                    err_str = sprintf('EnergyPlusCosim: EnergyPlus process sent flag "%d" (%s).',...
+                        flag, mlep.epFlag2str(flag));
+                    if flag < 0
+                        [~,errFile] = fileparts(obj.idfFile);
+                        errFile = [errFile '.err'];
+                        errFilePath = fullfile(pwd,obj.outputDir,errFile);
+                        err_str = [err_str, ...
+                            sprintf('Check the <a href="matlab:open %s">%s</a> file for further information.',...
+                            errFilePath, errFile)];
+                    end
+                    error(err_str);
+                end
+            catch me
+                obj.stop;
+                rethrow(me);
+            end
+        end
+         
+        function write(obj, inputs, time)
+            %WRITE - Write inputs to the EnergyPlus simulation.
+            %
+            %  Syntax:   write(obj, inputs, time)
+            %
+            %  Inputs:
+            %      inputs - Vector of real values to be send to the
+            %               EnergyPlus simulation.
+            %        time - Time mark to be send to the EnergyPlus simulation.
+            %
+            % See also: INITIALIZE, START, READ
+            
+            try
+                assert(isa(inputs,'numeric') && isa(time,'numeric'),'Inputs must be a numeric vectors.');
+                rValIn = inputs(:);
+                % Write data                
+                obj.writeSocket(mlep.encodeRealData(obj.versionProtocol,...
+                    0, ...
+                    time,...
+                    rValIn));
+            catch me
+                obj.stop;
+                rethrow(me);                
+            end
+        end
+        
         function stop(obj, stopSignal)
+            %STOP - Close communication and stop the EnergyPlus process
+            %Send stop to EnergyPlus. Close socket connection. Stop EnergyPlus process.
+            %
+            % Syntax:  stop(obj)
+            %
+            % See also: INITIALIZE, START, SETTINGS
+            
+            if obj.isRunning
+                % Send stop signal
+                if nargin < 2 || stopSignal                    
+                    try 
+                        obj.writeSocket(mlep.encodeStatus(obj.versionProtocol, 1));
+                    catch 
+                        % Connection may already be closed. Socket
+                        % exception is a normal behavior                        
+                    end
+                end
+            
+                % Close connection
+                obj.closeSocket;
+            end
+            
             if obj.isInitialized 
                 % There can be errors prior to "running" status, where the
                 % process has already been started
@@ -184,36 +321,63 @@ classdef mlep < handle
                 end
             end
             
-            if obj.isRunning
-                % Send stop signal
-                if nargin < 2 || stopSignal
-                    obj.write(mlep.encodeStatus(obj.versionProtocol, 1));
-                end
-            
-                % Close connection
-                obj.closeSocket;
-            end
-            
             obj.isRunning = false;
             obj.isInitialized = false;
         end
-        
+    end
+    
+    methods (Hidden)           
         function delete(obj)
+            % Class destructor.
+            
             if obj.isRunning
-                obj.stop;
+                obj.stop;                 
             end
+            obj.isInitialized = false;
+            obj.process = [];
             
             % Close server socket
             if isjava(obj.serverSocket)
-                obj.serverSocket.close;
-                obj.serverSocket = [];
+                obj.serverSocket.close;                
             end
+            obj.serverSocket = [];
+        end % \destructor
+    end
+    
+    % ---------------------- Get/Set methods ------------------------------
+    methods     
+        function set.idfFile(obj, file)
+            assert(~isempty(file),'IDF file not specified.');
+            assert(ischar(file) || isstring(file),'Invalid file name.');
+            if strlength(file)<4 || ~strcmpi(file(end-3:end), '.idf')
+                file = [file '.idf']; %add extension
+            end
+            assert(exist(file,'file')>0,obj.file_not_found_str,file);
+            obj.idfFile = file;
         end
-
-        function settings(obj)
-            % Obtain settings from variable MLEPSETTINGS
-            % If that variable does not exist load settings from file or
-            % run installation             
+        
+        function set.epwFile(obj,file)
+            assert(~isempty(file),'EPW file not specified.');
+            assert(ischar(file) || isstring(file),'Invalid file name.');
+            if strlength(file)<4 || ~strcmpi(file(end-3:end), '.epw')
+                file = [file '.epw'];
+            end
+            assert(exist(file,'file')>0,obj.file_not_found_str,file);
+            obj.epwFile = file;
+        end
+    end
+    
+    %% ======================== EnergyPlus ================================
+    methods (Access = private)
+        
+        function loadSettings(obj)
+            %LOADSETTINGS - Load running environment configuration. 
+            %Obtain settings from file MLEPSETTINGS.mat
+            %If it doesn't exist run installation.
+            %
+            % Syntax:  loadSettings(obj)
+            %
+            % See also: START
             
             % Try to load MLEPSETTING.mat file
             if exist('MLEPSETTINGS.mat','file')
@@ -251,45 +415,22 @@ classdef mlep < handle
                 error('Error loading mlep settings. Please run "installMlep.m" again.');
             end
         end
-    end
-    
-    % ---------------------- Get/Set methods ------------------------------
-    methods
-        function set.idfFile(obj, file)
-            assert(~isempty(file),'IDF file not specified.');
-            assert(ischar(file) || isstring(file),'Invalid file name.');
-            if strlength(file)<4 || ~strcmpi(file(end-3:end), '.idf')
-                file = [file '.idf']; %add extension
-            end
-            assert(exist(file,'file')>0,obj.file_not_found_str,file);
-            obj.idfFile = file;
-        end
         
-        function set.epwFile(obj,file)
-            assert(~isempty(file),'EPW file not specified.');
-            assert(ischar(file) || isstring(file),'Invalid file name.');
-            if strlength(file)<4 || ~strcmpi(file(end-3:end), '.epw')
-                file = [file '.epw'];
-            end
-            assert(exist(file,'file')>0,obj.file_not_found_str,file);
-            obj.epwFile = file;
-        end
-    end
-    
-    %% ======================== EnergyPlus ================================
-    methods (Access = private)
-        
-        % Run the EnergyPlus process
-        function runEP(obj)                        
+        function runEnergyPlus(obj)       
+            %RUNENERGYPLUS - Start EnergyPlus process.
+            %Run EnergyPlus using ProcessManager class. Add listener to
+            %process exit event            
+            %
+            % Syntax:  runEnergyPlus(obj)
+            %
+            % See also: START
+            
             % Set local environment
             for i = 1:numel(obj.env)
                 setenv(obj.env{i}{1}, obj.env{i}{2});
             end
             
-            %% Create the EnergyPlus co-simulatin process
-            [~,idfName] = fileparts(obj.idfFile);
-            
-            % Create the external E+ process
+            % --- Create the external E+ process
             
             % Prepare EP command
             epcmd = javaArray('java.lang.String',11);
@@ -300,7 +441,8 @@ classdef mlep < handle
             epcmd(5) = java.lang.String(obj.iddFullFilename);
             epcmd(6) = java.lang.String('-x'); % expand objects
             epcmd(7) = java.lang.String('-p'); % output prefix
-            epcmd(8) = java.lang.String(idfName);
+            [~,idfName] = fileparts(obj.idfFile);
+            epcmd(8) = java.lang.String(idfName); % output prefix name
             epcmd(9) = java.lang.String('-s'); % output suffix
             epcmd(10) = java.lang.String('D'); % Dash style "prefix-suffix"
             epcmd(11) = java.lang.String(obj.idfFullFilename); % IDF file
@@ -317,14 +459,14 @@ classdef mlep < handle
             epproc.start();
             
             if ~epproc.running
-                error('Error while starting external co-simulation program.');
+                error('Unknown error while starting the EnergyPlus process. Check the *.err file for further information.');
             else
                 obj.process = epproc;
             end
             
             function epProcListener(src,data)
                 fprintf('\n');
-                fprintf('%s: Process exited with exitValue = %g\n',src.id,src.exitValue);
+                fprintf('%s: EnergyPlus process exited with exitValue = %d.\n',src.id,src.exitValue);
                 
                 if src.exitValue ~= 1
                     fprintf('Event name %s\n',data.EventName);
@@ -342,9 +484,17 @@ classdef mlep < handle
             end
         end
         
-        % Load I/O variables from the IDF file
         function loadIdf(obj)
-            %% COLLECT DATA IDF FILE
+            %LOADIDF - Load I/O variables from the IDF file
+            %Read Timestep, RunPeriod, Version and input/output
+            %configuration from the specified IDF file. The inputs and
+            %outputs are stored into inputTable and outputTable variables.
+            %
+            % Syntax:  loadIdf(obj)
+            %
+            % See also: INITIALIZE
+            
+            % Parse IDF
             in = mlep.readIDF(obj.idfFullFilename,...
                 {'Timestep',...
                 'RunPeriod',...
@@ -401,12 +551,16 @@ classdef mlep < handle
             end
         end
         
-        % Create a variable.cfg config file or reuse user-defined one
         function makeVariablesConfigFile(obj)
-            % If there is a variable.cfg in the same directory as the IDF file,
-            % then use it (copy it into the outputFolder for E+ to use).
-            % Otherwise, create a new one based on the inputs and outputs
-            % defined in the IDF file.
+            %MAKEVARIABLESCONFIGFILE - Create a variable.cfg config file or reuse user-defined one
+            %If there is a variable.cfg in the same directory as the IDF file
+            %use it (copy it into the outputFolder for E+ to use).
+            %Otherwise, create a new one based on the inputs and outputs
+            %defined in the IDF file.
+            %
+            % Syntax:  makeVariablesConfigFile(obj)
+            %
+            % See also: MLEP.WRITESOCKETCONFIG, INITIALIZE
             
             if obj.isUserVarFile
                 assert(exist(obj.varFullFilename,'file')==2,obj.file_not_found_str,obj.varFullFilename);
@@ -414,18 +568,18 @@ classdef mlep < handle
                 if ~copyfile(obj.varFullFilename, obj.outputDirFullPath)
                     error('Cannot copy "%s" to "%s".', obj.varFullFilename, obj.outputDirFullPath);
                 end
-                newVarFullFilename = fullfile(obj.outputDirFullPath, obj.variablesFile);
+                newVarFullFilename = fullfile(obj.outputDirFullPath, obj.variablesConfigFileName);
                 % Add disclamer to the copied variables.cfg file
                 S = fileread(newVarFullFilename);
                 disclaimer = [newline '<!--' newline,...
-                    '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!' newline,...
-                    'THIS IS A FILE COPY.' newline,...
-                    'DO NOT EDIT THIS FILE AS ANY CHANGES WILL BE OVERWRITTEN!' newline,...
-                    '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!' newline,...
+                    '|===========================================================|' newline,...
+                    '|                  THIS IS A FILE COPY.                     |' newline,...
+                    '| DO NOT EDIT THIS FILE AS ANY CHANGES WILL BE OVERWRITTEN! |' newline,...
+                    '|===========================================================|' newline,...
                     '-->' newline];
-                anchor = '<BCVTB-variables>';
+                anchor = '^<\?xml.*\?>';
                 [~,e] = regexp(S,anchor);
-                if isempty(e), error('Parsing of "%s" failed. Please check the file.',obj.variablesFile);
+                if isempty(e), error('Parsing of "%s" failed. Please check the file.',obj.variablesConfigFileName);
                 else
                     S = [S(1:e), disclaimer, S(e+1:end)];
                 end
@@ -437,15 +591,20 @@ classdef mlep < handle
                 % Create a new 'variables.cfg' file based on the input/output
                 % definition in the IDF file
                 
-                mlep.writeVariableConfig(obj.inputTable,...
-                    obj.outputTable,...
-                    fullfile(obj.outputDirFullPath, obj.variablesFile));
+                mlep.writeVariableConfig(...
+                    fullfile(obj.outputDirFullPath, obj.variablesConfigFileName),...
+                    obj.inputTable,...
+                    obj.outputTable);
                 
             end
         end
         
-        % Check input/output configuration
         function checkIO(obj)
+            %CHECKIO - Check input/output configuration
+            %
+            % Syntax:  checkIO(obj)
+            %
+            % See also: INITIALIZE, MAKEVARIABLESCONFIGFILE
             
             % Check variables.cfg config for wrong entries
             assert(~isempty(obj.inputTable) && ~isempty(obj.outputTable), 'Run parsing of the variables.cfg file first.');
@@ -486,13 +645,21 @@ classdef mlep < handle
             end
         end
         
-        % Delete files from the previous simulation
-        function cleanEP(obj, rootDir)
-            % Remove "outputDir" from the rootDir folder
-            if strcmp(rootDir,'.')
+        function cleanEP(obj)
+            %CLEANEP - Delete files from the previous simulation
+            %
+            % Syntax:  cleanEP(obj)
+            %
+            % See also: INITIALIZE
+            
+            % Remove "outputDir" from the "workDir" folder
+            if strcmp(obj.workDir,'.')
                 rootDir = pwd;
+            else
+                rootDir = obj.workDir;
             end
-            dirname = fullfile(rootDir,obj.outputDir);
+            
+            dirname = fullfile(rootDir,obj.outputDirName);
             if exist(dirname,'dir')
                 mlep.rmdirR(dirname);
             end
@@ -500,13 +667,26 @@ classdef mlep < handle
     end
     
     methods (Access = private, Static)
-        % Parse variables.cfg file for desired I/O
+        
         function [inputTable, outputTable] = parseVariablesConfigFile(file)
+            %PARSEVARIABLESCONFIGFILE - Parse variables.cfg file for the desired I/O.
+            %
+            % Syntax:  [inputTable, outputTable] = parseVariablesConfigFile(file)
+            %
+            % Inputs:
+            %    file   - Path to the "variables.cfg" file.            
+            %
+            % Outputs:
+            %    inputTable  - Table with parsed inputs.
+            %    outputTable - Table with parsed outputs.
+            %
+            % See also: MLEP, MLEP.MAKEVARIABLESCONFIGFILE
+            
             assert(exist(file,'file') > 0,'File "%s" not found.');
             
             inputTable = table('Size',[0 2],'VariableTypes',{'string','string'},'VariableNames',{'Name','Type'});
             cInput = 1;
-            outputTable = table('Size',[0 2],'VariableTypes',{'string','string'},'VariableNames',{'Name','Type'});
+            outputTable = table('Size',[0 3],'VariableTypes',{'string','string','string'},'VariableNames',{'Name','Type','Period'});
             cOutput = 1;
             
             % Start parsing
@@ -519,7 +699,7 @@ classdef mlep < handle
                     case 'EnergyPlus' 
                         out = vars{i}.EnergyPlus.Attributes;
                         assert(isfield(out,'name') && isfield(out,'type'),'Fields "name" and/or "type" are not existing');
-                        outputTable(cOutput,:) = {out.name, out.type};
+                        outputTable(cOutput,:) = {out.name, out.type, 'timestep'};
                         cOutput = cOutput + 1;
                         
                     % Input to E+
@@ -537,13 +717,31 @@ classdef mlep < handle
             end
         end
         
-        % Helper function for killing processes identified by name
-        function killProcessByName(name)
+        function killProcessByName(name, varargin)
+            %KILLPROCESSBYNAME - Helper function for killing processes identified by name.
+            %
+            % Syntax:  killProcessByName(name)
+            %
+            % Inputs:
+            %         name - Name of the process to be killed.
+            % issueWarning - Notify when killing processes. (Default: true)
+            %
+            % See also: MLEP, MLEP.RUNENERGYPLUS
+            
+            if nargin < 2
+                issueWarning = true;
+            else
+                issueWarning = varargin{1};
+                assert(isa(issueWarning,'numeric') || isa(issueWarning,'logical'));
+            end
+                
             p = System.Diagnostics.Process.GetProcessesByName(name);
             for i = 1:p.Length
                 try
-                    dt = p(i).StartTime.Now - p(i).StartTime;
-                    warning('Found process "%s", ID = %d, started %d minutes ago. Terminating the process.',name, p(i).Id, dt.Minutes);
+                    dt = p(i).StartTime.Now - p(i).StartTime;                    
+                    if issueWarning
+                        warning('Found process "%s", ID = %d, started %d minutes ago. Terminating the process.',name, p(i).Id, dt.Minutes);                    
+                    end
                     p(i).Kill();
                     p(i).WaitForExit(100);
                 catch
@@ -554,8 +752,16 @@ classdef mlep < handle
             end
         end
         
-        % Helper function for recursive rmdir
         function rmdirR(dirname)
+            %RMDIRR - Helper function for a recursive rmdir
+            %
+            % Syntax:  rmdirR(dirname)
+            %
+            % Inputs:
+            %      dirname - Directory to be removed. 
+            %
+            % See also: MLEP, MLEP.INITIALIZE
+            
             % Remove foldert recursively (with all files beneath)
             delete(fullfile(dirname,'*'));
             st = rmdir(dirname);
@@ -564,14 +770,26 @@ classdef mlep < handle
     end
     
     methods (Access = public, Static)
-        % Translate flag number into a human readable string
+        
         function str = epFlag2str(flag)
-            % Flag	Description
+            %EPFLAG2STR - Transform numeric flag returned by EnergyPlus into a human readable form.
+            % Flag	Description:
             % +1	Simulation reached end time.
             % 0	    Normal operation.
             % -1	Simulation terminated due to an unspecified error.
             % -10	Simulation terminated due to an error during the initialization.
-            % -20	Simulation terminated due to an error during the time integration.
+            % -20	Simulation terminated due to an error during the time integration.% 
+            %
+            % Syntax:  str = epFlag2str(flag)
+            %
+            % Inputs:
+            %         flag - EnergyPlus return flag.
+            %
+            % Outputs:
+            %          str - Flag description.
+            %
+            % See also: MLEP, MLEP.RUNENERGYPLUS
+            
             switch flag
                 case 1
                     str = 'Simulation reached end time. If this is not intended, extend the simulation period in the IDF file';
@@ -588,8 +806,20 @@ classdef mlep < handle
             end
         end
         
-        % Get EnergyPlus version out of Energy+.idd file
         function [ver, minor] = getEPversion(iddFullpath)
+            %GETEPVERSION - Get EnergyPlus version out of Energy+.idd file
+            %
+            %  Syntax:  [ver, minor] = getEPversion(iddFullpath)
+            %
+            %  Inputs:
+            %  iddFullpath - Path to a .IDD file.  
+            %
+            % Outputs:
+            %          ver - EnergyPlus version (e.g. 8.9)
+            %        minor - Last digit of the EnergyPlus version (e.g. 0)
+            %
+            % See also: MLEP, MLEP.INITIALIZE
+            
             % Parse EnergyPlus version out of Energy+.idd file
             assert(exist(iddFullpath,'file')>0,'Could not find "%s" file. Please correct the file path or make sure it is on the Matlab search path.',iddFullpath);
             % Read file
@@ -607,9 +837,17 @@ classdef mlep < handle
     end
     
     %% ======================= Communication ==============================
-    methods
-        % Create or reuse java socket
+    methods (Access = private)
+        
         function makeSocket(obj)
+            %MAKESOCKET - Create or reuse java socket.
+            %Open a socket on a free port on localhost. Make the
+            %"socket.cfg" file to be read by BCVTB. 
+            %
+            %  Syntax:  makeSocket(obj)
+            %
+            % See also: INITIALIZE, ACCEPTSOCKET
+            
             if isempty(obj.serverSocket) || ...
                     (~isempty(obj.serverSocket) && obj.serverSocket.isClosed)
                 % If any error happens, this function will be interrupted
@@ -638,13 +876,22 @@ classdef mlep < handle
             obj.serverSocket.setSoTimeout(obj.acceptTimeout);
             
             % Write socket config file
-            mlep.writeSocketConfig(fullfile(obj.outputDirFullPath,obj.configFile),obj.serverSocket, hostname);
+            mlep.writeSocketConfig(...
+                fullfile(obj.outputDirFullPath,obj.socketConfigFileName),...
+                hostname,...
+                obj.serverSocket.getLocalPort);
             
             obj.commSocket = [];
         end
         
-        % Establish connection by accepting socket
-        function acceptSocket(obj)
+        function acceptSocket(obj)            
+            %ACCEPTSOCKET - Establish connection by accepting socket.            
+            %
+            %  Syntax:  acceptSocket(obj)
+            %
+            % See also: MAKESOCKET, READSOCKET, WRITESOCKET, CLOSESOCKET,
+            %           READ, WRITE
+            
             assert(obj.isInitialized, 'Initialize the object first.');
             % Accept Socket
             obj.commSocket = obj.serverSocket.accept;
@@ -662,8 +909,15 @@ classdef mlep < handle
             end            
         end
         
-        % Read from socket
-        function packet = read(obj)
+        function packet = readSocket(obj)
+            %READSOCKET - Read from socket. 
+            %
+            %  Syntax: packet = readSocket(obj)
+            %
+            % Outputs: packet - One line of data obtained from the socket.
+            %
+            % See also: MAKESOCKET, WRITESOCKET
+            
             if obj.isRunning
                 packet = char(readLine(obj.reader));
 %                 packet = char(readLine(java.io.BufferedReader(java.io.InputStreamReader(obj.commSocket.getInputStream))));
@@ -672,8 +926,15 @@ classdef mlep < handle
             end
         end
         
-        % Write to socket
-        function write(obj, packet)
+        function writeSocket(obj, packet)
+            %WRITESOCKET - Write data to socket.
+            %
+            %  Syntax: writeSocket(obj, packet)
+            %
+            %  Inputs: packet - Data to be sent to the socket.
+            %
+            % See also: MAKESOCKET, READSOCKET
+            
             if obj.isRunning
 %                 wr = java.io.BufferedWriter(java.io.OutputStreamWriter(obj.commSocket.getOutputStream));
 %                 wr.write(sprintf('%s\n', packet));
@@ -686,143 +947,30 @@ classdef mlep < handle
             end
         end
         
-        % Communication timeout
-        function setRWTimeout(obj, value)
-            if value < 0, value = 0; end
-            obj.rwTimeout = value;
+        function setRWTimeout(obj, timeout)
+            %SETRWTIMEOUT - Set read/write timeout for the communication socket.
+            %
+            %  Syntax: setRWTimeout(obj, value)
+            %
+            %  Inputs: timeout - Communication timeout in [ms].
+            %
+            % See also: MAKESOCKET, READ, WRITE
+            
+            if timeout < 0, timeout = 0; end
+            obj.rwTimeout = timeout;
             if isjava(obj.commSocket)
-                obj.commSocket.setSoTimeout(value);
+                obj.commSocket.setSoTimeout(timeout);
                 obj.createStreams;  % Recreate reader and writer streams
             end
         end
         
-        % Feed a sequence of input to the simulation
-        function [status, TOut, ROut, IOut, BOut] = feedInputs(obj,...
-                TInputs, RInputs, IInputs, BInputs)
-            % Runs simulation with sequences of inputs, and returns outputs
-            % The process will be started if it is not running, and it will
-            % not be stopped when this function returns.
-            % status: 0 if successful, 1 if the client terminates before
-            %       all inputs are fed, -1 if other errors.
-            % TInputs and TOut are vectors of input & output time instants.
-            % All input and output sequences are matrices where each row
-            % contains input/output data for one time instant, each column
-            % corresponds to an input/output signal. R*, I*, B* are for
-            % real, integer, boolean signals respectively.
-            %
-            % This function does not check for validity of arguments, so
-            % take appropriate caution.
-            
-            if nargin < 5
-                error('Not enough parameters.');
-            end
-            
-            ROut = [];
-            IOut = [];
-            BOut = [];
-            status = 0;
-            
-            nRuns = length(TInputs);
-            if nRuns < 1
-                disp('nRuns is zero.');
-                status = -1;
-                return;
-            end
-            
-            TOut = nan(nRuns, 1);
-            
-            if ~obj.isRunning
-                obj.start;
-                if ~obj.isRunning
-                    disp('Cannot start the simulation process.');
-                    status = -1;
-                    return;
-                end
-            end
-            
-            if isempty(RInputs), RInputs = zeros(nRuns, 0); end
-            if isempty(IInputs), IInputs = zeros(nRuns, 0); end
-            if isempty(BInputs), BInputs = zeros(nRuns, 0); end
-            
-            % Run the first time to obtain the size of outputs
-            obj.write(mlep.encodeData(obj.versionProtocol, 0, TInputs(1),...
-                RInputs(1,:), IInputs(1,:), BInputs(1,:)));
-            
-            readpacket = obj.read;
-            
-            if isempty(readpacket)
-                disp('Cannot read first input packets.');
-                status = -1;
-                return;
-            else
-                [flag, timevalue, rvalues, ivalues, bvalues] = mlep.decodePacket(readpacket);
-                switch flag
-                    case 0
-                        TOut(1) = timevalue;
-                        
-                        ROut = nan(nRuns, length(rvalues)); ROut(1,:) = rvalues;
-                        IOut = nan(nRuns, length(ivalues)); IOut(1,:) = ivalues;
-                        BOut = nan(nRuns, length(bvalues)); BOut(1,:) = bvalues;
-                    case 1
-                        obj.stop(false);
-                        status = 1;
-                        return;
-                    otherwise
-                        fprintf('Error from E+ with flag %d.\n', flag);
-                        obj.stop(false);
-                        status = -1;
-                        return;
-                end
-            end
-            
-            for kRun = 2:nRuns
-                fprintf('Run %d at time %g with U = %g.\n', kRun, TInputs(kRun), RInputs(kRun,:));
-                obj.write(mlep.encodeData(obj.versionProtocol, 0, TInputs(kRun),...
-                    RInputs(kRun,:), IInputs(kRun,:), BInputs(kRun,:)));
-                
-                % Try to read a number of times (there is some problem with
-                % TCP connection).
-                nTrials = 0;
-                while nTrials < 10
-                    readpacket = obj.read;
-                    if isempty(readpacket)
-                        nTrials = nTrials + 1;
-                    else
-                        break;
-                    end
-                end
-                
-                if isempty(readpacket)
-                    disp('Cannot read input packets.');
-                    status = -1;
-                    break;
-                else
-                    [flag, timevalue, rvalues, ivalues, bvalues] = mlep.decodePacket(readpacket);
-                    switch flag
-                        case 0
-                            TOut(kRun) = timevalue;
-                            ROut(kRun,:) = rvalues;
-                            IOut(kRun,:) = ivalues;
-                            BOut(kRun,:) = bvalues;
-                        case 1
-                            obj.stop(false);
-                            status = 1;
-                            break;
-                        otherwise
-                            fprintf('Error from E+ with flag %d.\n', flag);
-                            obj.stop(false);
-                            status = -1;
-                            break;
-                    end
-                end
-            end
-        end
-    end
-    
-    methods (Access = private)
-        % Close socket connection
         function closeSocket(obj)
-            % Close serverSocket
+            %CLOSESOCKET - Close socket connection.            
+            %
+            %  Syntax: closeSocket(obj)            
+            %
+            % See also: MAKESOCKET, READ, WRITE
+            
             if isjava(obj.serverSocket)
                 obj.serverSocket.close();
             end
@@ -849,14 +997,19 @@ classdef mlep < handle
             obj.commSocket = [];
         end
         
-        % Create java i/o streams
         function createStreams(obj)
+            %CREATESTREAMS - Prepare Java I/O streams. 
+            %
+            %  Syntax: createStreams(obj)   
+            %
+            % See also: READ, WRITE
+            
             obj.writer = java.io.BufferedWriter(java.io.OutputStreamWriter(obj.commSocket.getOutputStream));
             obj.reader = java.io.BufferedReader(java.io.InputStreamReader(obj.commSocket.getInputStream));
         end
     end
     
-    methods (Static)
+    methods (Access = private, Static)
         % Decode BCVTB protocol packet
         [flag, timevalue, realvalues, intvalues, boolvalues] = decodePacket(packet);
         
@@ -873,10 +1026,10 @@ classdef mlep < handle
         data = readIDF(filename, classnames);
         
         % Make socket configuration file
-        writeSocketConfig(fullFilePath, serverSocket, hostname);
+        writeSocketConfig(fullFilePath, hostname, port);
         
         % Make co-simulation I/O configuration file
-        writeVariableConfig(inputTable, outputTable, fullFilePath);
+        writeVariableConfig(fullFilePath, inputTable, outputTable);
     end
   
 end

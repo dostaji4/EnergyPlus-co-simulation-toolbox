@@ -1,5 +1,6 @@
 function data = readIDF(filename, classnames)
 % READIDF - Read and parse EnergyPlus IDF file.
+%
 %   data = readIDF(filename) reads all data entries from an IDF
 %   file with name filename. The output data is a structure array,
 %   where each item is one data entry. Each item k has two fields:
@@ -48,10 +49,6 @@ function data = readIDF(filename, classnames)
 %
 %
 % (C) 2012 by Truong X. Nghiem (nghiem@seas.upenn.edu)
-
-% HISTORY:
-%   2012-05-16 Speed up and change output structure.
-%   2012-05-09 Started.
 
 error(nargchk(1, 2, nargin));
 assert(ischar(filename), 'File name must be a string.');
