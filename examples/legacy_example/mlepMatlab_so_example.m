@@ -4,7 +4,7 @@ ep = mlep;
 ep.idfFile = 'SmOffPSZ';
 ep.epwFile = 'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3';
 ep.useBus = false; % use vector I/O
-ep.start; 
+ep.setup('init'); 
 
 %% The main simulation loop
 endTime = 4*24*60*60;
@@ -20,17 +20,15 @@ while t < endTime
     
     u = [20 25];
     
-    % Get y
-    [y, t] = ep.read;
-    
-    % Send u
-    ep.write(u,t); 
-    
+    % Send u, get y
+    y = ep.step(u);        
+    t = ep.time;
+
     % Save data to table
-    logTable(iLog, :) = num2cell([t y(:)']);
+    logTable(iLog, :) = num2cell([t y']);
     iLog = iLog + 1;    
 end
-ep.stop;
+ep.release;
 
 %% Plot
 

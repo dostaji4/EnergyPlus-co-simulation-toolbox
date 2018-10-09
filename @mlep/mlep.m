@@ -1,28 +1,75 @@
-classdef mlep < handle
-%MLEP - EnergyPlus co-simulation toolbox. 
+classdef mlep < mlepSO
+%MLEP - EnergyPlus co-simulation tool. 
 %The class contains all necesary tools for starting the co-simulation with
 %EnergyPlus (E+). It enables data exchanges between the host (in Matlab) and
 %the client (the E+ process), using the communication protocol 
 %defined by Building Control Virtual Test Bed (BCVTB).
 %
-% Selected Properties and Methods:
+%Selected Properties and Methods:
 % 
 % MLEP Properties:
+%         idfFile - Building simulation configuration file for EnergyPlus
+%                   .IDF. (Default: 'in.idf')
+%         epwFile - Weather data file .EPW. (Default: 'in.epw')
 %         workDir - A directory, where the EnergyPlus process is started.
 %                   (Default: '.' meaning the current directory)
 %   outputDirName - Name of the directory, where all outputs of EnergyPlus 
 %                   will be put. The directory is created under the working 
-%                   directory. (Default: "eplusout")
-%           
+%                   directory. (Default: 'eplusout') 
 %           
 % MLEP Methods:
-%  initialize - Load and validate input files. Write configuration files. 
-%       start - Start the EnergyPlus process and establish communication.
-%        read - Read outputs from EnergyPlus. 
-%       write - Write input to EnergyPlus.
-%        stop - Close communication and terminate the EnergyPlus process.    
+%      initialize - Load and validate input files. Write configuration files. 
+%           start - Start an EnergyPlus process and establish communication.
+%            read - Read outputs from the EnergyPlus. 
+%           write - Write inputs to the EnergyPlus.
+%            stop - Close communication and terminate the EnergyPlus process.    
 %
-% See also: OTHER_CLASS_NAME1,  OTHER_CLASS_NAME2
+% MLEP Inherited System Object Methods:
+%            step - Send variables 'u' to EnergyPlus and get variables
+%                   'y' from EnergyPlus by calling y = step(obj,u).
+%                   If useBus = true then 'u' must be an appropriate 
+%                   buses/structure and 'y' is a bus/structure, otherwise
+%                   'u' and 'y' are vectors of appriate sizes.
+%           setup - Initialize system object manually when necessary by 
+%                   invoking setup(obj,'init'). The routine will start the 
+%                   EnergyPlus process and establish communication. 
+%                   The setup routine is called automatically during the 
+%                   first 'step' call if not ran manually.
+%         release - Equivalent to the stop method.
+% 
+% Example - Using mlep methods (mlepMatlab_example.m)
+%
+%     % Initialize
+%     ep = mlep;
+%     ep.idfFile = 'SmOffPSZ';
+%     ep.epwFile = 'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3';
+%     ep.start; 
+% 
+%     % Run
+%     u = [20 25];
+%     [y, t] = ep.read; % Get EnergyPlus outputs
+%     ep.write(u,t);    % Send EnergyPlus inputs
+% 
+%     % Stop
+%     ep.stop;
+%
+% Example - Using System Object (mlepMatlab_so_example.m)
+%
+%     % Initialize
+%     ep = mlep;
+%     ep.idfFile = 'SmOffPSZ';
+%     ep.epwFile = 'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3';
+%     ep.useBus = false; % use vector I/O
+% 
+%     % Run
+%     u = [20 25];
+%     y = ep.step(u); % Communicate with EnergyPlus
+%     t = ep.time;
+% 
+%     % Stop
+%     ep.release;
+%
+% See also: MLEPSO, PROCESSMANAGER
 %    
 % Copyright (c) 2018, Jiri Dostal (jiri.dostal@cvut.cz)
 % All rights reserved.
@@ -40,15 +87,14 @@ classdef mlep < handle
 % THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
 % "AS IS". NO WARRANTIES ARE GRANTED.
 %
-%
 % History:
 %    2009-2013 by Truong Nghiem(truong@seas.upenn.edu)
 %    2010-2015 by Willy Bernal(Willy.BernalHeredia@nrel.gov)
 %    2018      by Jiri Dostal (jiri.dostal@cvut.cz)
     
-    properties                
-        idfFile = 'in.idf';     % Building specification IDF file (E+ default by default)
-        epwFile = 'in.epw';     % Weather profile EPW file (E+ default by default)                
+    properties (Nontunable)               
+        idfFile = 'in.idf';     % Specify IDF file
+        epwFile = 'in.epw';     % Specify EPW file                
         workDir = '.';          % Working directory (default is current directory)
         outputDirName = 'eplusout'; % EnergyPlus output directory (created under working folder)                                        
     end
@@ -57,7 +103,8 @@ classdef mlep < handle
     end
     
     properties (SetAccess=private, GetAccess=public)
-        timestep;               % [s] Simulation timestep (loaded from IDF, co-simulation timesteps must adhere)
+        timestep;               % Simulation timestep [s] loaded from IDF. 
+                                % Timesteps of co-simulation processes must adhere.
         isRunning = false;      % Is co-simulation running?
         isInitialized = false;  % Initialization flag        
         inputTable;             % Table of inputs to EnergyPlus
@@ -249,7 +296,7 @@ classdef mlep < handle
                     if flag < 0
                         [~,errFile] = fileparts(obj.idfFile);
                         errFile = [errFile '.err'];
-                        errFilePath = fullfile(pwd,obj.outputDir,errFile);
+                        errFilePath = fullfile(pwd,obj.outputDirName,errFile);
                         err_str = [err_str, ...
                             sprintf('Check the <a href="matlab:open %s">%s</a> file for further information.',...
                             errFilePath, errFile)];
@@ -347,6 +394,9 @@ classdef mlep < handle
     % ---------------------- Get/Set methods ------------------------------
     methods     
         function set.idfFile(obj, file)
+            % SET.IDFFILE - Check existance of the IDF file, then set.
+           
+            if ~isempty(bdroot) && isLibraryMdl(bdroot), return, end
             assert(~isempty(file),'IDF file not specified.');
             assert(ischar(file) || isstring(file),'Invalid file name.');
             if strlength(file)<4 || ~strcmpi(file(end-3:end), '.idf')
@@ -357,6 +407,9 @@ classdef mlep < handle
         end
         
         function set.epwFile(obj,file)
+            % SET.EPWFILE - Check existance of the EPW file, then set.
+            
+            if ~isempty(bdroot) && isLibraryMdl(bdroot), return, end
             assert(~isempty(file),'EPW file not specified.');
             assert(ischar(file) || isstring(file),'Invalid file name.');
             if strlength(file)<4 || ~strcmpi(file(end-3:end), '.epw')
