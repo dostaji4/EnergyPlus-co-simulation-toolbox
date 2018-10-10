@@ -99,7 +99,8 @@ classdef mlep < mlepSO
         outputDirName = 'eplusout'; % EnergyPlus output directory (created under working folder)                                        
     end
     
-    properties (Hidden)                      
+    properties (SetAccess=private, GetAccess=public, Hidden, Nontunable)  
+        idfData;                % Structure with data from parsed IDF
     end
     
     properties (SetAccess=private, GetAccess=public)
@@ -121,8 +122,7 @@ classdef mlep < mlepSO
         process;                % Process object for E+        
         env;                    % Variable containing Environment settings for process run
         program;                % EnergyPlus executable (detected during installation)  
-        isUserVarFile;          % True if user-defined variables.cfg file is present        
-        idfData;                % Structure with data from parsed IDF
+        isUserVarFile;          % True if user-defined variables.cfg file is present                
         idfFullFilename;        % Full path to IDF file
         epwFullFilename;        % Full path to EPW file
         iddFullFilename;        % Full path to IDD file
@@ -159,13 +159,15 @@ classdef mlep < mlepSO
             %
             % See also: START, READ, WRITE, STOP
             
-            if obj.isInitialized
-                return
+            if obj.isRunning && obj.isInitialized
+                % do not reinitialize
+                return                
             end
             
-            if obj.isRunning
+            if ~obj.isInitialized && obj.isRunning
                 obj.stop;
                 obj.isRunning = 0;
+                % and continue initialization
             end
             
             % Check parameters
@@ -519,7 +521,7 @@ classdef mlep < mlepSO
             
             function epProcListener(src,data)
                 fprintf('\n');
-                fprintf('%s: EnergyPlus process exited with exitValue = %d.\n',src.id,src.exitValue);
+                fprintf('%s: EnergyPlus process stopped with exitValue = %d.\n',src.id,src.exitValue);
                 
                 if src.exitValue ~= 1
                     fprintf('Event name %s\n',data.EventName);

@@ -4,7 +4,7 @@
     <param.authnamewatermark>Jiri Dostal</param.authnamewatermark>
     <param.email />
     <param.company />
-    <param.summary>Interface for co-simulation of EnergyPlus models in Matlab/Simulink.</param.summary>
+    <param.summary>Enables co-simulation of EnergyPlus models in Matlab.</param.summary>
     <param.description>Interface with EnergyPlus models via socket connection (BCVTB protocol). EnergyPlus and Matlab/Simulink are co-simulated using loose coupling. See to legacy_example folder for introductory examples.</param.description>
     <param.screenshot>${PROJECT_ROOT}\library\mlepIcon.jpg</param.screenshot>
     <param.version>1.0</param.version>
@@ -16,6 +16,8 @@
     <param.guid>f0f50fa4-c72a-4978-a241-7933910859fa</param.guid>
     <param.exclude.filters>*.asv
 *.mat
+cleanup.m
+startup.m
 .*
 EnergyPlusV8-9-0\api-ms-win-core-console-l1-1-0.dll
 EnergyPlusV8-9-0\api-ms-win-core-datetime-l1-1-0.dll
@@ -900,24 +902,40 @@ tools\busObjectBusCreator\BOBCReadMe.txt
 tools\busObjectBusCreator\BusObjectBusCreator.slx
 tools\busObjectBusCreator\license.txt</param.exclude.filters>
     <param.exclude.pcodedmfiles>true</param.exclude.pcodedmfiles>
-    <param.examples />
+    <param.examples>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;examples&gt;
+   &lt;exampleCategory name="legacy_example"&gt;
+      &lt;example name="mlepMatlab_example" type="html"&gt;
+         &lt;file type="source"&gt;/examples/legacy_example/html/mlepMatlab_example.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/legacy_example/mlepMatlab_example.m&lt;/file&gt;
+         &lt;file type="thumbnail"&gt;/examples/legacy_example/html/mlepMatlab_example.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/legacy_example/html/mlepMatlab_example_01.png&lt;/file&gt;
+      &lt;/example&gt;
+      &lt;example name="mlepMatlab_so_example" type="html"&gt;
+         &lt;file type="source"&gt;/examples/legacy_example/html/mlepMatlab_so_example.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/legacy_example/mlepMatlab_so_example.m&lt;/file&gt;
+         &lt;file type="thumbnail"&gt;/examples/legacy_example/html/mlepMatlab_so_example.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/legacy_example/html/mlepMatlab_so_example_01.png&lt;/file&gt;
+      &lt;/example&gt;
+   &lt;/exampleCategory&gt;
+&lt;/examples&gt;</param.examples>
     <param.demosxml />
     <param.apps />
     <param.registered.apps />
     <param.docs />
-    <param.getting.started.guide />
+    <param.getting.started.guide>${PROJECT_ROOT}\doc\GettingStarted.mlx</param.getting.started.guide>
     <param.matlabpath.excludes />
     <param.javaclasspath.excludes>
       <item>/mlep/bcvtb/lib/xml/build/jar/DTDValidator.jar</item>
       <item>/bcvtb/lib/xml/build/jar/DTDValidator.jar</item>
     </param.javaclasspath.excludes>
-    <param.exported.on.package>false</param.exported.on.package>
-    <param.release.start>R2018a</param.release.start>
+    <param.exported.on.package>true</param.exported.on.package>
+    <param.release.start>R2017a</param.release.start>
     <param.release.end>latest</param.release.end>
     <param.release.current.only>false</param.release.current.only>
     <param.compatiblity.windows>true</param.compatiblity.windows>
     <param.compatiblity.macos>false</param.compatiblity.macos>
-    <param.compatiblity.linux>true</param.compatiblity.linux>
+    <param.compatiblity.linux>false</param.compatiblity.linux>
     <param.compatiblity.matlabonline>false</param.compatiblity.matlabonline>
     <unset>
       <param.email />
@@ -929,17 +947,13 @@ tools\busObjectBusCreator\license.txt</param.exclude.filters>
       <param.products.version />
       <param.platforms />
       <param.exclude.pcodedmfiles />
-      <param.examples />
       <param.demosxml />
       <param.apps />
       <param.registered.apps />
       <param.docs />
-      <param.getting.started.guide />
       <param.matlabpath.excludes />
-      <param.exported.on.package />
       <param.release.current.only />
       <param.compatiblity.windows />
-      <param.compatiblity.linux />
     </unset>
     <fileset.rootdir>
       <file>C:\work\projects\Hydronics_4_0\Matlab\Building_cosimulation\EnergyPlus_cosimulation_toolbox</file>
@@ -947,12 +961,12 @@ tools\busObjectBusCreator\license.txt</param.exclude.filters>
     <fileset.rootfiles>
       <file>${PROJECT_ROOT}\@mlep</file>
       <file>${PROJECT_ROOT}\bcvtb</file>
-      <file>${PROJECT_ROOT}\cleanup.m</file>
+      <file>${PROJECT_ROOT}\demos.xml</file>
+      <file>${PROJECT_ROOT}\doc</file>
       <file>${PROJECT_ROOT}\examples</file>
       <file>${PROJECT_ROOT}\installMlep.m</file>
       <file>${PROJECT_ROOT}\library</file>
       <file>${PROJECT_ROOT}\manuals_and_articles</file>
-      <file>${PROJECT_ROOT}\startup.m</file>
       <file>${PROJECT_ROOT}\third_party</file>
     </fileset.rootfiles>
     <fileset.depfun.included />
