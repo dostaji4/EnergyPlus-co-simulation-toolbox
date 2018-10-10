@@ -1,9 +1,10 @@
 # Getting Started with EnergyPlus co-simulation toolbox
+
 ## Description
 The toolbox facilitates simultaneous simulation of EnergyPlus and Matlab (co-simulation). The main component is the 'mlep' class containing all the necessary tools to configure and run EnergyPlus co-simulation within the Matlab environment. 
 ## System Requirements
 * __Windows__. The toolbox has only been tested for Windows, but considerable preparations for other OS has already been done.
-* __EnergyPlus installed__ You can obtain the software here [ https://energyplus.net/](https://energyplus.net/). If you install the EnergyPlus to the default location ('C:\EnergyPlusVx-x-x\') then it might be detected automatically by the toolbox. Please note, that you should always simulate IDF files by the same version of the EnergyPlus with which they were created or you can alternatively upgrade the IDF file by the IDFVersionUpdater (located under 'C:\EnergyPlusVx-x-x\PreProcess\IDFVersionUpdater'). 
+* __EnergyPlus installed__. You can obtain the software here [ https://energyplus.net/](https://energyplus.net/). If you install the EnergyPlus to the default location ('C:\EnergyPlusVx-x-x\') then it might be detected automatically by the toolbox. Please note, that you should always simulate IDF files by the same version of the EnergyPlus with which they were created or you can alternatively upgrade the IDF file by the IDFVersionUpdater (located under 'C:\EnergyPlusVx-x-x\PreProcess\IDFVersionUpdater'). 
 
 ## Install 
 Download and install the toolbox binary from [https://github.com/dostaji4/EnergyPlus-co-simulation-toolbox/releases](https://github.com/dostaji4/EnergyPlus-co-simulation-toolbox/releases).
@@ -16,7 +17,10 @@ The toolbox contains:
 * System Object implementation usable in Matlab & Simulink. 
 * Bus input/output integration for easy Simulink model setup. 
 * A 'mlep Bus Creator' block to facilitate Simulink co-simulation input setup. 
+
 ## Examples
+See the _GettingStarted.mlx_ guide delivered with the Matlab toolbox or the documentation
+residing under _Help -> Supplemental Software -> EnergyPlus co-simulation toolbox_
 
 For detailed Matlab example see
 ```matlab
