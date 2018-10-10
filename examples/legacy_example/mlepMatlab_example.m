@@ -47,6 +47,7 @@ outputTable = ep.outputTable
 
 % Now with the "variables.cfg" file (example file contains a subset of the
 % IDF i/o set).
+cd(fileparts(mfilename('fullpath')));
 copyfile('variables_example.cfg','variables.cfg');
 
 % Re-initialize
