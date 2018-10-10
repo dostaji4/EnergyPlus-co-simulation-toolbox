@@ -1,10 +1,10 @@
 <deployment-project plugin="plugin.toolbox" plugin-version="1.0">
-  <configuration build-checksum="2994093686" file="C:\work\projects\Hydronics_4_0\Matlab\Building_cosimulation\EnergyPlus_cosimulation_toolbox\EnergyPlus co-simulation toolbox_packager.prj" location="C:\work\projects\Hydronics_4_0\Matlab\Building_cosimulation\EnergyPlus_cosimulation_toolbox" name="EnergyPlus co-simulation toolbox_packager" target="target.toolbox" target-name="Package Toolbox">
+  <configuration build-checksum="3608178216" file="C:\work\projects\Hydronics_4_0\Matlab\Building_cosimulation\EnergyPlus_cosimulation_toolbox\EnergyPlus co-simulation toolbox_packager.prj" location="C:\work\projects\Hydronics_4_0\Matlab\Building_cosimulation\EnergyPlus_cosimulation_toolbox" name="EnergyPlus co-simulation toolbox_packager" target="target.toolbox" target-name="Package Toolbox">
     <param.appname>EnergyPlus co-simulation toolbox</param.appname>
     <param.authnamewatermark>Jiri Dostal</param.authnamewatermark>
     <param.email />
     <param.company />
-    <param.summary>Enables co-simulation of EnergyPlus models in Matlab.</param.summary>
+    <param.summary>Co-simulation of EnergyPlus models in Matlab.</param.summary>
     <param.description>Interface with EnergyPlus models via socket connection (BCVTB protocol). EnergyPlus and Matlab/Simulink are co-simulated using loose coupling. See to legacy_example folder for introductory examples.</param.description>
     <param.screenshot>${PROJECT_ROOT}\library\mlepIcon.jpg</param.screenshot>
     <param.version>1.0</param.version>
@@ -929,7 +929,7 @@ tools\busObjectBusCreator\license.txt</param.exclude.filters>
       <item>/mlep/bcvtb/lib/xml/build/jar/DTDValidator.jar</item>
       <item>/bcvtb/lib/xml/build/jar/DTDValidator.jar</item>
     </param.javaclasspath.excludes>
-    <param.exported.on.package>true</param.exported.on.package>
+    <param.exported.on.package>false</param.exported.on.package>
     <param.release.start>R2017a</param.release.start>
     <param.release.end>latest</param.release.end>
     <param.release.current.only>false</param.release.current.only>
@@ -952,6 +952,7 @@ tools\busObjectBusCreator\license.txt</param.exclude.filters>
       <param.registered.apps />
       <param.docs />
       <param.matlabpath.excludes />
+      <param.exported.on.package />
       <param.release.current.only />
       <param.compatiblity.windows />
     </unset>
