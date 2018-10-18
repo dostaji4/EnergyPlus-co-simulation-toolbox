@@ -3,7 +3,7 @@ classdef mlepSO < matlab.System &...
         matlab.system.mixin.Propagates &...
         matlab.system.mixin.CustomIcon &...
         matlab.system.mixin.Nondirect
-    %MLEPSO - EnergyPlus co-simulation system object.
+    %MLEPSO EnergyPlus co-simulation system object.
     %Simulate EnergyPlus models in Matlab/Simulink using a loose coupling
     %co-simulation mechanism.    
     %
@@ -108,10 +108,16 @@ classdef mlepSO < matlab.System &...
         
         function validatePropertiesImpl(obj)
            
-            if ~isempty(bdroot) && isLibraryMdl(bdroot), return, end
+            if ~isempty(gcs) && ...
+                    (strcmpi(get_param(gcs,'BlockDiagramType'),'library') || ... % is library?
+                     strcmpi(get_param(gcb,'Commented'),'on'))                   % is commented out?
+                return
+            end
             
-            % Initialize
-            obj.initialize;
+            % Initialize 
+            if ~obj.isInitialized 
+                obj.initialize;
+            end
             
             % Create output bus object
             if obj.useBus
@@ -158,7 +164,7 @@ classdef mlepSO < matlab.System &...
                 rethrow(me);
             end
         end
-        
+         
         function updateImpl(obj,input)
             % Send signals to E+
             if isstruct(input)
@@ -321,6 +327,10 @@ classdef mlepSO < matlab.System &...
             sts = obj.createSampleTime("Type", "Discrete", ...
                 "SampleTime", obj.timestep);
         end
+       
+        function simMode = getSimulateUsingImpl(obj) %#ok<MANU>
+            simMode = 'Interpreted execution';
+        end
     end
     
     %% ================== Simulink Block Appearence =======================
@@ -342,6 +352,12 @@ classdef mlepSO < matlab.System &...
     end
     
     methods(Access = protected, Static)
+        
+        function flag = showSimulateUsingImpl
+            % Hide Simulate using block
+            flag = false;
+        end
+        
         function header = getHeaderImpl(obj) %#ok<INUSD>
             % Define header panel for System block dialog
             header = matlab.system.display.Header(mfilename("class"));

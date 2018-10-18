@@ -99,11 +99,11 @@ classdef mlep < mlepSO
         outputDirName = 'eplusout'; % EnergyPlus output directory (created under working folder)                                        
     end
     
-    properties (SetAccess=private, GetAccess=public, Hidden, Nontunable)  
+    properties (SetAccess=private, GetAccess=public, Hidden, Nontunable, Transient)  
         idfData;                % Structure with data from parsed IDF
     end
     
-    properties (SetAccess=private, GetAccess=public)
+    properties (SetAccess=private, GetAccess=public, Transient)
         timestep;               % Simulation timestep [s] loaded from IDF. 
                                 % Timesteps of co-simulation processes must adhere.
         isRunning = false;      % Is co-simulation running?
@@ -114,7 +114,7 @@ classdef mlep < mlepSO
         versionProtocol;        % Current version of the protocol        
     end
     
-    properties (Access = private)
+    properties (Access = private, Transient)
         serverSocket;           % Server socket to listen to client
         commSocket;             % Socket for sending/receiving data
         writer;                 % Buffered writer stream
@@ -406,6 +406,7 @@ classdef mlep < mlepSO
             end
             assert(exist(file,'file')>0,obj.file_not_found_str,file);
             obj.idfFile = file;
+            obj.isInitialized = 0; % Force new initialization
         end
         
         function set.epwFile(obj,file)
