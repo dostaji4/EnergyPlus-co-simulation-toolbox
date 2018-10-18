@@ -115,12 +115,22 @@ classdef mlepSO < matlab.System &...
             
             % Create output bus object
             if obj.useBus
+                % Create valid names 
+                idx = strlength(obj.outputSigName) > namelengthmax;
+                if any(idx)
+                    
+                end
+                
+                obj.createBusObjects;
+                
+                % Validate variable names
+%                 assert(isvarname(obj.outputSigName));
+                
                 % Prepare output structure prototype
                 obj.outTable = table('Size',[0 obj.nOut],...
                     'VariableTypes',repmat({'double'},1,obj.nOut),...
                     'VariableNames', obj.outputSigName);    
-                obj.outTable{1,:} = zeros(1,obj.nOut);
-                obj.createBusObjects;
+                obj.outTable{1,:} = zeros(1,obj.nOut);                
             end
         end
         

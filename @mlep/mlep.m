@@ -687,8 +687,9 @@ classdef mlep < mlepSO
             % Check Outputs for asterisks
             chk = contains(obj.outputTable.Name,'*');
             if any(chk)
-               error('IDF file: Ambiguous "*" key value detected in the following entries:\n%sPlease specify the key value exactly (using "Environment", zone name, surface name, etc.).',...
+               warning('IDF file: Ambiguous "*" key value detected. Please specify the key value exactly (using "Environment", zone name, surface name, etc.). The issue was detected in the following entries:\n%s\n',...
                    evalc('disp(obj.outputTable(chk,:))'));
+               obj.outputTable = obj.outputTable(~chk,:);
             end
             
             % Check Outputs for reporting frequency other then 
