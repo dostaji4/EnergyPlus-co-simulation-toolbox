@@ -16,7 +16,7 @@
 ep = mlep;
 ep.idfFile = 'SmOffPSZ';
 ep.epwFile = 'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3';
-ep.useBus = false; % use vector I/O
+ep.generateBusObjects = false; % use vector I/O
 
 % Use user-defined I/O configuration
 cd(fileparts(mfilename('fullpath')));

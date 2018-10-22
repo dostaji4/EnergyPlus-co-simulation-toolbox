@@ -11,9 +11,7 @@ classdef mlepSO < matlab.System &...
     %
     % MLEPSO Properties:
     %   idfFile       - EnergyPlus simulation configuration file (*.IDF)
-    %   epwFile       - Weather file (*.EPW).
-    %   useBus        - Logical switch determining if input and output are
-    %                   buses. (Default: true)
+    %   epwFile       - Weather file (*.EPW).    %       
     %   inputBusName  - Name of a Simulink.Bus object created from the
     %                   interface input specification (IDF/variables.cfg).
     %   outputBusName - Name of a Simulink.Bus object created from the
@@ -21,11 +19,11 @@ classdef mlepSO < matlab.System &...
     %   time          - Current simulation time.
     %
     % MLEPSO Methods:    
-    %   y = step(u)   - Send variables "u" to EnergyPlus and get variables
-    %                   "y" from EnergyPlus. If useBus = true, then "u" 
-    %                   must be an appropriate buses/structure and "y" is
-    %                   a bus/structure, otherwise "u" and "y" are vectors
-    %                   of appriate sizes.
+    %   y = step(u)   - Send variables 'u' to EnergyPlus and get variables
+    %                   'y' from EnergyPlus. 'u' and 'y' are vectors
+    %                   of appriate sizes defined by I/O definition in the
+    %                   IDF file. You can obtain the sizes by reading the
+    %                   'nIn' and 'nOut' properties.
     %   setup('init') - Initialize system object manually when necessary.
     %                   The routine will start the EnergyPlus process and
     %                   initialize communication. The setup routine is
@@ -34,10 +32,10 @@ classdef mlepSO < matlab.System &...
     %
     % See also: MLEP
     %
-    %
+    
     % Copyright (c) 2018, Jiri Dostal (jiri.dostal@cvut.cz)
     % All rights reserved.
-        
+    %    
     % Redistribution and use in source and binary forms, with or without
     % modification, are permitted provided that the following conditions are
     % met:
@@ -67,22 +65,30 @@ classdef mlepSO < matlab.System &...
     end
     
     properties (Logical, Nontunable)
-        useBus = true;              % Use bus
+        generateBusObjects = true;   % Generate Bus objects
     end
     
     properties (SetAccess = private, Abstract)
         timestep;                   % Simulation timestep
     end
     
-    properties (Hidden, SetAccess = private)
+    properties  (SetAccess = protected, GetAccess=public, Transient, Abstract)
+        isInitialized;              % Initialization flag        
+    end
+    
+    properties (SetAccess = private)
         nOut;               % Number of outputs
         nIn;                % Number of inputs
+    end
+    
+    properties (Hidden, SetAccess = private)        
         outputSigName;      % List of output signal names
         inputSigName;       % List of input signal names
         outTable;           % Prototype of output bus (to save time)
     end
     
     properties (Access = private)                            
+        % Signal naming function (use with caution)
         sigNameFcn = @(name,type) ['EP_' regexprep([name '__' type],'\W','_')];        
         inputMap;            
     end
@@ -109,7 +115,7 @@ classdef mlepSO < matlab.System &...
         function validatePropertiesImpl(obj)
            
             if ~isempty(gcs) && ...
-                    (strcmpi(get_param(gcs,'BlockDiagramType'),'library') || ... % is library?
+                    (strcmpi(get_param(bdroot,'BlockDiagramType'),'library') || ... % is library?
                      strcmpi(get_param(gcb,'Commented'),'on'))                   % is commented out?
                 return
             end
@@ -120,45 +126,25 @@ classdef mlepSO < matlab.System &...
             end
             
             % Create output bus object
-            if obj.useBus
-                % Create valid names 
-                idx = strlength(obj.outputSigName) > namelengthmax;
-                if any(idx)
-                    
-                end
-                
+            if obj.generateBusObjects                               
                 obj.createBusObjects;
-                
-                % Validate variable names
-%                 assert(isvarname(obj.outputSigName));
-                
-                % Prepare output structure prototype
-                obj.outTable = table('Size',[0 obj.nOut],...
-                    'VariableTypes',repmat({'double'},1,obj.nOut),...
-                    'VariableNames', obj.outputSigName);    
-                obj.outTable{1,:} = zeros(1,obj.nOut);                
             end
         end
         
         function validateInputsImpl(obj,in)
             try
                 % Validate inputs to the step method at initialization
-                if obj.useBus && isstruct(in)
-                    assert(isequal(obj.inputSigName,fieldnames(in)));
-                else
-                    if obj.useBus && ~isstruct(in)
-                        warning('Input is not a bus. Assigning inputs by their order.');
-                    end
-                    if isnumeric(in)
+                if isstruct(in)
+                    assert(isequal(obj.inputSigName,fieldnames(in)),'Input bus doesn''t comply with the specification derived from IDF file.');
+                elseif isnumeric(in)
                         assert(numel(in) == obj.nIn,'The size of input %dx%d does not comply with the required size %dx%d.',...
                             size(in,1),size(in,2),obj.nIn, 1);
-                    elseif ischar(in) && strcmpi(in,'init')
-                        %do nothing
-                    else
-                        error('Invalid input type "%s". Use either numerical vector of appropriate size or a string ''init''.',...
-                            class(in));
-                    end
-                end
+                elseif ischar(in) && strcmpi(in,'init')
+                        %do nothing, it is the setup('init') call.
+                else
+                    error('Invalid input type "%s". Use either numerical vector of appropriate size or a string ''init''.',...
+                        class(in));
+                end                
             catch me
                 obj.stop;
                 rethrow(me);
@@ -189,24 +175,15 @@ classdef mlepSO < matlab.System &...
                 obj.stopError('EnergyPlus data output dimension not correct.');
             end
             
-            if obj.useBus
-                % Create output bus
-                obj.outTable{1,:} = outputs;
-                output = table2struct(obj.outTable);
-                % Note: This is the fastest way compared to
-                % slower  out = cell2struct(num2cell(rValOut'),obj.outputSigName,1);
-                % slowest for i = 1:obj.nOut
-                %            out.(obj.outputSigName{i}) = rValOut(i);
-                %         end
-            else
-                % Output vector
-                output = outputs(:);
-            end        
+            % Output as a collumn vector
+            output = outputs(:);
+            
         end
         
         function resetImpl(obj)
             % Initialize / reset discrete-state properties
             obj.time = 0;
+            obj.isInitialized = 0;
         end
         
         function releaseImpl(obj)
@@ -280,18 +257,27 @@ classdef mlepSO < matlab.System &...
             end
         end
         
+        function set.inputBusName(obj,value)
+            validateattributes(value, {'char'},{'scalartext','nonempty'});
+            % Avoid duplicate name
+            assert(~strcmp(value,obj.outputBusName),'Bus objects cannot have the same name.'); %#ok<MCSUP>
+            obj.inputBusName = value;
+        end
+        
+        function set.outputBusName(obj,value)
+            validateattributes(value, {'char'},{'scalartext','nonempty'});
+            % Avoid duplicate name
+            assert(~strcmp(value,obj.inputBusName),'Bus objects cannot have the same name.'); %#ok<MCSUP>
+            obj.outputBusName = value;            
+        end
     end
     
     %% ===================== Simulink I/O methods =========================
     methods (Access = protected)
 
-        function [out] = getOutputDataTypeImpl(obj)
-            % Return data type for each output port            
-            if obj.useBus
-                out = obj.outputBusName;
-            else
-                out = "double";
-            end                        
+        function [out] = getOutputDataTypeImpl(obj) %#ok<MANU>
+            % Return data type for each output port                        
+            out = "double";            
         end
         
         function [out] = isOutputFixedSizeImpl(obj) %#ok<MANU>
@@ -308,28 +294,19 @@ classdef mlepSO < matlab.System &...
         end
         
         function [out] = getOutputSizeImpl(obj)
-            % Return size for each output port            
-            if obj.useBus
-                out = [1 1];
-            else
-                out = [obj.nOut 1];
-            end
+            % Return size for each output port                        
+            out = [obj.nOut 1];            
         end
         
-        function [out,out2] = isOutputComplexImpl(obj) %#ok<MANU>
+        function [out] = isOutputComplexImpl(obj) %#ok<MANU>
             % Return true for each output port with complex data
-            out = false;
-            out2 = false;            
+            out = false;            
         end
         
         function sts = getSampleTimeImpl(obj)     
             % Specify sampling time
             sts = obj.createSampleTime("Type", "Discrete", ...
                 "SampleTime", obj.timestep);
-        end
-       
-        function simMode = getSimulateUsingImpl(obj) %#ok<MANU>
-            simMode = 'Interpreted execution';
         end
     end
     
@@ -349,9 +326,21 @@ classdef mlepSO < matlab.System &...
             % Return output port names for System block                        
             out = obj.outputBusName;
         end
+        
+%          function flag = isInactivePropertyImpl(obj,propertyName)  %#ok<INUSL>
+%              if strcmp(propertyName,'isInitialized')
+%                  flag = true;
+%              else
+%                  flag = false;
+%              end
+%          end
     end
     
     methods(Access = protected, Static)
+        
+        function simMode = getSimulateUsingImpl
+            simMode = 'Interpreted execution';
+        end
         
         function flag = showSimulateUsingImpl
             % Hide Simulate using block
@@ -374,7 +363,7 @@ classdef mlepSO < matlab.System &...
             
             busGroup = matlab.system.display.Section(...
                 'Title','Bus',...
-                'PropertyList',{'useBus','inputBusName','outputBusName'});
+                'PropertyList',{'generateBusObjects','inputBusName','outputBusName'});
             
             busTab = matlab.system.display.SectionGroup(...
                 'Title','Bus', ...
