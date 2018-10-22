@@ -25,11 +25,11 @@ classdef mlep < mlepSO
 %            stop - Close communication and terminate the EnergyPlus process.    
 %
 % MLEP Inherited System Object Methods:
-%            step - Send variables 'u' to EnergyPlus and get variables
-%                   'y' from EnergyPlus by calling y = step(obj,u).
-%                   If useBus = true then 'u' must be an appropriate 
-%                   buses/structure and 'y' is a bus/structure, otherwise
-%                   'u' and 'y' are vectors of appriate sizes.
+%     y = step(u) - Send variables 'u' to EnergyPlus and get variables
+%                   'y' from EnergyPlus. 'u' and 'y' are vectors
+%                   of appriate sizes defined by I/O definition in the
+%                   IDF file. You can obtain the sizes by reading the
+%                   'nIn' and 'nOut' properties.
 %           setup - Initialize system object manually when necessary by 
 %                   invoking setup(obj,'init'). The routine will start the 
 %                   EnergyPlus process and establish communication. 
@@ -59,7 +59,6 @@ classdef mlep < mlepSO
 %     ep = mlep;
 %     ep.idfFile = 'SmOffPSZ';
 %     ep.epwFile = 'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3';
-%     ep.useBus = false; % use vector I/O
 % 
 %     % Run
 %     u = [20 25];
@@ -70,10 +69,11 @@ classdef mlep < mlepSO
 %     ep.release;
 %
 % See also: MLEPSO, PROCESSMANAGER
-%    
+%
+
 % Copyright (c) 2018, Jiri Dostal (jiri.dostal@cvut.cz)
 % All rights reserved.
-
+%
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted provided that the following conditions are 
 % met:
@@ -103,11 +103,14 @@ classdef mlep < mlepSO
         idfData;                % Structure with data from parsed IDF
     end
     
+    properties  (SetAccess = protected, GetAccess=public, Transient)
+        isInitialized = false;  % Initialization flag        
+    end
+        
     properties (SetAccess=private, GetAccess=public, Transient)
         timestep;               % Simulation timestep [s] loaded from IDF. 
-                                % Timesteps of co-simulation processes must adhere.
-        isRunning = false;      % Is co-simulation running?
-        isInitialized = false;  % Initialization flag        
+                                % Timesteps of co-simulation processes must adhere.        
+        isRunning = false;      % Is co-simulation running?                
         inputTable;             % Table of inputs to EnergyPlus
         outputTable;            % Table of outputs from EnergyPlus       
         versionEnergyPlus;      % EnergyPlus version (identified during intallation)                        
@@ -398,21 +401,24 @@ classdef mlep < mlepSO
         function set.idfFile(obj, file)
             % SET.IDFFILE - Check existance of the IDF file, then set.
            
-            if ~isempty(bdroot) && isLibraryMdl(bdroot), return, end
+            if ~isempty(gcs) && strcmpi(get_param(bdroot,'BlockDiagramType'),'library'), return, end
             assert(~isempty(file),'IDF file not specified.');
             assert(ischar(file) || isstring(file),'Invalid file name.');
             if strlength(file)<4 || ~strcmpi(file(end-3:end), '.idf')
                 file = [file '.idf']; %add extension
             end
             assert(exist(file,'file')>0,obj.file_not_found_str,file);
+            oldFile = obj.idfFile;
             obj.idfFile = file;
-            obj.isInitialized = 0; % Force new initialization
+            if ~strcmp(file, oldFile)
+                obj.isInitialized = 0; % Force new initialization
+            end
         end
         
         function set.epwFile(obj,file)
             % SET.EPWFILE - Check existance of the EPW file, then set.
             
-            if ~isempty(bdroot) && isLibraryMdl(bdroot), return, end
+            if ~isempty(gcs) && strcmpi(get_param(bdroot,'BlockDiagramType'),'library'), return, end
             assert(~isempty(file),'EPW file not specified.');
             assert(ischar(file) || isstring(file),'Invalid file name.');
             if strlength(file)<4 || ~strcmpi(file(end-3:end), '.epw')

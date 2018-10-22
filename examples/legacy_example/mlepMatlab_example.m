@@ -20,9 +20,8 @@ ep.idfFile = 'SmOffPSZ';
 % Weather file
 ep.epwFile = 'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3';
 
-% Set input/output configuration to 'vector'. Default is true, for easy
-% simulation setup in simulink. 
-ep.useBus = false; 
+% Disable generation of the Bus objects - they come handy in mainly in Simulink
+ep.generateBusObjects = false; 
 
 % Initialize the co-simulation. 
 % Note: Two configurations of inputs/outputs are present in this example.

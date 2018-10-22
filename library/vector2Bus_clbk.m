@@ -1,11 +1,9 @@
 function vector2Bus_clbk(block, type)
 %vector2bus_clbk - Callback functions.
-% Valid type options are 'popup', 'initMask', 'InitFcn'.
+% Valid type options are 'popup', 'initMask', 'InitFcn', 'CopyFcn'.
 
 % Copyright (c) 2018, Jiri Dostal (jiri.dostal@cvut.cz)
 % All rights reserved.
-%
-% Code influenced by Landon Wagner, 2015 code of 'Bus Object Bus Creator'.
 
 % String to be displayed when no Bus object is selected
 default_str = 'Select a Bus object...';
@@ -20,6 +18,8 @@ switch type
         vector2Bus_maskInit(block)
     case 'InitFcn'
         vector2Bus_InitFcn(block)
+    case 'CopyFcn'
+        vector2Bus_CopyFcn(block)
     otherwise
         error('Unknown callback: ''%s.''', type);
 end
@@ -96,8 +96,12 @@ end
         
     end
 
-    function vector2Bus_maskInit(block)
-        %% Create Demux and Bus Creator
+    function objExists = vector2Bus_maskInit(block)
+        % Create demux and bus creator inside. Return wheater the bus
+        % object exists (1 -> exists. 0-> does not exist);
+        
+        assert(nargout == 0 || nargout == 1);
+        %% Create Demux and Bus Creator        
         
         % Get block handle
         blockHandle = get_param(block,'handle');
@@ -124,8 +128,15 @@ end
             % Evaluate the string containing the workspace bus name which will
             % load the desired bus parameters.
             busObj = evalin('base',busType);
-        catch 
-            warning('''%s'': Selected Bus object ''%s'' doesn''t exists in the base workspace.', block, busType);
+            if nargout == 1 
+                objExists = 1;
+            end
+        catch                         
+            if nargout == 1 
+                objExists = 0;
+            else
+                warning('''%s'': Selected Bus object ''%s'' doesn''t exists in the base workspace.', block, busType);
+            end
             return
         end
         
@@ -158,27 +169,36 @@ end
     end
 
     function vector2Bus_InitFcn(block)
-        % Get block handle
-        blockHandle = get_param(block,'handle');
+%         % Check 
+%         % Get block handle
+%         blockHandle = get_param(block,'handle');
+%         
+%         % Get current option
+%         selectedBusTypeStr = get_param(blockHandle, 'MaskValues');
+%         
+%         if strcmp(selectedBusTypeStr,default_str) 
+%             error('''%s'': Please select first a Bus object.',block);
+%         elseif strcmp(selectedBusTypeStr,empty_str)         
+%             error('''%s'': No Bus objects found in the base workspace. The block cannot be used, please comment it out or remove it.',block);
+%         end
+%         
+%         % Check if the Bus object exists
+%         busType = regexp(selectedBusTypeStr,'^Bus: (.*)','tokens');
+%         assert(~isempty(busType{1}));
+%         busType = busType{1}{1}{1};
+           
+        % Recreate inner blocks
+        objExists = vector2Bus_maskInit(block);
         
-        % Get current option
-        selectedBusTypeStr = get_param(blockHandle, 'MaskValues');
-        
-        if strcmp(selectedBusTypeStr,default_str) 
-            error('''%s'': Please select first a Bus object.',block);
-        elseif strcmp(selectedBusTypeStr,empty_str)         
-            error('''%s'': No Bus objects found in the base workspace. The block cannot be used, please comment it out or remove it.',block);
-        end
-        
-        % Check if the Bus object exists
-        busType = regexp(selectedBusTypeStr,'^Bus: (.*)','tokens');
-        assert(~isempty(busType{1}));
-        busType = busType{1}{1}{1};
-
-        try 
-            evalin('base',busType);
-        catch             
+        % Give error 
+        if ~objExists
             error('''%s'': Selected Bus object ''%s'' doesn''t exists in the base workspace.', block, busType);
         end
+    end
+
+    function vector2Bus_CopyFcn(block)
+       % Disable library link
+       set_param(block,'LinkStatus','none');
+       set_param(block,'CopyFcn','');
     end
 end
