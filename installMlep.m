@@ -1,25 +1,12 @@
-% INSTALLMLEP code to install "mlep"
 function installMlep
-%      Run this script before using MLE+.
-%
-%      Use: installMlep
-%
-%      In installMlep you need to specify whether you want to use the GUI
-%      mode or the Manual mode. Set manualInstall = 0 if you do not want to
-%      use the GUI for installation.
-%      GUI (manualInstall = 1): A installation screen will pop up according
-%      to your operating system (PC or UNIX)
-%      MANUAL (manualInstall = 0): You need to specify the E+ and Java
-%      directory for Windows machines and only the E+ directory for UNIX
-%      systems.
-%
-%      To save your configurations permanently in Matlab, you need to have
-%      admin privileges. If you get the following: "Warning: Unable to save
-%      apth to file ..." You either need to run this script everytime you
-%      open Matlab or pass a path to the savepath function at the end of
-%      the script.
-%
-% Last Modified by Willy Bernal - Willy.BernalHeredia@nrel.gov 30-Jul-2015
+%INSTALLMLEP - Install mlep tool. 
+%Search for all necessary paths and save them for future use. The script is
+%ran automatically, but run it manually when settings need to be changed.
+%The settings are stored to the toolbox directory into a MLEPSETTINGS.mat
+%file.
+
+% Copyright (c) 2018, Jiri Dostal (jiri.dostal@cvut.cz)
+% All rights reserved. See the license file.
 
 %% === Extract paths ======================================================
 
@@ -72,12 +59,12 @@ if ispc
     [~,iddPath] = validateEnergyPlusDir(eplusPath);
     versionEnergyPlus = mlep.getEPversion(iddPath);        
     
-    % Java path (registry query)
-    ver = winqueryreg('HKEY_LOCAL_MACHINE','software\JavaSoft\Java Runtime Environment','CurrentVersion');
-    javaHome = winqueryreg('HKEY_LOCAL_MACHINE',['software\JavaSoft\Java Runtime Environment\' ver],'JavaHome');
-    javaPath = fullfile(javaHome,'bin');
-    if ~exist(javaPath,'dir')
-        error('Java Runtime Environment not found. Please install Java JRE.')
+    % Java path - use Matlab internal JRE
+    javaPath = dirPlus(fullfile(matlabroot,'sys','java'),'FileFilter','java.exe');
+    if ~isempty(javaPath)
+        javaPath = fileparts(javaPath{1});
+    else
+        error('Java Runtime Environment not found. Please change the installation script to provide path to a Java JRE.')
     end
     
     % Get EnergyPlus command
@@ -128,7 +115,7 @@ save(fullfile(homePath,'MLEPSETTINGS.mat'),'MLEPSETTINGS');
 
 disp('================ mlep installation succesful ================');
 
-%% =========================================================================
+%% === Helper functions ===================================================
 % EnergyPlus folder validation function
     function [valid, idd_path] = validateEnergyPlusDir(folder)
         idd_path = dirPlus(folder,'Depth',1,'FileFilter','^Energy\+\.idd');        
