@@ -11,7 +11,7 @@ classdef mlepSO < matlab.System &...
     %
     % MLEPSO Properties:
     %   idfFile       - EnergyPlus simulation configuration file (*.IDF)
-    %   epwFile       - Weather file (*.EPW).    %       
+    %   epwFile       - Weather file (*.EPW).          
     %   inputBusName  - Name of a Simulink.Bus object created from the
     %                   interface input specification (IDF/variables.cfg).
     %   outputBusName - Name of a Simulink.Bus object created from the
@@ -56,7 +56,7 @@ classdef mlepSO < matlab.System &...
     
     properties (Nontunable, Abstract)
         idfFile;                    % Specify IDF file
-        epwFile;                    % Specify EPW file        
+        epwFile;                    % Specify EPW file                
     end
     
     properties (Nontunable)      
@@ -71,11 +71,7 @@ classdef mlepSO < matlab.System &...
     properties (SetAccess = private, Abstract)
         timestep;                   % Simulation timestep
     end
-    
-    properties  (SetAccess = protected, GetAccess=public, Transient, Abstract)
-        isInitialized;              % Initialization flag        
-    end
-    
+
     properties (SetAccess = private)
         nOut;               % Number of outputs
         nIn;                % Number of inputs
@@ -120,10 +116,8 @@ classdef mlepSO < matlab.System &...
                 return
             end
             
-            % Initialize 
-            if ~obj.isInitialized 
-                obj.initialize;
-            end
+            % Initialize             
+            obj.initialize;            
             
             % Create output bus object
             if obj.generateBusObjects                               
@@ -182,8 +176,7 @@ classdef mlepSO < matlab.System &...
         
         function resetImpl(obj)
             % Initialize / reset discrete-state properties
-            obj.time = 0;
-            obj.isInitialized = 0;
+            obj.time = 0;            
         end
         
         function releaseImpl(obj)
@@ -195,38 +188,64 @@ classdef mlepSO < matlab.System &...
     end
     
     methods(Access = private)
-        function createBusObjects(obj)             
-            bus = Simulink.Bus;
+        function createBusObjects(obj)                         
+            % Create Bus objects - the fastest way is by using the
+            % Simulink.Bus.cellToObject method. Avoid calling object
+            % properties in the for loop!
+           
+            % --- Create outbus 
+            elems = cell(obj.nOut,1);
+            Ts = obj.timestep;
+            signames = obj.outputSigName;
             for i = 1:obj.nOut
-                % Create one signal
-                elem = Simulink.BusElement;
-                elem.Name = obj.outputSigName{i};
-                elem.Dimensions = 1;
-                elem.DimensionsMode = 'Fixed';
-                elem.DataType = 'double';
-                elem.SampleTime = obj.timestep;
-                elem.Complexity = 'real';
-                % Add to bus
-                bus.Elements(i) = elem;
+                elems{i} = cell(1,6);
+                elems{i}{1} = signames{i};   %Element name
+                elems{i}{2} = 1;            %Dimensions
+                elems{i}{3} = 'double';     %Data type
+                elems{i}{4} = Ts;           %Sample time
+                elems{i}{5} = 'real';       %Complexity
+                elems{i}{6} = 'Sample';     %Sampling mode
             end
-            assignin('base',obj.outputBusName, bus);
             
-            % Create outbus
-            bus = Simulink.Bus;
+            
+            %Bus object information, specified as a cell array of cell arrays. Each subordinate cell array must contain this bus object information:
+            outbus = {...
+                obj.outputBusName,... %Bus name
+                '',... %Header file
+                'EP Output Bus',... %Description
+                'Auto',... %Data scope
+                '-1',... %Alignment
+                elems... %Elements
+                };
+            
+            % --- Create inbus            
+            elems = cell(obj.nIn,1);            
+            signames = obj.inputSigName;
             for i = 1:obj.nIn
-                % Create one signal
-                elem = Simulink.BusElement;
-                elem.Name = obj.inputSigName{i};
-                elem.Dimensions = 1;
-                elem.DimensionsMode = 'Fixed';
-                elem.DataType = 'double';
-                elem.SampleTime = obj.timestep;
-                elem.Complexity = 'real';
-                % Add to bus
-                bus.Elements(i) = elem;
+                elems{i} = cell(1,6);
+                elems{i}{1} = signames{i};   %Element name
+                elems{i}{2} = 1;            %Dimensions
+                elems{i}{3} = 'double';     %Data type
+                elems{i}{4} = Ts;           %Sample time
+                elems{i}{5} = 'real';       %Complexity
+                elems{i}{6} = 'Sample';     %Sampling mode
             end
-            assignin('base',obj.inputBusName, bus);
-        end
+            
+            
+            %Bus object information, specified as a cell array of cell arrays. Each subordinate cell array must contain this bus object information:
+            inbus = {...
+                obj.inputBusName,... %Bus name
+                '',... %Header file
+                'EP Output Bus',... %Description
+                'Auto',... %Data scope
+                '-1',... %Alignment
+                elems... %Elements
+                };
+            
+            % --- Create the bus objects and assign them to base workspace
+            Simulink.Bus.cellToObject({outbus, inbus});
+        end   
+        
     end
     
     % ----------------------- Get/Set methods -----------------------------
@@ -326,14 +345,6 @@ classdef mlepSO < matlab.System &...
             % Return output port names for System block                        
             out = obj.outputBusName;
         end
-        
-%          function flag = isInactivePropertyImpl(obj,propertyName)  %#ok<INUSL>
-%              if strcmp(propertyName,'isInitialized')
-%                  flag = true;
-%              else
-%                  flag = false;
-%              end
-%          end
     end
     
     methods(Access = protected, Static)

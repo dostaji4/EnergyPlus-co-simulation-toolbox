@@ -13,13 +13,13 @@ empty_str = 'No Bus objects found.';
 
 switch type
     case 'popup'
-        vector2Bus_popup(block)
+        vector2Bus_popup(block);
     case 'maskInit'
-        vector2Bus_maskInit(block)
+        vector2Bus_maskInit(block);
     case 'InitFcn'
-        vector2Bus_InitFcn(block)
+        vector2Bus_InitFcn(block);
     case 'CopyFcn'
-        vector2Bus_CopyFcn(block)
+        vector2Bus_CopyFcn(block);
     otherwise
         error('Unknown callback: ''%s.''', type);
 end
@@ -127,6 +127,7 @@ end
         try 
             % Evaluate the string containing the workspace bus name which will
             % load the desired bus parameters.
+            % USE -> Simulink.data.existsInGlobal and Simulink.data.evalinGlobal
             busObj = evalin('base',busType);
             if nargout == 1 
                 objExists = 1;

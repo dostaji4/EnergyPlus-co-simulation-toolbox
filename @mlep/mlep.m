@@ -9,10 +9,14 @@ classdef mlep < mlepSO
 % 
 % MLEP Properties:
 %         idfFile - Building simulation configuration file for EnergyPlus
-%                   .IDF. (Default: 'in.idf')
-%         epwFile - Weather data file .EPW. (Default: 'in.epw')
+%                   with and extension '.idf'. Specify either absolute path
+%                   or a name of a file on the Matlab search path.
+%                   (Default: 'in.idf')
+%         epwFile - Weather data file with an extension '.epw'. Specify 
+%                   either absolute path or a filename on the Matlab 
+%                   search path. (Default: 'in.epw')
 %         workDir - A directory, where the EnergyPlus process is started.
-%                   (Default: '.' meaning the current directory)
+%                   (Default: The directory of the IDF file)
 %   outputDirName - Name of the directory, where all outputs of EnergyPlus 
 %                   will be put. The directory is created under the working 
 %                   directory. (Default: 'eplusout') 
@@ -93,9 +97,9 @@ classdef mlep < mlepSO
 %    2018      by Jiri Dostal (jiri.dostal@cvut.cz)
     
     properties (Nontunable)               
-        idfFile = 'in.idf';     % Specify IDF file
-        epwFile = 'in.epw';     % Specify EPW file                
-        workDir = '.';          % Working directory (default is current directory)
+        idfFile = 'in';     % Specify IDF file
+        epwFile = 'in';     % Specify EPW file                
+        workDir = '';          % Working directory (default is the directory of the IDF file)
         outputDirName = 'eplusout'; % EnergyPlus output directory (created under working folder)                                        
     end
     
@@ -117,6 +121,10 @@ classdef mlep < mlepSO
         versionProtocol;        % Current version of the protocol        
     end
     
+    properties (Access = private)
+        idfChecksum = '';       % Checksum of the loaded IDF file
+    end
+    
     properties (Access = private, Transient)
         serverSocket;           % Server socket to listen to client
         commSocket;             % Socket for sending/receiving data
@@ -126,12 +134,13 @@ classdef mlep < mlepSO
         env;                    % Variable containing Environment settings for process run
         program;                % EnergyPlus executable (detected during installation)  
         isUserVarFile;          % True if user-defined variables.cfg file is present                
-        idfFullFilename;        % Full path to IDF file
-        epwFullFilename;        % Full path to EPW file
+        idfFullFilename;        % Full path to IDF file        
+        epwFullFilename;        % Full path to EPW file        
         iddFullFilename;        % Full path to IDD file
         varFullFilename;        % Full path to variables config file
         outputDirFullPath;      % Full path to the output directory
-        epDir;                  % EnergyPlus directory          
+        epDir;                  % EnergyPlus directory                  
+        workDirPrivate;         % Private property mimicking the public nontunable workDir
     end
     
     properties (Constant, GetAccess = private)       
@@ -173,35 +182,41 @@ classdef mlep < mlepSO
                 % and continue initialization
             end
             
-            % Check parameters
-            if isempty(obj.program)
-                error('Program name must be specified.');
-            end
-            
             % Assert files availability
             assert(exist(obj.iddFile,'file')>0,obj.file_not_found_str,obj.iddFile);
             obj.iddFullFilename = which(obj.iddFile);
-            obj.idfFullFilename = which(obj.idfFile);
-            obj.epwFullFilename = which(obj.epwFile);
             
-            % Load IDF file
-            obj.loadIdf;            
-                        
-            % Check IDF version             
+            % Load IDF file if its MD5 hash changed
+            md5 = Simulink.getFileChecksum(obj.idfFullFilename);
+            if ~strcmp(obj.idfChecksum,md5)
+                obj.loadIdf;            
+                obj.idfChecksum = md5;
+            end
+            
+            % Check IDF version
             if ~strcmp(obj.versionEnergyPlus,obj.idfData.version{1}{1})
                 warning('IDF file of version "%s" is being simulated by an EnergyPlus of version "%s".\n This may cause severe errors in the EnergyPlus simulation.\n Use IDFVersionUpdate utility to upgrade the file (<EP_dir>/PreProcess/IDFVersionUpdater/..).',...
                     obj.idfData.version{1}{1}, obj.versionEnergyPlus);
             end
-            
+                
             % Check for possible hanging EP processes
             if obj.checkAndKillExistingEPprocesses
                 [~,progname] = fileparts(obj.program);
                 mlep.killProcessByName(progname);
             end
             
+            % Set working directory
+            if isempty(obj.workDir)
+                % Set the working directory as that of the IDF file
+                obj.workDirPrivate = fileparts(obj.idfFullFilename);
+            else
+                assert(exist(obj.workDir,'dir')==7,'Working directory ''%s'' not found.',obj.workDir);
+                obj.workDirPrivate = obj.workDir;
+            end
+            
             % Create E+ output folder
             obj.cleanEP;
-            obj.outputDirFullPath = fullfile(obj.workDir,obj.outputDirName);
+            obj.outputDirFullPath = fullfile(obj.workDirPrivate,obj.outputDirName);
             [st,ms] = mkdir(obj.outputDirFullPath);
             assert(st,'%s',ms);
             
@@ -240,12 +255,14 @@ classdef mlep < mlepSO
             if obj.isRunning, return; end
             
             % Initialize
-            obj.initialize;
+            if ~obj.isInitialized
+                obj.initialize;
+            end
             
             % Save current directory and change directory if necessary
-            changeDir = ~strcmp(obj.workDir,'.');
+            changeDir = ~strcmp(obj.workDirPrivate,'.');
             if changeDir
-                runDir = cd(obj.workDir); % actual dir returned by cd
+                runDir = cd(obj.workDirPrivate); % actual dir returned by cd
             else
                 runDir = pwd;
             end
@@ -258,7 +275,7 @@ classdef mlep < mlepSO
                 obj.runEnergyPlus;        
                 
                 % Establish connection
-                pause(0.5);
+                pause(0.15);
                 obj.acceptSocket;
                 
             catch ErrObj
@@ -298,9 +315,8 @@ classdef mlep < mlepSO
                 if flag ~= 0
                     err_str = sprintf('EnergyPlusCosim: EnergyPlus process sent flag "%d" (%s).',...
                         flag, mlep.epFlag2str(flag));
-                    if flag < 0
-                        [~,errFile] = fileparts(obj.idfFile);
-                        errFile = [errFile '.err'];
+                    if flag < 0                        
+                        errFile = [obj.idfFile '.err'];
                         errFilePath = fullfile(pwd,obj.outputDirName,errFile);
                         err_str = [err_str, ...
                             sprintf('Check the <a href="matlab:open %s">%s</a> file for further information.',...
@@ -376,6 +392,7 @@ classdef mlep < mlepSO
             obj.isRunning = false;
             obj.isInitialized = false;
         end
+        
     end
     
     methods (Hidden)           
@@ -399,33 +416,80 @@ classdef mlep < mlepSO
     % ---------------------- Get/Set methods ------------------------------
     methods     
         function set.idfFile(obj, file)
-            % SET.IDFFILE - Check existance of the IDF file, then set.
-           
+            % SET.IDFFILE - Check existance of the IDF file, then set. If
+            % the filename is absolute, then take it as it is. If the
+            % filename is relative (no path), then locate the file in
+            % search path. 
+            
             if ~isempty(gcs) && strcmpi(get_param(bdroot,'BlockDiagramType'),'library'), return, end
             assert(~isempty(file),'IDF file not specified.');
             assert(ischar(file) || isstring(file),'Invalid file name.');
-            if strlength(file)<4 || ~strcmpi(file(end-3:end), '.idf')
-                file = [file '.idf']; %add extension
-            end
-            assert(exist(file,'file')>0,obj.file_not_found_str,file);
-            oldFile = obj.idfFile;
-            obj.idfFile = file;
-            if ~strcmp(file, oldFile)
-                obj.isInitialized = 0; % Force new initialization
-            end
+            
+            % Get path 
+            filepath = fileparts(file);
+            ext = '.idf';
+            
+            if ~isempty(filepath)
+                % Fullpath specified -> take the filename literally
+                assert(exist(file,'file')>0,obj.file_not_found_str,file);
+                [~, name] = fileparts(file);
+                obj.idfFile = name; % Filename without extension   
+                % Save the fullpath
+                obj.idfFullFilename = file; %#ok<MCSUP>
+            else
+                % Relative path specified. Do best to find the right file                
+                % Clean up filename
+                idx = regexpi(file,ext); % search for extension
+                if ~isempty(idx)
+                    % Strip extension
+                    file = file(1:idx-1);       
+                    % Remove any leading or trailing spaces
+                    file = regexprep(file,'(^\s*|\s*$)','');
+                end                
+                assert(exist([file ext],'file')>0,obj.file_not_found_str,[file ext]);                                    
+                obj.idfFile = file;
+                % Save the fullpath
+                obj.idfFullFilename = which([file ext]); %#ok<MCSUP> 
+            end    
+            
         end
         
         function set.epwFile(obj,file)
-            % SET.EPWFILE - Check existance of the EPW file, then set.
+             % SET.EPWFILE - Check existance of the IDF file, then set. If
+            % the filename is absolute, then take it as it is. If the
+            % filename is relative (no path), then locate the file in
+            % search path. 
             
             if ~isempty(gcs) && strcmpi(get_param(bdroot,'BlockDiagramType'),'library'), return, end
             assert(~isempty(file),'EPW file not specified.');
             assert(ischar(file) || isstring(file),'Invalid file name.');
-            if strlength(file)<4 || ~strcmpi(file(end-3:end), '.epw')
-                file = [file '.epw'];
-            end
-            assert(exist(file,'file')>0,obj.file_not_found_str,file);
-            obj.epwFile = file;
+            
+            % Get path 
+            filepath = fileparts(file);
+            ext = '.epw';
+            
+            if ~isempty(filepath)
+                % Fullpath specified -> take the filename literally
+                assert(exist(file,'file')>0,obj.file_not_found_str,file);
+                [~, name] = fileparts(file);
+                obj.epwFile = name; % Filename without extension   
+                % Save the fullpath
+                obj.epwFullFilename = file; %#ok<MCSUP>
+            else
+                % Relative path specified. Do best to find the right file                
+                % Clean up filename
+                idx = regexpi(file,ext); % search for extension
+                if ~isempty(idx)
+                    % Strip extension
+                    file = file(1:idx-1);
+                    % Remove any leading or trailing spaces
+                    file = regexprep(file,'(^\s*|\s*$)','');
+                end                
+                assert(exist([file ext],'file')>0,obj.file_not_found_str,[file ext]);                                    
+                obj.epwFile = file;
+                % Save the fullpath
+                obj.epwFullFilename = which([file ext]); %#ok<MCSUP> 
+            end    
         end
     end
     
@@ -502,9 +566,8 @@ classdef mlep < mlepSO
             epcmd(4) = java.lang.String('-i'); % IDD file
             epcmd(5) = java.lang.String(obj.iddFullFilename);
             epcmd(6) = java.lang.String('-x'); % expand objects
-            epcmd(7) = java.lang.String('-p'); % output prefix
-            [~,idfName] = fileparts(obj.idfFile);
-            epcmd(8) = java.lang.String(idfName); % output prefix name
+            epcmd(7) = java.lang.String('-p'); % output prefix            
+            epcmd(8) = java.lang.String(obj.idfFile); % output prefix name
             epcmd(9) = java.lang.String('-s'); % output suffix
             epcmd(10) = java.lang.String('D'); % Dash style "prefix-suffix"
             epcmd(11) = java.lang.String(obj.idfFullFilename); % IDF file
@@ -568,49 +631,55 @@ classdef mlep < mlepSO
             obj.idfData.timeStep = str2double(char(in(1).fields{1}));
             obj.timestep = 60/obj.idfData.timeStep * 60; %[s];
             obj.idfData.runPeriod = (str2double(char(in(2).fields{1}(4))) - str2double(char(in(2).fields{1}(2))))*31 + 1 + str2double(char(in(2).fields{1}(5))) - str2double(char(in(2).fields{1}(3)));
-            obj.idfData.schedule = in(3).fields;
-            obj.idfData.actuator = in(4).fields;
-            obj.idfData.variable = in(5).fields;
-            obj.idfData.output = in(6).fields;
+            schedule = in(3).fields;
+            obj.idfData.schedule = schedule;
+            actuator = in(4).fields;
+            obj.idfData.actuator = actuator;
+            variable = in(5).fields;
+            obj.idfData.variable = variable;
+            output = in(6).fields;
+            obj.idfData.output = output;
             obj.idfData.version = in(7).fields;
             
             % List Schedules
-            obj.idfData.inputTable = table('Size',[0 2],'VariableTypes',{'string','string'},'VariableNames',{'Name','Type'});
-            for i = 1:size(obj.idfData.schedule,2)
-                if ~size(obj.idfData.schedule,1)
+            inTable = table('Size',[0 2],'VariableTypes',{'string','string'},'VariableNames',{'Name','Type'});
+            for i = 1:size(schedule,2)
+                if ~size(schedule,1)
                     break;
                 end
-                obj.idfData.inputTable(i,:) = {'schedule',...                % Name
-                                                obj.idfData.schedule{i}{1}}; % Type
-            end
+                inTable(i,:) = {'schedule',...   % Name
+                                schedule{i}{1}}; % Type
+            end            
             
             % List Actuators
-            cInput = height(obj.idfData.inputTable);
-            for i = 1:size(obj.idfData.actuator,2)
-                if ~size(obj.idfData.actuator,1)
+            cInput = height(inTable);
+            for i = 1:size(actuator,2)
+                if ~size(actuator,1)
                     break;
                 end
-                obj.idfData.inputTable(cInput+i) = {'actuator',...           % Name
-                                                obj.idfData.actuator{i}{1}}; % Type
+                inTable(cInput+i) = {'actuator',...   % Name
+                                     actuator{i}{1}}; % Type
             end
             
             % List Variable
-            cInput = height(obj.idfData.inputTable);
+            cInput = height(inTable);
             for i = 1:size(obj.idfData.variable,2)
                 if ~size(obj.idfData.variable,1)
                     break;
                 end
-                obj.idfData.inputTable(cInput+i) = {'variable',...           % Name
-                                                obj.idfData.actuator{i}{1}}; % Type
-            end
+                inTable(cInput+i) = {'variable',...   % Name
+                                     variable{i}{1}}; % Type
+            end            
+            obj.idfData.inputTable = inTable ;
             
             % List Outputs
-            obj.idfData.outputTable = table('Size',[0 3],'VariableTypes',{'string','string','string'},'VariableNames',{'Name','Type','Period'});
-            for i = 1:size(obj.idfData.output,2)                    
-                obj.idfData.outputTable(i,:) = {obj.idfData.output{i}{1}, ... % Name
-                                                obj.idfData.output{i}{2}, ... % Type
-                                                obj.idfData.output{i}{3}};    % Period
+            outTable = table('Size',[0 3],'VariableTypes',{'string','string','string'},'VariableNames',{'Name','Type','Period'});
+            for i = 1:size(output,2)                    
+                outTable(i,:) = {output{i}{1}, ... % Name
+                                 output{i}{2}, ... % Type
+                                 output{i}{3}};    % Period
             end
+            obj.idfData.outputTable = outTable;            
         end
         
         function makeVariablesConfigFile(obj)
@@ -662,7 +731,8 @@ classdef mlep < mlepSO
         end
         
         function checkIO(obj)
-            %CHECKIO - Check input/output configuration
+            %CHECKIO - Check input/output configuration for duplicates,
+            % asterisks, wrong periods, etc.
             %
             % Syntax:  checkIO(obj)
             %
@@ -716,10 +786,10 @@ classdef mlep < mlepSO
             % See also: INITIALIZE
             
             % Remove "outputDir" from the "workDir" folder
-            if strcmp(obj.workDir,'.')
+            if strcmp(obj.workDirPrivate,'.')
                 rootDir = pwd;
             else
-                rootDir = obj.workDir;
+                rootDir = obj.workDirPrivate;
             end
             
             dirname = fullfile(rootDir,obj.outputDirName);
@@ -829,6 +899,11 @@ classdef mlep < mlepSO
             delete(fullfile(dirname,'*'));
             st = rmdir(dirname);
             assert(st,'Could not delete folder "%s".',dirname);
+        end
+        
+        function requestReinitialization(obj)
+            % Trigger reinitialization of the object
+            obj.isInitialized = 0;
         end
     end
     
