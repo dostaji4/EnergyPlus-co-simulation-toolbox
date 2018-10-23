@@ -70,5 +70,5 @@ for i=1:height(outputTable)
     docRootNode.appendChild(thisElement);
 end
 
-xmlwrite(fullFilePath,docNode);
+xmlwrite_r18a(fullFilePath,docNode);
 end
