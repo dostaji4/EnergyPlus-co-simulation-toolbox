@@ -50,7 +50,7 @@ function data = readIDF(filename, classnames)
 %
 % (C) 2012 by Truong X. Nghiem (nghiem@seas.upenn.edu)
 
-error(nargchk(1, 2, nargin));
+narginchk(1, 2);
 assert(ischar(filename), 'File name must be a string.');
 if ~exist('classnames', 'var')
     classnames = {};
@@ -142,7 +142,7 @@ while true
         foundClassname = false;
         
         for k = 1:nClassnames
-            if ~isempty(strmatch(classnames{k}, lowerL))
+            if ~isempty(strncmp(classnames{k}, lowerL,strlength(classnames{k})))
                 foundClassname = true;
                 break;
             end

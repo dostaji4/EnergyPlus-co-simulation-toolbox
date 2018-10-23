@@ -8,11 +8,11 @@ function busObjectBusCreator_clbk(block, type)
 
 switch type
     case 'popup'
-        busObjectBusCreator_popup(block)
+        busObjectBusCreator_popup(block);
     case 'button'
-        busObjectBusCreator_button(block)
+        busObjectBusCreator_button(block);
     case 'CopyFcn'
-        busObjectBusCreator_CopyFcn(block)
+        busObjectBusCreator_CopyFcn(block);
     otherwise
         error('Unknown callback: ''%s.''', type);
 end
