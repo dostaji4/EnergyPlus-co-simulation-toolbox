@@ -65,7 +65,8 @@ classdef mlepSO < matlab.System &...
     end
     
     properties (Logical, Nontunable)
-        generateBusObjects = true;   % Generate Bus objects
+        useDataDictionary = false;   % Store Bus objects in Data dictionary?
+        generateBusObjects = false;  % _helper property to induce bus generation programatically
     end
     
     properties (SetAccess = private, Abstract)
@@ -79,12 +80,12 @@ classdef mlepSO < matlab.System &...
     
     properties (Hidden, SetAccess = private)        
         outputSigName;      % List of output signal names
-        inputSigName;       % List of input signal names
-        outTable;           % Prototype of output bus (to save time)
+        inputSigName;       % List of input signal names       
     end
     
     properties (Access = private)                            
         % Signal naming function (use with caution)
+        dataDictionaryName = 'EnergyPlusSimulation.sldd';
         sigNameFcn = @(name,type) ['EP_' regexprep([name '__' type],'\W','_')];        
         inputMap;            
     end
@@ -104,8 +105,8 @@ classdef mlepSO < matlab.System &...
     
     methods (Access = protected)
         
-        function setupImpl(obj)        
-            obj.start;                    
+        function setupImpl(obj)                    
+            obj.start;      
         end
         
         function validatePropertiesImpl(obj)
@@ -119,9 +120,9 @@ classdef mlepSO < matlab.System &...
             % Initialize             
             obj.initialize;            
             
-            % Create output bus object
-            if obj.generateBusObjects                               
-                obj.createBusObjects;
+            % Create bus objects when running from Simulink
+            if ~isempty(bdroot)                
+                obj.createBusObjects;            
             end
         end
         
@@ -192,7 +193,31 @@ classdef mlepSO < matlab.System &...
             % Create Bus objects - the fastest way is by using the
             % Simulink.Bus.cellToObject method. Avoid calling object
             % properties in the for loop!
-           
+                      
+            busDescr = 'EnergyPlus Simulation bus';
+            
+            % --- Clear all existing EnergyPlus Bus objects in data
+            % dictionary
+            
+            % Get Data dictionary variables     
+            if obj.useDataDictionary
+                ddRootName = get_param(bdroot,'DataDictionary');
+                if ~isempty(ddRootName)
+                    rootDD = Simulink.data.dictionary.open(ddRootName);
+                    ddSec = getSection(rootDD,'Design Data');
+                    ddVars = find(ddSec,'-value','-class','Simulink.Bus'); %#ok<GTARG>
+                    for i = 1:numel(ddVars)
+                        val = getValue(ddVars(i));
+                        if isprop(val,'Description') && strcmp(val.Description, busDescr)
+                            deleteEntry(ddSec,ddVars(i).Name);
+                        end
+                    end
+                    % Close all            
+                    saveChanges(rootDD);
+                    close(rootDD);
+                end
+            end
+            
             % --- Create outbus 
             elems = cell(obj.nOut,1);
             Ts = obj.timestep;
@@ -212,7 +237,7 @@ classdef mlepSO < matlab.System &...
             outbus = {...
                 obj.outputBusName,... %Bus name
                 '',... %Header file
-                'EP Output Bus',... %Description
+                busDescr,... %Description
                 'Auto',... %Data scope
                 '-1',... %Alignment
                 elems... %Elements
@@ -236,7 +261,7 @@ classdef mlepSO < matlab.System &...
             inbus = {...
                 obj.inputBusName,... %Bus name
                 '',... %Header file
-                'EP Output Bus',... %Description
+                busDescr,... %Description
                 'Auto',... %Data scope
                 '-1',... %Alignment
                 elems... %Elements
@@ -244,6 +269,55 @@ classdef mlepSO < matlab.System &...
             
             % --- Create the bus objects and assign them to base workspace
             Simulink.Bus.cellToObject({outbus, inbus});
+                        
+            % --- Save data to data dictionary            
+            if obj.useDataDictionary
+                % Create/open Data Dictionary for EnergyPlus
+                epDictionaryName = obj.dataDictionaryName;
+                epDictionaryFilename = [fileparts(get_param(bdroot,'FileName')) filesep epDictionaryName];
+                if exist(epDictionaryFilename,'file')
+                    epDD = Simulink.data.dictionary.open(epDictionaryFilename);
+                else
+                    epDD = Simulink.data.dictionary.create(epDictionaryFilename);
+                end
+                epSec = getSection(epDD,'Design Data');
+                
+                % Get the Bus Objects     
+                inBus = evalin('base',obj.inputBusName);
+                outBus = evalin('base',obj.outputBusName);
+                
+                % Save to model workspace (it would be the obvious choice,
+                % but it is not allowed to load bus objects from here the moment)
+%                 ws = get_param(bdroot,'ModelWorkspace');
+%                 assignin(ws,obj.inputBusName,inBus);
+%                 assignin(ws,obj.outputBusName,outBus);
+                
+                % Assign the Bus Objects to the Data Dictionary                
+                assignin(epSec, obj.inputBusName, inBus);
+                assignin(epSec, obj.outputBusName, outBus);
+                
+                % Save data dictionary
+                saveChanges(epDD);
+                
+                % Clear base workspace variables 
+                evalin('base',['clearvars(''' obj.inputBusName ''',''' obj.outputBusName ''');']);
+                
+                % Connect to model dictionary or assign dictionary to model
+                ddRootName = get_param(bdroot,'DataDictionary');
+                if isempty(ddRootName)                                    
+                    % Assign EnergyPlus dictionary to the model
+                    set_param(bdroot,'DataDictionary',epDictionaryName);                        
+                else
+                    % Add data source to the existing Data Dictionary of
+                    % the model
+                    rootDD = Simulink.data.dictionary.open(ddRootName);
+                    addDataSource(rootDD, epDictionaryName);
+                    saveChanges(rootDD);
+                end
+                
+                % Close all
+                Simulink.data.dictionary.closeAll;
+            end
         end   
         
     end
@@ -278,6 +352,8 @@ classdef mlepSO < matlab.System &...
         
         function set.inputBusName(obj,value)
             validateattributes(value, {'char'},{'scalartext','nonempty'});
+            % Check if it is a valid variable name
+            assert(isvarname(value), 'Invalid variable name "%s".', value);
             % Avoid duplicate name
             assert(~strcmp(value,obj.outputBusName),'Bus objects cannot have the same name.'); %#ok<MCSUP>
             obj.inputBusName = value;
@@ -285,6 +361,8 @@ classdef mlepSO < matlab.System &...
         
         function set.outputBusName(obj,value)
             validateattributes(value, {'char'},{'scalartext','nonempty'});
+            % Check if it is a valid variable name
+            assert(isvarname(value), 'Invalid variable name "%s".', value);
             % Avoid duplicate name
             assert(~strcmp(value,obj.inputBusName),'Bus objects cannot have the same name.'); %#ok<MCSUP>
             obj.outputBusName = value;            
@@ -374,7 +452,7 @@ classdef mlepSO < matlab.System &...
             
             busGroup = matlab.system.display.Section(...
                 'Title','Bus',...
-                'PropertyList',{'generateBusObjects','inputBusName','outputBusName'});
+                'PropertyList',{'inputBusName','outputBusName','useDataDictionary'});            
             
             busTab = matlab.system.display.SectionGroup(...
                 'Title','Bus', ...

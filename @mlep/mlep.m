@@ -183,6 +183,8 @@ classdef mlep < mlepSO
             end
             
             % Assert files availability
+            assert(~isempty(which(obj.idfFullFilename)),obj.file_not_found_str,obj.idfFullFilename);
+            assert(~isempty(which(obj.epwFullFilename)),obj.file_not_found_str,obj.epwFullFilename);
             assert(exist(obj.iddFile,'file')>0,obj.file_not_found_str,obj.iddFile);
             obj.iddFullFilename = which(obj.iddFile);
             
@@ -430,8 +432,9 @@ classdef mlep < mlepSO
             ext = '.idf';
             
             if ~isempty(filepath)
-                % Fullpath specified -> take the filename literally
+                % Fullpath specified -> take the filename literally                
                 assert(exist(file,'file')>0,obj.file_not_found_str,file);
+                file = regexprep(file,'(^\s*|\s*$)','');
                 [~, name] = fileparts(file);
                 obj.idfFile = name; % Filename without extension   
                 % Save the fullpath
@@ -535,8 +538,7 @@ classdef mlep < mlepSO
                 obj.program = mlepSetting.program;
                 obj.env = mlepSetting.env;
                 obj.epDir = mlepSetting.eplusDir;
-                addpath(mlepSetting.eplusDir);
-                addpath(mlepSetting.javaDir);
+                addpath(mlepSetting.eplusDir,mlepSetting.javaDir);
             else
                 error('Error loading mlep settings. Please run "installMlep.m" again.');
             end
@@ -740,12 +742,17 @@ classdef mlep < mlepSO
             
             % Check variables.cfg config for wrong entries
             assert(~isempty(obj.inputTable) && ~isempty(obj.outputTable), 'Run parsing of the variables.cfg file first.');
-            chk = ismember(obj.inputTable,obj.idfData.inputTable);
-            assert(all(chk),'The following inputs to EnergyPlus (ExternalInterface) are defined in the "variables.cfg file, but are missing in the IDF file:\n%s ',...
-                evalc('disp(obj.inputTable(~chk,:))'));
-            chk = ismember(obj.outputTable,obj.idfData.outputTable);
-            assert(all(chk),'The following inputs to EnergyPlus (ExternalInterface) are defined in the "variables.cfg file, but are missing in the IDF file:\n%s ',...
-                evalc('disp(obj.outputTable(~chk,:))'));
+            
+            % Check validity of user specified variables.cfg file
+            if obj.isUserVarFile                
+                chk = ismember(obj.inputTable,obj.idfData.inputTable);
+                assert(all(chk),'The following inputs to EnergyPlus (ExternalInterface) are defined in the "variables.cfg file, but are missing in the IDF file:\n%s ',...
+                    evalc('disp(obj.inputTable(~chk,:))'));
+                
+                chk = ismember(obj.outputTable,obj.idfData.outputTable);
+                assert(all(chk),'The following inputs to EnergyPlus (ExternalInterface) are defined in the "variables.cfg file, but are missing in the IDF file:\n%s ',...
+                    evalc('disp(obj.outputTable(~chk,:))'));
+            end
             
             % Check i/o tables for duplicates
             [obj.inputTable,ia] = unique(obj.inputTable,'rows','stable');

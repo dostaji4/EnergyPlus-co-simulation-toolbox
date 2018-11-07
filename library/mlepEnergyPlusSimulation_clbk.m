@@ -10,8 +10,12 @@ switch type
         mlepEnergyPlusSimulation_OpenFcn(block);
     case 'maskInit'
         mlepEnergyPlusSimulation_maskInit(block);
+    case 'InitFcn'
+        mlepEnergyPlusSimulation_InitFcn(block);
     case 'browseButton'
         mlepEnergyPlusSimulation_browseButton(block, varargin{:});
+    case 'generateBus'
+        mlepEnergyPlusSimulation_generateBus(block);
     otherwise
         error('Unknown callback: ''%s.''', type);
 end
@@ -52,6 +56,14 @@ set_param([block '/Out'], 'OutDataTypeStr', ['Bus: ' outputBusName]);
 %Set input
 set_param([block '/In'], 'OutDataTypeStr', ['Bus: ' inputBusName]);
 
+end
+
+function mlepEnergyPlusSimulation_InitFcn(block)
+1;
+end
+
+function mlepEnergyPlusSimulation_generateBus(block)
+1;
 end
 
 function selectedFile = mlepEnergyPlusSimulation_browseButton(block, varargin)
