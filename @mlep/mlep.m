@@ -1,5 +1,5 @@
 classdef mlep < mlepSO
-%MLEP - EnergyPlus co-simulation tool. 
+%MLEP EnergyPlus co-simulation tool. 
 %The class contains all necesary tools for starting the co-simulation with
 %EnergyPlus (E+). It enables data exchanges between the host (in Matlab) and
 %the client (the E+ process), using the communication protocol 
