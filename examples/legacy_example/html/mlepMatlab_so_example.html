@@ -1,0 +1,208 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Matlab &amp; EnergyPlus co-simulation example - using System Object</title><meta name="generator" content="MATLAB 9.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-10-23"><meta name="DC.source" content="mlepMatlab_so_example.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Matlab &amp; EnergyPlus co-simulation example - using System Object</h1><!--introduction--><p>Demonstrates the functionality of the mlep (MatLab-EnergyPlus) tool on a small office building simulation scenario.</p><p>Note that a start of the simulation period as well as a timestep and an input/output configuration is defined by the the EnergyPlus simulation configuration file (.IDF). Climatic conditions are obtained from a EnergyPlus Weather data file (.EPW).</p><p>For a detailed description of mlep usage please refere to the 'mlepMatlab_example.m' example.</p><p>See also: mlepSimulink_example.slx</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Instantiate mlep and configure simulation</a></li><li><a href="#2">Simulate</a></li><li><a href="#3">Plot results</a></li><li><a href="#4">Clean up</a></li></ul></div><h2 id="1">Instantiate mlep and configure simulation</h2><pre class="codeinput">ep = mlep;
+ep.idfFile = <span class="string">'SmOffPSZ'</span>;
+ep.epwFile = <span class="string">'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3'</span>;
+ep.generateBusObjects = false; <span class="comment">% use vector I/O</span>
+
+<span class="comment">% Use user-defined I/O configuration</span>
+cd(fileparts(mfilename(<span class="string">'fullpath'</span>)));
+copyfile(<span class="string">'variables_example.cfg'</span>,<span class="string">'variables.cfg'</span>);
+
+ep.setup(<span class="string">'init'</span>);
+pause(1); <span class="comment">% pause to have the initial EnergyPlus output in this section</span>
+</pre><pre class="codeoutput">EP: ExpandObjects Started.
+EP: No expanded file generated.
+EP: ExpandObjects Finished. Time:     0.062
+EP: EnergyPlus Starting
+EP: EnergyPlus, Version 8.9.0-40101eaafd, YMD=2018.10.23 16:31
+EP: Adjusting Air System Sizing
+EP: Adjusting Standard 62.1 Ventilation Sizing
+EP: Initializing Simulation
+EP: Reporting Surfaces
+EP: Beginning Primary Simulation
+EP: Initializing New Environment Parameters
+EP: Warming up {1}
+EP: Instantiating Building Controls Virtual Test Bed
+EP: ExternalInterface initializes.
+EP: Opaque part contains invalid character: \
+EP: Number of outputs in ExternalInterface = 3
+EP: Number of inputs  in ExternalInterface = 2
+EP: Warming up {2}
+EP: Warming up {3}
+EP: Warming up {4}
+EP: Warming up {5}
+EP: Warming up {6}
+EP: Starting Simulation at 06/01 for Chicago Ohare Intl Ap IL USA TMY3
+WMO#=725300
+EP: ExternalInterface starts first data exchange.
+</pre><h2 id="2">Simulate</h2><pre class="codeinput">endTime = 4*24*60*60;
+nRows = ceil(endTime / ep.timestep);
+logTable = table(<span class="string">'Size'</span>,[0, 1 + ep.nOut],<span class="keyword">...</span>
+    <span class="string">'VariableTypes'</span>,repmat({<span class="string">'double'</span>},1,1 + ep.nOut),<span class="keyword">...</span>
+    <span class="string">'VariableNames'</span>,[{<span class="string">'Time'</span>}; ep.outputSigName]);
+iLog = 1;
+t = 0;
+
+<span class="keyword">while</span> t &lt; endTime
+
+    u = [20 25];
+
+    <span class="comment">% Send inputs to/ get outputs from EnergyPlus</span>
+    y = ep.step(u);
+
+    <span class="comment">% Obtain elapsed simulation time [s]</span>
+    t = ep.time;
+
+    <span class="comment">% Log data</span>
+    logTable(iLog, :) = num2cell([t y']);
+    iLog = iLog + 1;
+<span class="keyword">end</span>
+ep.release;
+</pre><h2 id="3">Plot results</h2><pre class="codeinput">plot(seconds(table2array(logTable(:,1))),<span class="keyword">...</span>
+    table2array(logTable(:,2:end)));
+xtickformat(<span class="string">'hh:mm:ss'</span>);
+legend(logTable.Properties.VariableNames(2:end),<span class="string">'Interpreter'</span>,<span class="string">'none'</span>);
+
+title(ep.idfFile);
+xlabel(<span class="string">'Time [hh:mm:ss]'</span>);
+ylabel(<span class="string">'Temperature [C]'</span>);
+</pre><pre class="codeoutput">
+EP: EnergyPlus process stopped with exitValue = 1.
+</pre><img vspace="5" hspace="5" src="mlepMatlab_so_example_01.png" alt=""> <h2 id="4">Clean up</h2><pre class="codeinput">delete <span class="string">variables.cfg</span>
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Matlab & EnergyPlus co-simulation example - using System Object
+% Demonstrates the functionality of the mlep (MatLab-EnergyPlus) tool on 
+% a small office building simulation scenario.
+%
+% Note that a start of the simulation period as well as a timestep and
+% an input/output configuration is defined by the the EnergyPlus simulation
+% configuration file (.IDF). Climatic conditions are obtained from a
+% EnergyPlus Weather data file (.EPW). 
+%
+% For a detailed description of mlep usage please refere to the
+% 'mlepMatlab_example.m' example.
+%
+% See also: mlepSimulink_example.slx
+
+%% Instantiate mlep and configure simulation
+ep = mlep;
+ep.idfFile = 'SmOffPSZ';
+ep.epwFile = 'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3';
+ep.generateBusObjects = false; % use vector I/O
+
+% Use user-defined I/O configuration
+cd(fileparts(mfilename('fullpath')));
+copyfile('variables_example.cfg','variables.cfg');
+
+ep.setup('init'); 
+pause(1); % pause to have the initial EnergyPlus output in this section
+
+%% Simulate
+
+endTime = 4*24*60*60;
+nRows = ceil(endTime / ep.timestep);
+logTable = table('Size',[0, 1 + ep.nOut],...
+    'VariableTypes',repmat({'double'},1,1 + ep.nOut),...
+    'VariableNames',[{'Time'}; ep.outputSigName]);
+iLog = 1;
+t = 0;
+
+while t < endTime
+    
+    u = [20 25];
+    
+    % Send inputs to/ get outputs from EnergyPlus
+    y = ep.step(u); 
+    
+    % Obtain elapsed simulation time [s]
+    t = ep.time;
+
+    % Log data
+    logTable(iLog, :) = num2cell([t y']);
+    iLog = iLog + 1;    
+end
+ep.release;
+
+%% Plot results
+plot(seconds(table2array(logTable(:,1))),...
+    table2array(logTable(:,2:end)));
+xtickformat('hh:mm:ss');
+legend(logTable.Properties.VariableNames(2:end),'Interpreter','none');
+
+title(ep.idfFile);
+xlabel('Time [hh:mm:ss]');
+ylabel('Temperature [C]');
+
+%% Clean up
+delete variables.cfg
+
+##### SOURCE END #####
+--></body></html>

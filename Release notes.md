@@ -1,15 +1,29 @@
-# Changelog
+# Release notes
 
-## [Unreleased]
+## [unreleased] 
 
-### Added
+### Added 
  * EPW source block for Simulink.
- * This changelog.
+ * Bus objects may be stored in a DataDictionary to avoid its residency in 
+   the base workspace.
  
 ### Changed
+ 
+## [v1.2]
+Bus objects generated 
+
+### Added 
+ * Load and Save routines.  
+ 
+### Changed
+ * Bus objects are now loading in the Init function callback. It should solve 
+   the '_Missing Bus objects_' issues.
+ * Optimized IDF file parsing speed.
+ * Initialization no longer triggered from the Simulink mask.
+ * Robustified _Vector to Bus_ block callback.
 
 ## [v1.1]
-Structure of the main Simulink library was changed in order to work around the 63char. signal name length limit.
+Structure of the main Simulink library was changed to support signal names longer then 63 characters.
 
 ### Added
  * Bus objects now support signal names longer than 63 characters.

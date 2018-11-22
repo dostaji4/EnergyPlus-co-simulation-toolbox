@@ -230,19 +230,40 @@ function createConnection(block, nSignals)
 %% Create demux, bus creator and connect them
 
 % Get the current vector size
-nOldSignals = str2double(get_param([block '/Demux'],'Outputs'));
+nDemuxSignals = str2double(get_param([block '/Demux'],'Outputs'));
+nBCSignals = str2double(get_param([block '/BusCreator'],'Inputs'));
+
+if nDemuxSignals ~= nBCSignals
+    % Recreate the block completely
+    
+    % Find lines
+    lines = find_system(gcb, ...
+        'LookUnderMasks','all',...
+        'FindAll','on',...
+        'type','line');
+    
+    % Delete lines
+    delete_line(lines);    
+    
+    % Add lines from/to ports
+    add_line(block,'In1/1','Demux/1'); 
+    add_line(block,'BusCreator/1','Out1/1'); 
+    
+    % Set number of demux signals to trigger recreation
+    nDemuxSignals = 0;
+end
 
 % Create connections
-if nSignals > nOldSignals
+if nSignals > nDemuxSignals
     % Add just the right number of lines
     set_param([block '/Demux'],'Outputs',num2str(nSignals))
     set_param([block '/BusCreator'],'Inputs',num2str(nSignals))
-    for iSig = (nOldSignals+1):nSignals
+    for iSig = (nDemuxSignals+1):nSignals
         add_line(block,['Demux/' num2str(iSig)],['BusCreator/' num2str(iSig)])
     end
-elseif nSignals < nOldSignals
+elseif nSignals < nDemuxSignals
     % Remove just the right number of lines
-    for iSig = (nSignals+1):nOldSignals
+    for iSig = (nSignals+1):nDemuxSignals
         delete_line(block,['Demux/' num2str(iSig)],['BusCreator/' num2str(iSig)])
     end
     set_param([block '/Demux'],'Outputs',num2str(nSignals))

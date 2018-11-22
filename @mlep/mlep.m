@@ -50,8 +50,8 @@ classdef mlep < mlepSO
 %     ep.start; 
 % 
 %     % Run
-%     u = [20 25];
 %     [y, t] = ep.read; % Get EnergyPlus outputs
+%     u = [20 25];
 %     ep.write(u,t);    % Send EnergyPlus inputs
 % 
 %     % Stop
@@ -97,53 +97,51 @@ classdef mlep < mlepSO
 %    2018      by Jiri Dostal (jiri.dostal@cvut.cz)
     
     properties (Nontunable)               
-        idfFile = 'in';     % Specify IDF file
-        epwFile = 'in';     % Specify EPW file                
+        idfFile = '';     % Specify IDF file
+        epwFile = '';     % Specify EPW file                
         workDir = '';          % Working directory (default is the directory of the IDF file)
         outputDirName = 'eplusout'; % EnergyPlus output directory (created under working folder)                                        
     end
     
-    properties (SetAccess=private, GetAccess=public, Hidden, Nontunable, Transient)  
+    properties (SetAccess=protected, Nontunable)
+        timestep;               % Simulation timestep [s] loaded from IDF. 
+                                % Timesteps of co-simulation processes must adhere.                
+        inputTable;             % Table of inputs to EnergyPlus
+        outputTable;            % Table of outputs from EnergyPlus               
+        versionEnergyPlus;      % EnergyPlus version (identified during intallation)                        
+        versionProtocol;        % Current version of the protocol                
         idfData;                % Structure with data from parsed IDF
+        idfChecksum = '';       % Checksum of the loaded IDF file
+        idfFullFilename;        % Full path to IDF file        
+        env;                    % Variable containing Environment settings for process run
+        program;                % EnergyPlus executable (detected during installation)
+        isUserVarFile;          % True if user-defined variables.cfg file is present
+        epwFullFilename;        % Full path to EPW file
+        iddFullFilename;        % Full path to IDD file
+        varFullFilename;        % Full path to variables config file
+        outputDirFullPath;      % Full path to the output directory
+        epDir;                  % EnergyPlus directory
     end
     
-    properties  (SetAccess = protected, GetAccess=public, Transient)
+    properties (SetAccess=private, Transient)
         isInitialized = false;  % Initialization flag        
-    end
-        
-    properties (SetAccess=private, GetAccess=public, Transient)
-        timestep;               % Simulation timestep [s] loaded from IDF. 
-                                % Timesteps of co-simulation processes must adhere.        
-        isRunning = false;      % Is co-simulation running?                
-        inputTable;             % Table of inputs to EnergyPlus
-        outputTable;            % Table of outputs from EnergyPlus       
-        versionEnergyPlus;      % EnergyPlus version (identified during intallation)                        
-        versionProtocol;        % Current version of the protocol        
+        isRunning = false;      % Is co-simulation running?
     end
     
     properties (Access = private)
-        idfChecksum = '';       % Checksum of the loaded IDF file
+       workDirPrivate;         % Private property mimicking the public nontunable workDir 
+       isValidateInputFilename = 1; % Turn on input filename validation
     end
     
-    properties (Access = private, Transient)
+    properties (Access = private)
         serverSocket;           % Server socket to listen to client
         commSocket;             % Socket for sending/receiving data
         writer;                 % Buffered writer stream
         reader;                 % Buffered reader stream
-        process;                % Process object for E+        
-        env;                    % Variable containing Environment settings for process run
-        program;                % EnergyPlus executable (detected during installation)  
-        isUserVarFile;          % True if user-defined variables.cfg file is present                
-        idfFullFilename;        % Full path to IDF file        
-        epwFullFilename;        % Full path to EPW file        
-        iddFullFilename;        % Full path to IDD file
-        varFullFilename;        % Full path to variables config file
-        outputDirFullPath;      % Full path to the output directory
-        epDir;                  % EnergyPlus directory                  
-        workDirPrivate;         % Private property mimicking the public nontunable workDir
+        process;                % Process object for E+                
     end
     
-    properties (Constant, GetAccess = private)       
+    properties (Constant, Access = private)       
         rwTimeout = 10000;      % Timeout for sending/receiving data (0 = infinite) [ms]        
         acceptTimeout = 6000;   % Timeout for waiting for the client to connect [ms]                       
         port = 0;               % Socket port (default 0 = any free port)
@@ -161,6 +159,8 @@ classdef mlep < mlepSO
     %% =========================== MLEP ===================================
     methods
         function obj = mlep
+            % Class constructor
+            
             loadSettings(obj);
         end % /constructor
         
@@ -172,41 +172,37 @@ classdef mlep < mlepSO
             % See also: START, READ, WRITE, STOP
             
             if obj.isRunning && obj.isInitialized
-                % do not reinitialize
+                % do not reinitialize if it is running
                 return                
             end
             
             if ~obj.isInitialized && obj.isRunning
+                % restart, this should not occur, but for the sake of
+                % robustness.. 
                 obj.stop;
                 obj.isRunning = 0;
                 % and continue initialization
             end
             
             % Assert files availability
-            assert(~isempty(which(obj.idfFullFilename)),obj.file_not_found_str,obj.idfFullFilename);
-            assert(~isempty(which(obj.epwFullFilename)),obj.file_not_found_str,obj.epwFullFilename);
+            assert(exist(obj.idfFullFilename,'file')>0,obj.file_not_found_str,obj.idfFullFilename);
+            assert(exist(obj.epwFullFilename,'file')>0,obj.file_not_found_str,obj.epwFullFilename);
             assert(exist(obj.iddFile,'file')>0,obj.file_not_found_str,obj.iddFile);
             obj.iddFullFilename = which(obj.iddFile);
             
-            % Load IDF file if its MD5 hash changed
-            md5 = Simulink.getFileChecksum(obj.idfFullFilename);
-            if ~strcmp(obj.idfChecksum,md5)
+            % Load IDF file             
+            currentChecksum = mlep.fileChecksum(obj.idfFullFilename);
+            if ~strcmp(obj.idfChecksum,currentChecksum)
                 obj.loadIdf;            
-                obj.idfChecksum = md5;
-            end
+                obj.idfChecksum = currentChecksum;
+            end            
             
             % Check IDF version
             if ~strcmp(obj.versionEnergyPlus,obj.idfData.version{1}{1})
                 warning('IDF file of version "%s" is being simulated by an EnergyPlus of version "%s".\n This may cause severe errors in the EnergyPlus simulation.\n Use IDFVersionUpdate utility to upgrade the file (<EP_dir>/PreProcess/IDFVersionUpdater/..).',...
                     obj.idfData.version{1}{1}, obj.versionEnergyPlus);
             end
-                
-            % Check for possible hanging EP processes
-            if obj.checkAndKillExistingEPprocesses
-                [~,progname] = fileparts(obj.program);
-                mlep.killProcessByName(progname);
-            end
-            
+                                   
             % Set working directory
             if isempty(obj.workDir)
                 % Set the working directory as that of the IDF file
@@ -216,7 +212,13 @@ classdef mlep < mlepSO
                 obj.workDirPrivate = obj.workDir;
             end
             
-            % Create E+ output folder
+            % Check for possible hanging E+ processes and stop them
+            if obj.checkAndKillExistingEPprocesses
+                [~,progname] = fileparts(obj.program);
+                mlep.killProcessByName(progname);
+            end
+            
+            % Clean or create E+ output folder
             obj.cleanEP;
             obj.outputDirFullPath = fullfile(obj.workDirPrivate,obj.outputDirName);
             [st,ms] = mkdir(obj.outputDirFullPath);
@@ -303,7 +305,7 @@ classdef mlep < mlepSO
             
             try
                 % Read data from EnergyPlus
-                readPacket = obj.readSocket;
+                readPacket = readSocket(obj);
                 assert( ...
                     ~isempty(readPacket), ...
                     'EnergyPlusCosim:readError', ...
@@ -348,7 +350,7 @@ classdef mlep < mlepSO
                 assert(isa(inputs,'numeric') && isa(time,'numeric'),'Inputs must be a numeric vectors.');
                 rValIn = inputs(:);
                 % Write data                
-                obj.writeSocket(mlep.encodeRealData(obj.versionProtocol,...
+                writeSocket(obj,mlep.encodeRealData(obj.versionProtocol,...
                     0, ...
                     time,...
                     rValIn));
@@ -395,9 +397,49 @@ classdef mlep < mlepSO
             obj.isInitialized = false;
         end
         
-    end
-    
-    methods (Hidden)           
+        function s = save(obj) 
+            %SAVE - Save object properties to a structure.
+            %
+            %  Syntax:  s = save(obj)
+            %
+            % Outputs:
+            %      s  - structure containing current object state. Not all
+            %           the saved properties are loadable. 
+            %
+            % See also: LOAD, INITIALIZE, SETTINGS
+            
+            % Get properties            
+            s = get(obj);   
+        end
+        
+        function s = load(obj,s) 
+            %LOAD - Load object properties from a structure.
+            %
+            %  Syntax:  s = load(obj,s)
+            %
+            %  Inputs:
+            %      s  - structure containing object properties.
+            %
+            % Outputs:
+            %      s  - structure containing loaded object properties.
+            %
+            % See also: SAVE, INITIALIZE, SETTINGS
+            
+            % Get loadable object properties 
+            selectedProps = findPropByAttr(obj,...                
+                'Transient',0,...                
+                'NonCopyable',0,...                
+                'DefiningClass','mlep',...          
+                'GetAccess','public',...
+                'SetAccess',{'protected','private'});
+            
+            % Remove properties that are not loadable 
+            s = rmfield(s,setdiff(fieldnames(s),selectedProps));
+            
+            % Set properties            
+            set(obj,s);                 
+        end
+        
         function delete(obj)
             % Class destructor.
             
@@ -412,10 +454,116 @@ classdef mlep < mlepSO
                 obj.serverSocket.close;                
             end
             obj.serverSocket = [];
-        end % \destructor
+        end % /destructor   
+        
     end
     
-    % ---------------------- Get/Set methods ------------------------------
+    %% ------------------- Static mlep methods ----------------------------
+    methods (Hidden, Static)        
+        function [filename, fullpath] = validateInputFilename(file, extension)
+            %VALIDATEINPUTFILENAME - validation routines for input files.
+            %Validates file given by a relative or absolute path. Returns
+            %absolute path of the file. 
+            %
+            %  Syntax:  [filename, fullpath] = validateInputFilename(file, extension)
+            %
+            %  Inputs:
+            %      file  - name of a file or a relative path or an absolute
+            %              path. Dots '.' are allowed 
+            %              (e.q. USA.LosAngels.2001.epw)
+            %  extension - expected extension the the file (e.q. 'EPW')
+            %
+            % Outputs:
+            %   filename - filename stripped of an extension. 
+            %   fullpath - absolute path the the file.
+                                    
+            % Validate file and extract its name and fullpath.                        
+            assert(~isempty(file),'%s file not specified.',upper(extension));
+            assert(ischar(file) || isstring(file),'Invalid file name.');
+            
+            file_not_found_str = 'Could not find "%s" file. Please correct the file path or make sure it is on the Matlab search path.';
+            
+            % Get path
+            filepath = fileparts(file);
+            ext = ['.' lower(strrep(strtrim(extension),'.',''))];
+            if ~isempty(filepath)
+                % ---- Fullpath specified ---------------------------------
+                % Take the filename literally
+                
+                assert(exist(file,'file')>0,file_not_found_str,file);
+                [~, name] = fileparts(file);
+                filename = name; % Filename without extension
+                % Save the fullpath
+                s = dir(file); % exist and dir trim spaces etc. from name
+                fullpath = fullfile(s.folder, s.name);
+            else
+                % --- Relative path specified -----------------------------
+                % Do best to find the right file
+                
+                % Clean up filename
+                idx = regexpi(file,ext); % search for extension
+                if ~isempty(idx)
+                    % Strip extension
+                    file = file(1:idx-1);
+                    % Remove any leading or trailing spaces
+                    file = strtrim(file);
+                end
+                
+                assert(exist([file ext],'file')>0, file_not_found_str,[file ext]);
+                filename = file;
+                
+                % Save the fullpath
+                fullpath = which([file ext]);
+            end
+        end
+        
+        function file = browseForFile(extension)
+            %BROWSEFORFILE - Open file dialog for the specific extension.             
+            %Browse manually for a file and validate the selection.
+            %
+            %  Syntax:  file = browseForFile(extension)
+            %
+            %  Inputs:
+            %  extension - filter files by extension (e.q. 'EPW')
+            %
+            % Outputs:
+            %       file - absolute path of the selected file
+            
+            validateattributes(extension,{'char'},{'scalartext'});
+            validOptions = {'IDF','EPW'};
+            extension = validatestring(extension,validOptions);            
+            
+            
+            filefilter = ['*.' lower(extension)];
+            dialogTitle = ['Select ' upper(extension) ' File'];
+            
+            % Ask for file
+            [file,path] = uigetfile(filefilter,dialogTitle);   
+            
+            % Validate selection
+            if file ~= 0 % Cancel button
+                [~, file] = mlep.validateInputFilename(fullfile(path,file), extension);            
+            end
+        end
+        
+        function checksum = fileChecksum(file)
+            % FILECHECKSUM - Calculate file checksum.
+            % This is a wrapper function for hashing command.
+            %
+            %  Syntax:   checksum = fileChecksum(file)
+            % 
+            %  Inputs:
+            %       file - path to an existing file.
+            %
+            % Outputs: 
+            %   checksum - calculated checksum.
+            
+            % Return checksum of a file.
+            checksum = Simulink.getFileChecksum(file);
+        end      
+    end
+    
+    %% ---------------------- Get/Set methods -----------------------------
     methods     
         function set.idfFile(obj, file)
             % SET.IDFFILE - Check existance of the IDF file, then set. If
@@ -423,38 +571,16 @@ classdef mlep < mlepSO
             % filename is relative (no path), then locate the file in
             % search path. 
             
-            if ~isempty(gcs) && strcmpi(get_param(bdroot,'BlockDiagramType'),'library'), return, end
-            assert(~isempty(file),'IDF file not specified.');
-            assert(ischar(file) || isstring(file),'Invalid file name.');
-            
-            % Get path 
-            filepath = fileparts(file);
-            ext = '.idf';
-            
-            if ~isempty(filepath)
-                % Fullpath specified -> take the filename literally                
-                assert(exist(file,'file')>0,obj.file_not_found_str,file);
-                file = regexprep(file,'(^\s*|\s*$)','');
-                [~, name] = fileparts(file);
-                obj.idfFile = name; % Filename without extension   
-                % Save the fullpath
-                obj.idfFullFilename = file; %#ok<MCSUP>
+            if obj.isValidateInputFilename && ... % user defined validation
+                    (isempty(bdroot) || ... % no simulink
+                    (~strcmp(get_param(bdroot,'BlockDiagramType'),'library') || ... % library
+                    ~strcmp(file,obj.idfFile))) %#ok<MCSUP> % default 
+                % Validate
+                [obj.idfFile, obj.idfFullFilename] = ...
+                    mlep.validateInputFilename(file, 'IDF');  %#ok<MCSUP>
             else
-                % Relative path specified. Do best to find the right file                
-                % Clean up filename
-                idx = regexpi(file,ext); % search for extension
-                if ~isempty(idx)
-                    % Strip extension
-                    file = file(1:idx-1);       
-                    % Remove any leading or trailing spaces
-                    file = regexprep(file,'(^\s*|\s*$)','');
-                end                
-                assert(exist([file ext],'file')>0,obj.file_not_found_str,[file ext]);                                    
                 obj.idfFile = file;
-                % Save the fullpath
-                obj.idfFullFilename = which([file ext]); %#ok<MCSUP> 
-            end    
-            
+            end
         end
         
         function set.epwFile(obj,file)
@@ -463,36 +589,15 @@ classdef mlep < mlepSO
             % filename is relative (no path), then locate the file in
             % search path. 
             
-            if ~isempty(gcs) && strcmpi(get_param(bdroot,'BlockDiagramType'),'library'), return, end
-            assert(~isempty(file),'EPW file not specified.');
-            assert(ischar(file) || isstring(file),'Invalid file name.');
-            
-            % Get path 
-            filepath = fileparts(file);
-            ext = '.epw';
-            
-            if ~isempty(filepath)
-                % Fullpath specified -> take the filename literally
-                assert(exist(file,'file')>0,obj.file_not_found_str,file);
-                [~, name] = fileparts(file);
-                obj.epwFile = name; % Filename without extension   
-                % Save the fullpath
-                obj.epwFullFilename = file; %#ok<MCSUP>
+            if obj.isValidateInputFilename && ... % user defined validation
+                    (isempty(bdroot) || ... % no simulink
+                    (~strcmp(get_param(bdroot,'BlockDiagramType'),'library') || ... % library
+                    ~strcmp(file,obj.epwFile))) %#ok<MCSUP> % default 
+                [obj.epwFile, obj.epwFullFilename] =...
+                    mlep.validateInputFilename(file, 'EPW');  %#ok<MCSUP>
             else
-                % Relative path specified. Do best to find the right file                
-                % Clean up filename
-                idx = regexpi(file,ext); % search for extension
-                if ~isempty(idx)
-                    % Strip extension
-                    file = file(1:idx-1);
-                    % Remove any leading or trailing spaces
-                    file = regexprep(file,'(^\s*|\s*$)','');
-                end                
-                assert(exist([file ext],'file')>0,obj.file_not_found_str,[file ext]);                                    
                 obj.epwFile = file;
-                % Save the fullpath
-                obj.epwFullFilename = which([file ext]); %#ok<MCSUP> 
-            end    
+            end
         end
     end
     
@@ -801,12 +906,13 @@ classdef mlep < mlepSO
             
             dirname = fullfile(rootDir,obj.outputDirName);
             if exist(dirname,'dir')
-                mlep.rmdirR(dirname);
+                rmdir(dirname,'s');
             end
         end
     end
     
-    methods (Access = private, Static)
+    %% ---------------------- Static EP methods ---------------------------    
+    methods (Access = private, Hidden, Static)
         
         function [inputTable, outputTable] = parseVariablesConfigFile(file)
             %PARSEVARIABLESCONFIGFILE - Parse variables.cfg file for the desired I/O.
@@ -814,7 +920,7 @@ classdef mlep < mlepSO
             % Syntax:  [inputTable, outputTable] = parseVariablesConfigFile(file)
             %
             % Inputs:
-            %    file   - Path to the "variables.cfg" file.            
+            %    file   - Path to the "variables.cfg" file.
             %
             % Outputs:
             %    inputTable  - Table with parsed inputs.
@@ -832,25 +938,25 @@ classdef mlep < mlepSO
             % Start parsing
             s = xml2struct(file); %modified version of xml2struct allowing for not checking the .dtd file
             s = struct2cell(s);
-            vars = s{1}{2}.variable;            
+            vars = s{1}{2}.variable;
             for i = 1:numel(vars)
                 switch vars{i}.Attributes.source
                     % Output from E+
-                    case 'EnergyPlus' 
+                    case 'EnergyPlus'
                         out = vars{i}.EnergyPlus.Attributes;
                         assert(isfield(out,'name') && isfield(out,'type'),'Fields "name" and/or "type" are not existing');
                         outputTable(cOutput,:) = {out.name, out.type, 'timestep'};
                         cOutput = cOutput + 1;
                         
-                    % Input to E+
-                    case 'Ptolemy' 
+                        % Input to E+
+                    case 'Ptolemy'
                         name = fieldnames(vars{i}.EnergyPlus.Attributes);
                         assert(any(contains({'schedule','variable','actuator'},name)),...
                             'Unknown variable name "%s".',name);
-                        inputTable(cInput,:) = {name{1}, vars{i}.EnergyPlus.Attributes.(name{1})};                        
+                        inputTable(cInput,:) = {name{1}, vars{i}.EnergyPlus.Attributes.(name{1})};
                         cInput = cInput + 1;
-                    
-                    % Error
+                        
+                        % Error
                     otherwise
                         error('Unknown varible source "%s".',vars{i}.Attributes.source)
                 end
@@ -874,13 +980,13 @@ classdef mlep < mlepSO
                 issueWarning = varargin{1};
                 assert(isa(issueWarning,'numeric') || isa(issueWarning,'logical'));
             end
-                
+            
             p = System.Diagnostics.Process.GetProcessesByName(name);
             for i = 1:p.Length
                 try
-                    dt = p(i).StartTime.Now - p(i).StartTime;                    
+                    dt = p(i).StartTime.Now - p(i).StartTime;
                     if issueWarning
-                        warning('Found process "%s", ID = %d, started %d minutes ago. Terminating the process.',name, p(i).Id, dt.Minutes);                    
+                        warning('Found process "%s", ID = %d, started %d minutes ago. Terminating the process.',name, p(i).Id, dt.Minutes);
                     end
                     p(i).Kill();
                     p(i).WaitForExit(100);
@@ -892,30 +998,6 @@ classdef mlep < mlepSO
             end
         end
         
-        function rmdirR(dirname)
-            %RMDIRR - Helper function for a recursive rmdir
-            %
-            % Syntax:  rmdirR(dirname)
-            %
-            % Inputs:
-            %      dirname - Directory to be removed. 
-            %
-            % See also: MLEP, MLEP.INITIALIZE
-            
-            % Remove foldert recursively (with all files beneath)
-            delete(fullfile(dirname,'*'));
-            st = rmdir(dirname);
-            assert(st,'Could not delete folder "%s".',dirname);
-        end
-        
-        function requestReinitialization(obj)
-            % Trigger reinitialization of the object
-            obj.isInitialized = 0;
-        end
-    end
-    
-    methods (Access = public, Static)
-        
         function str = epFlag2str(flag)
             %EPFLAG2STR - Transform numeric flag returned by EnergyPlus into a human readable form.
             % Flag	Description:
@@ -923,7 +1005,7 @@ classdef mlep < mlepSO
             % 0	    Normal operation.
             % -1	Simulation terminated due to an unspecified error.
             % -10	Simulation terminated due to an error during the initialization.
-            % -20	Simulation terminated due to an error during the time integration.% 
+            % -20	Simulation terminated due to an error during the time integration.%
             %
             % Syntax:  str = epFlag2str(flag)
             %
@@ -957,7 +1039,7 @@ classdef mlep < mlepSO
             %  Syntax:  [ver, minor] = getEPversion(iddFullpath)
             %
             %  Inputs:
-            %  iddFullpath - Path to a .IDD file.  
+            %  iddFullpath - Path to a .IDD file.
             %
             % Outputs:
             %          ver - EnergyPlus version (e.g. 8.9)
@@ -978,7 +1060,10 @@ classdef mlep < mlepSO
             assert(~isempty(tokens)&&size(tokens{1},2)==2,' Error while parsing "%s" for EnergyPlus version',iddFullpath);
             ver = tokens{1}{1};
             minor = tokens{1}{2};
-        end
+        end     
+        
+        % Parse IDF file
+        data = readIDF(filename, classnames);
     end
     
     %% ======================= Communication ==============================
@@ -994,7 +1079,7 @@ classdef mlep < mlepSO
             % See also: INITIALIZE, ACCEPTSOCKET
             
             if isempty(obj.serverSocket) || ...
-                    (~isempty(obj.serverSocket) && obj.serverSocket.isClosed)
+                    (~isempty(obj.serverSocket) && isClosed(obj.serverSocket))
                 % If any error happens, this function will be interrupted
                 if ~isempty(obj.host)
                     serversock = java.net.ServerSocket(obj.port, 0, obj.host);
@@ -1018,7 +1103,7 @@ classdef mlep < mlepSO
             end
             
             % Set accept timeout
-            obj.serverSocket.setSoTimeout(obj.acceptTimeout);
+            setSoTimeout(obj.serverSocket, obj.acceptTimeout);
             
             % Write socket config file
             mlep.writeSocketConfig(...
@@ -1039,13 +1124,13 @@ classdef mlep < mlepSO
             
             assert(obj.isInitialized, 'Initialize the object first.');
             % Accept Socket
-            obj.commSocket = obj.serverSocket.accept;
+            obj.commSocket = accept(obj.serverSocket);
             
             % Create Streams            
             if isjava(obj.commSocket)
                 % Create writer and reader                
                 if obj.rwTimeout ~= 0
-                    obj.commSocket.setSoTimeout(obj.rwTimeout);
+                    setSoTimeout(obj.commSocket,obj.rwTimeout);
                 end
                 obj.createStreams;
                 obj.isRunning = true;                
@@ -1085,8 +1170,8 @@ classdef mlep < mlepSO
 %                 wr.write(sprintf('%s\n', packet));
 %                 wr.flush;
                 assert(numel(packet) < 21621);
-                obj.writer.write([packet mlep.CRChar]);
-                obj.writer.flush;
+                write(obj.writer,[packet mlep.CRChar]);
+                flush(obj.writer);
             else
                 error('Co-simulation is not running.');
             end
@@ -1104,7 +1189,7 @@ classdef mlep < mlepSO
             if timeout < 0, timeout = 0; end
             obj.rwTimeout = timeout;
             if isjava(obj.commSocket)
-                obj.commSocket.setSoTimeout(timeout);
+                setSoTimeout(obj.commSocket,timeout);
                 obj.createStreams;  % Recreate reader and writer streams
             end
         end
@@ -1117,22 +1202,22 @@ classdef mlep < mlepSO
             % See also: MAKESOCKET, READ, WRITE
             
             if isjava(obj.serverSocket)
-                obj.serverSocket.close();
+                close(obj.serverSocket);
             end
             
             % Close commSocket
             if isjava(obj.commSocket)
-                obj.commSocket.close();
+                close(obj.commSocket);
             end
             
             % Close Reader
             if isjava(obj.reader)
-                obj.reader.close();
+                close(obj.reader);
             end
             
             % Close Writer
             if isjava(obj.writer)
-                obj.writer.close();
+                close(obj.writer);
             end
             
             % Delete Java Objects
@@ -1149,12 +1234,13 @@ classdef mlep < mlepSO
             %
             % See also: READ, WRITE
             
-            obj.writer = java.io.BufferedWriter(java.io.OutputStreamWriter(obj.commSocket.getOutputStream));
-            obj.reader = java.io.BufferedReader(java.io.InputStreamReader(obj.commSocket.getInputStream));
+            obj.writer = java.io.BufferedWriter(java.io.OutputStreamWriter(getOutputStream(obj.commSocket)));
+            obj.reader = java.io.BufferedReader(java.io.InputStreamReader(getInputStream(obj.commSocket)));
         end
     end
     
-    methods (Access = private, Static)
+    %% ---------------- Static communication methods ----------------------
+    methods (Access = private, Hidden, Static)
         % Decode BCVTB protocol packet
         [flag, timevalue, realvalues, intvalues, boolvalues] = decodePacket(packet);
         
@@ -1166,9 +1252,6 @@ classdef mlep < mlepSO
         
         % Encode BCVTB protocol simulation status
         packet = encodeStatus(vernumber, flag);
-        
-        % Parse IDF file
-        data = readIDF(filename, classnames);
         
         % Make socket configuration file
         writeSocketConfig(fullFilePath, hostname, port);

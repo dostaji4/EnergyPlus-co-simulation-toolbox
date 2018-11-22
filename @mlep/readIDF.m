@@ -105,16 +105,16 @@ end
 inBlock = false;  % A block is a block of code ended with ;
 saveBlock = false;  % Is the current block being saved?
 
-% The regular expression for parsing a line in the IDF file
+% --- Parse ---------------------------------------------------------------
 %   A field is a group of 0 or more characters not including comma,
 %   semi-colon and exclamation; a line consists of a number of fields,
 %   separated by either a comma or a semi-colon.
-rexp = '([^,;]*)([;,])';
+
 startLineIdx = 1;
-for i = 1:nLines
+for iLine = 1:nLines
     
     % Get line 
-    endLineIdx = lineIdx(i);
+    endLineIdx = lineIdx(iLine);
     line = filetext(startLineIdx:endLineIdx);
     startLineIdx = endLineIdx + 1;    
     
@@ -175,9 +175,9 @@ for i = 1:nLines
 
     % Parse fields
     nFields = numel(dataEndIdx);
-    dataEndIdx = [1 dataEndIdx]; %#ok<AGROW>
+    dataEndIdx = [0 dataEndIdx]; %#ok<AGROW>
     for k = 1:nFields  
-        field = strtrim(line(dataEndIdx(k):dataEndIdx(k+1)-1));
+        field = strtrim(line(dataEndIdx(k)+1:dataEndIdx(k+1)-1));
         if ~inBlock
             % Start a new block
             inBlock = true;
@@ -220,5 +220,4 @@ end
 if noClassnames
     data((1+nBlocks):end) = [];
 end
-
 end
