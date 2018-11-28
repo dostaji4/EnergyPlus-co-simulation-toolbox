@@ -1,16 +1,20 @@
 # Release notes
 
-## [unreleased] 
-
-### Added 
+## [todo]
+ * Add support for EnergyManagementSystem:OutputVariable
  * EPW source block for Simulink.
  * Bus objects may be stored in a DataDictionary to avoid its residency in 
    the base workspace.
- 
+   
+## [unreleased] 
+
+### Added   
+ * Better documentation
+
 ### Changed
  
 ## [v1.2]
-Bus objects generated 
+Bus objects generated in 
 
 ### Added 
  * Load and Save routines.  

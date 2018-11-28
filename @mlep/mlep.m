@@ -912,7 +912,7 @@ classdef mlep < mlepSO
     end
     
     %% ---------------------- Static EP methods ---------------------------    
-    methods (Access = private, Hidden, Static)
+    methods (Access = private, Static)
         
         function [inputTable, outputTable] = parseVariablesConfigFile(file)
             %PARSEVARIABLESCONFIGFILE - Parse variables.cfg file for the desired I/O.

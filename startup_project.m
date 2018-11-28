@@ -234,104 +234,17 @@ if action == LOAD || action == ADD
     % Open the active document again to make it the current file.
     activeDocName = matprojData.activeDocName;
     
-    % ...Again, make sure this isn't an unsaved "untitled" document.
-    [thisFilePath,~,ext] = fileparts(activeDocName);
-    if ~isempty(thisFilePath)
-        if ~isempty(activeDocName)
-            editorObj = matlab.desktop.editor.openDocument(matprojData.activeDocName);
+    if ~isempty(activeDocName)
+        % ...Again, make sure this isn't an unsaved "untitled" document.
+        [thisFilePath,~,ext] = fileparts(activeDocName);
+        if ~isempty(thisFilePath)
+            if ~isempty(activeDocName)
+                editorObj = matlab.desktop.editor.openDocument(matprojData.activeDocName);
+            end
         end
     end
     
     cd(matprojData.workingDir);
-    
-    %DO NOT LOAD PATH!!
-    
-    % Set path. For backwards compatibility, check that path was saved with
-    % project.
-    if 0 && isfield(matprojData,'path') 
-        
-        % Saved path will be incorrect for the current Matlab installation
-        % if Matlab has been upgraded since the .mat file was saved. Check
-        % for this and repair the path if necessary.
-        
-        % ...Find Matlab root path from saved project by searching for a
-        % known built-in toolbox that should be in all installations.
-        knownBuiltInName = '/toolbox/matlab/lang';
-        savedPath = matprojData.path;
-        
-        if strncmp(savedPath,'/',1)
-            isUnixPath = true;
-        else
-            isUnixPath = false;
-        end
-        
-        if isUnixPath
-            % Newer Matlab versions use ';' as the filesep for both unix and
-            % Windows, but older versions use ':' for unix. Standardize to ';'.
-            savedPath = strrep(savedPath,':',';');
-        end
-        
-        % Convert saved path to a cell array.
-        savedPath = textscan(savedPath,'%s','delimiter',';');
-        savedPath = savedPath{:};
-        
-        % For simplicity, use '/' as the file separator, regardless of
-        % whether this is a unix or Windows machine.
-        savedPath = cellfun(@(x) strrep(x,'\','/'),savedPath,'UniformOutput',false);
-        
-        % Get the path of the known built-in in the saved project.
-        ind = ~cellfun('isempty',cellfun(@(x) regexp(x,knownBuiltInName),savedPath,'UniformOutput', false));
-        assert(~isempty(find(ind)),[mfilename '.m--Failed to find valid path to Matlab built-in toolbox in saved path.']);
-        knownBuiltInPath = savedPath(ind);
-        knownBuiltInPath = knownBuiltInPath{:};
-        
-        % Extract the saved Matlab root directory from the found built-in.
-        savedRootPath = knownBuiltInPath(1:(strfind(knownBuiltInPath,knownBuiltInName)-1));
-        
-        % Convert the saved Matlab root directory to use the file separator
-        % on the running version of Matlab.
-        knownBuiltInPath = strrep(knownBuiltInPath,'/',filesep);
-        knownBuiltInPath = strrep(knownBuiltInPath,'\',filesep);
-        
-        % Further ensure compatibility by removing any trailing file
-        % separators from both the saved and current root paths (probably
-        % not necessary).
-        if strcmp(savedRootPath(end),filesep)
-            savedRootPath(end) = [];
-        end
-        
-        % Find the Matlab root directory in the running version of Matlab.
-        matlabRootPath = matlabroot;
-        if strcmp(matlabRootPath(end),filesep)
-            matlabRootPath(end) = [];
-        end
-        
-        if ~isequal(savedRootPath,matlabRootPath)
-            % The saved Matlab root path does not match the actual root
-            % path. Modify the saved root path.
-            savedPath = strrep(savedPath,savedRootPath,matlabRootPath);
-            
-            % Convert saved path from cell array to string for passing to path().
-            pathStr = '';
-            for iPath = 1:length(savedPath)
-                if iPath == length(savedPath)
-                    appendStr = savedPath{iPath};
-                else
-                    appendStr = [savedPath{iPath} pathsep];
-                end
-                
-                pathStr = [pathStr appendStr];
-            end % for each path line
-            
-            matprojData.path = pathStr;
-            disp([mfilename '.m--Saved path repaired to match current Matlab installation.']);
-            
-        end % if matlab root path does not match.
-        
-        % Set the path.
-        path(matprojData.path);
-        
-    end % if path was saved in .mat file
     
 elseif action == SAVE
     if exist(fullName,'file')

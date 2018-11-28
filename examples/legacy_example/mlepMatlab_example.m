@@ -1,5 +1,5 @@
 %% Matlab & EnergyPlus co-simulation example
-% Demonstrates the functionality of the mlep (MatLab-EnergyPlus) tool on 
+% Demonstrates the functionality of the mlep (MatLab-EnergyPlus) tool in 
 % a small office building simulation scenario.
 %
 % Note that a start of the simulation period as well as a timestep and
@@ -20,43 +20,16 @@ ep.idfFile = 'SmOffPSZ';
 % Weather file
 ep.epwFile = 'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3';
 
-% Initialize the co-simulation. 
-% Note: Two configurations of inputs/outputs are present in this example.
-% It was therefore necessary to call initialization routine separately. In
-% the case of one fixed setting you can use just the 'start' method (e.g.
-% 'ep.start').
-ep.initialize; 
 
 %% Input/output configuration 
-% If there is no "variables.cfg" config file present in the directory
-% where the IDF file resides, then the IDF file is parsed for configured
-% inputs/outputs (and "variables.cfg" file is created under output directory
-% - named 'eplusout' by default). If a user-defined "variables.cfg" is
-% present then it should contain a subset of the IDF I/O and it defines
-% the co-simulation inputs/outputs.
 
-% Display inputs/outputs defined in the IDF file. (no "variables.cfg" file
-% present).
-disp('Input/output configuration without the "variables.cfg" file present.');
+% Initialize the co-simulation. This will load the IDF file.
+ep.initialize; 
+
+% Display inputs/outputs defined in the IDF file. 
+disp('Input/output configuration.');
 inputTable = ep.inputTable    %#ok<*NASGU,*NOPTS>
 outputTable = ep.outputTable
-
-% Now with the "variables.cfg" file (example file contains a subset of the
-% IDF i/o set).
-cd(fileparts(mfilename('fullpath')));
-copyfile('variables_example.cfg','variables.cfg');
-
-% Re-initialize
-ep.initialize;
-
-disp('Input/output configuration with the "variables.cfg" file present.');
-inputTable = ep.inputTable
-outputTable = ep.outputTable
-
-% The IDF i/o configuration can still be viewed
-disp('Alternative way to obtain IDF input/output configuration.');
-inputTableIDF = ep.idfData.inputTable
-outputTableIDF = ep.idfData.outputTable
 
 %% Simulate
 
@@ -102,6 +75,3 @@ legend(logTable.Properties.VariableNames(2:end),'Interpreter','none');
 title(ep.idfFile);
 xlabel('Time [hh:mm:ss]');
 ylabel('Temperature [C]');
-
-%% Clean up
-delete variables.cfg
