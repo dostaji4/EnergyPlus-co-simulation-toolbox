@@ -1,5 +1,5 @@
 function vector2Bus_clbk(block, type)
-%vector2bus_clbk - Callback functions.
+%VECTOR2BUS_CLBK - Callback functions.
 % Valid type options are 'popup', 'initMask', 'InitFcn', 'CopyFcn'.
 
 % Copyright (c) 2018, Jiri Dostal (jiri.dostal@cvut.cz)

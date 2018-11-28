@@ -1,44 +1,82 @@
+function cleanup_project(varargin)
+disp('-------------- Running project cleanup -----------------------------')
+
+verbose = 1;
+
+% Project Root
+if nargin == 0
+    % Get simulink project
+    if numel(slproject.getCurrentProjects) > 0
+        proj = slproject.getCurrentProject;
+        projRootFolder = proj.RootFolder;
+    else
+        % error. No project loaded.
+        slproject.getCurrentProject
+    end
+elseif nargin >= 1
+    % Root folder specified
+    if exist(varargin{1},'dir') > 0
+        projRootFolder = varargin{1};
+    else
+        error('Project folder "%s" not found.',varargin{1});
+    end
+else
+    warning('More options then expected');
+end
+
 
 %% Save state of the editor
-disp('============== Saving editor state =================================')
-proj = slproject.getCurrentProject;
-projRootFolder = proj.RootFolder;
+disp('--- Saving editor state ---')
 filename = 'matproj.mat';
 matproj('SAVE', fullfile(projRootFolder, filename));
+disp('Done');
 
 %% Remove generated files
-disp('============== Removing generated files =================')
+disp('--- Removing generated files ---')
 
 % Folders
 dirFilter = '(slprj|eplusout)';
-dirList = dirPlus(projRootFolder,'ReturnDirs',true,'DirFilter',dirFilter,'RecurseInvalid',true);
+dirList = dirPlus(projRootFolder,...
+            'ReturnDirs',true,...
+            'DirFilter',dirFilter,...
+            'RecurseInvalid',true);
 cDir = 0;
 for i = 1:numel(dirList)        
     [status, msg] = rmdir(dirList{i},'s');
     if ~status        
-        warning('Folder "%s" could not be removed.', dirList{i});
+        warning('Folder ''%s'' could not be removed.', dirList{i});
     else
+        if verbose
+            fprintf('Removing ''<projRoot>%s''.\n',strrep(dirList{i},projRootFolder,''));            
+        end
         cDir = cDir + 1;
     end
 end
-fprintf('Removed %d "%s" folders.\n',cDir, dirFilter);
+if ~verbose
+    fprintf('Removed %d "%s" folders.\n',cDir, dirFilter);
+end
 
 % Files
-fileFilter = '.*\.(slxc|asv)$';
-fileList = dirPlus(projRootFolder,'FileFilter',fileFilter,'RecurseInvalid',true);
+fileFilter = '.*\.(slxc|asv|autosave)$';
+fileList = dirPlus(projRootFolder,...
+            'FileFilter',fileFilter,...
+            'RecurseInvalid',true);
 cFile = 0;
 for i = 1:numel(fileList)        
     try 
         delete(fileList{i});
+        if verbose
+            fprintf('Removing ''<projRoot>%s''.\n',strrep(fileList{i},projRootFolder,''));            
+        end
     catch
-        warning('File "%s" could not be removed.', fileList{i});
+        warning('File ''%s'' could not be removed.', fileList{i});
         continue
     end
     cFile = cFile + 1;
 end
-fprintf('Removed %d "%s" files.\n',cFile, fileFilter);
-
-disp('============== Project closed ======================================')
+if ~verbose
+    fprintf('Removed %d "%s" files.\n',cFile, fileFilter);
+end
 
 
 %% Functions
@@ -423,4 +461,5 @@ matprojData.path = projPath;
 save(outName,'matprojData');
 numSaved = numFiles;
 
+end
 end

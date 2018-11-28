@@ -1,4 +1,4 @@
-%% Matlab & EnergyPlus co-simulation example - using System Object
+%% Co-simulation example using System Object
 % Demonstrates the functionality of the mlep (MatLab-EnergyPlus) tool on 
 % a small office building simulation scenario.
 %

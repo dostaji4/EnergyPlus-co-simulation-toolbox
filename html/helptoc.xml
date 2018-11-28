@@ -19,12 +19,8 @@
 		Getting Started
 		</tocitem>
 		
-		<tocitem target="demos.html" 
-                 image="HelpIcon.HelpIcon.EXAMPLES">Examples
-        </tocitem>
-		
-		<tocitem target="foo.html" image="HelpIcon.FUNCTION"> 
-		Function reference
+		<tocitem target="/functionIndex/functionIndex.html" image="HelpIcon.FUNCTION"> 
+		Function Index
 		</tocitem>
 		
         <!-- Optional link or links to your or other Web sites -->

@@ -1,4 +1,4 @@
-%% Matlab & EnergyPlus co-simulation example
+%% Simple Matlab <-> EnergyPlus co-simulation example
 % Demonstrates the functionality of the mlep (MatLab-EnergyPlus) tool in 
 % a small office building simulation scenario.
 %
