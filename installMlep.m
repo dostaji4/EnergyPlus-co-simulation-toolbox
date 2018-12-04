@@ -1,5 +1,5 @@
 function installMlep
-%INSTALLMLEP - Install mlep tool. 
+%INSTALLMLEP Install mlep tool. 
 %Search for all necessary paths and save them for future use. The script is
 %ran automatically, but run it manually when settings need to be changed.
 %The settings are stored to the toolbox directory into a MLEPSETTINGS.mat

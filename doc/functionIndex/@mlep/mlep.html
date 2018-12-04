@@ -1,0 +1,1386 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of mlep</title>
+  <meta name="keywords" content="mlep">
+  <meta name="description" content="MLEP Main EnergyPlus co-simulation toolbox class.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../functionIndex.html">Home</a> &gt;  <a href="functionIndex.html">@mlep</a> &gt; mlep.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../functionIndex.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="functionIndex.html">Index for @mlep&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>mlep
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>MLEP Main EnergyPlus co-simulation toolbox class.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment">MLEP Main EnergyPlus co-simulation toolbox class.
+The class contains all necesary tools for starting the co-simulation with
+EnergyPlus (E+). It enables data exchanges between the host (in Matlab) and
+the client (the E+ process), using the communication protocol
+defined by Building Control Virtual Test Bed (BCVTB).
+
+Selected Properties and Methods:
+
+ MLEP Properties:
+         idfFile - Building simulation configuration file for EnergyPlus
+                   with and extension '.idf'. Specify either absolute path
+                   or a name of a file on the Matlab search path.
+                   (Default: 'in.idf')
+         epwFile - Weather data file with an extension '.epw'. Specify
+                   either absolute path or a filename on the Matlab
+                   search path. (Default: 'in.epw')
+         workDir - A directory, where the EnergyPlus process is started.
+                   (Default: The directory of the IDF file)
+   outputDirName - Name of the directory, where all outputs of EnergyPlus
+                   will be put. The directory is created under the working
+                   directory. (Default: 'eplusout')
+
+ MLEP Methods:
+      initialize - Load and validate input files. Write configuration files.
+           start - Start an EnergyPlus process and establish communication.
+            read - Read outputs from the EnergyPlus.
+           write - Write inputs to the EnergyPlus.
+            stop - Close communication and terminate the EnergyPlus process.
+
+ MLEP Inherited System Object Methods:
+     y = step(u) - Send variables 'u' to EnergyPlus and get variables
+                   'y' from EnergyPlus. 'u' and 'y' are vectors
+                   of appriate sizes defined by I/O definition in the
+                   IDF file. You can obtain the sizes by reading the
+                   'nIn' and 'nOut' properties.
+           setup - Initialize system object manually when necessary by
+                   invoking setup(obj,'init'). The routine will start the
+                   EnergyPlus process and establish communication.
+                   The setup routine is called automatically during the
+                   first 'step' call if not ran manually.
+         release - Equivalent to the stop method.
+
+ Example - Using mlep methods (mlepMatlab_example.m)
+
+     % Initialize
+     ep = mlep;
+     ep.idfFile = 'SmOffPSZ';
+     ep.epwFile = 'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3';
+     ep.start;
+
+     % Run
+     [y, t] = ep.read; % Get EnergyPlus outputs
+     u = [20 25];
+     ep.write(u,t);    % Send EnergyPlus inputs
+
+     % Stop
+     ep.stop;
+
+ Example - Using System Object (mlepMatlab_so_example.m)
+
+     % Initialize
+     ep = mlep;
+     ep.idfFile = 'SmOffPSZ';
+     ep.epwFile = 'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3';
+
+     % Run
+     u = [20 25];
+     y = ep.step(u); % Communicate with EnergyPlus
+     t = ep.time;
+
+     % Stop
+     ep.release;
+
+ See also: MLEPSO, PROCESSMANAGER</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="decodePacket.html" class="code" title="function [flag, timevalue, realvalues, intvalues, boolvalues] = decodePacket(packet)">decodePacket</a>	DECODEPACKET - Decode packet to data.</li><li><a href="encodeData.html" class="code" title="function packet = encodeData(vernumber, flag, timevalue, realvalues, intvalues, boolvalues)">encodeData</a>	ENCODEDATA - Encode data to packet.</li><li><a href="encodeRealData.html" class="code" title="function packet = encodeRealData(vernumber, flag, timevalue, realvalues)">encodeRealData</a>	ENCODEREALDATA Encode real value data to packet.</li><li><a href="encodeStatus.html" class="code" title="function packet = encodeStatus(vernumber, flag)">encodeStatus</a>	ENCODESTATUS - Encode status flag to a packet.</li><li><a href="mlep.html" class="code" title="">mlep</a>	MLEP Main EnergyPlus co-simulation toolbox class.</li><li><a href="readIDF.html" class="code" title="function data = readIDF(filename, classnames)">readIDF</a>	READIDF - Read and parse EnergyPlus IDF file.</li><li><a href="writeSocketConfig.html" class="code" title="function writeSocketConfig(fullFilePath, hostname, port)">writeSocketConfig</a>	WRITESOCKETCONFIG - Create socket configuration file.</li><li><a href="writeVariableConfig.html" class="code" title="function writeVariableConfig(fullFilePath, inputTable, outputTable)">writeVariableConfig</a>	WRITEVARIABLECONFIG - Create XML definition of the variable exchange for the BCVTB protocol.</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="mlep.html" class="code" title="">mlep</a>	MLEP Main EnergyPlus co-simulation toolbox class.</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function obj = mlep</a></li><li><a href="#_sub2" class="code">function initialize(obj)</a></li><li><a href="#_sub3" class="code">function start(obj)</a></li><li><a href="#_sub4" class="code">function [outputs, time] = read(obj)</a></li><li><a href="#_sub5" class="code">function write(obj, inputs, time)</a></li><li><a href="#_sub6" class="code">function stop(obj, stopSignal)</a></li><li><a href="#_sub7" class="code">function s = save(obj)</a></li><li><a href="#_sub8" class="code">function s = load(obj,s)</a></li><li><a href="#_sub9" class="code">function delete(obj)</a></li><li><a href="#_sub10" class="code">function [filename, fullpath] = validateInputFilename(file, extension)</a></li><li><a href="#_sub11" class="code">function file = browseForFile(extension)</a></li><li><a href="#_sub12" class="code">function checksum = fileChecksum(file)</a></li><li><a href="#_sub13" class="code">function set.idfFile(obj, file)</a></li><li><a href="#_sub14" class="code">function set.epwFile(obj,file)</a></li><li><a href="#_sub15" class="code">function loadSettings(obj)</a></li><li><a href="#_sub16" class="code">function runEnergyPlus(obj)</a></li><li><a href="#_sub17" class="code">function epProcListener(src,data)</a></li><li><a href="#_sub18" class="code">function loadIdf(obj)</a></li><li><a href="#_sub19" class="code">function makeVariablesConfigFile(obj)</a></li><li><a href="#_sub20" class="code">function checkIO(obj)</a></li><li><a href="#_sub21" class="code">function cleanEP(obj)</a></li><li><a href="#_sub22" class="code">function [inputTable, outputTable] = parseVariablesConfigFile(file)</a></li><li><a href="#_sub23" class="code">function killProcessByName(name, varargin)</a></li><li><a href="#_sub24" class="code">function str = epFlag2str(flag)</a></li><li><a href="#_sub25" class="code">function [ver, minor] = getEPversion(iddFullpath)</a></li><li><a href="#_sub26" class="code">function makeSocket(obj)</a></li><li><a href="#_sub27" class="code">function acceptSocket(obj)</a></li><li><a href="#_sub28" class="code">function packet = readSocket(obj)</a></li><li><a href="#_sub29" class="code">function writeSocket(obj, packet)</a></li><li><a href="#_sub30" class="code">function setRWTimeout(obj, timeout)</a></li><li><a href="#_sub31" class="code">function closeSocket(obj)</a></li><li><a href="#_sub32" class="code">function createStreams(obj)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">%MLEP Main EnergyPlus co-simulation toolbox class.</span>
+0002 <span class="comment">%The class contains all necesary tools for starting the co-simulation with</span>
+0003 <span class="comment">%EnergyPlus (E+). It enables data exchanges between the host (in Matlab) and</span>
+0004 <span class="comment">%the client (the E+ process), using the communication protocol</span>
+0005 <span class="comment">%defined by Building Control Virtual Test Bed (BCVTB).</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">%Selected Properties and Methods:</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">% MLEP Properties:</span>
+0010 <span class="comment">%         idfFile - Building simulation configuration file for EnergyPlus</span>
+0011 <span class="comment">%                   with and extension '.idf'. Specify either absolute path</span>
+0012 <span class="comment">%                   or a name of a file on the Matlab search path.</span>
+0013 <span class="comment">%                   (Default: 'in.idf')</span>
+0014 <span class="comment">%         epwFile - Weather data file with an extension '.epw'. Specify</span>
+0015 <span class="comment">%                   either absolute path or a filename on the Matlab</span>
+0016 <span class="comment">%                   search path. (Default: 'in.epw')</span>
+0017 <span class="comment">%         workDir - A directory, where the EnergyPlus process is started.</span>
+0018 <span class="comment">%                   (Default: The directory of the IDF file)</span>
+0019 <span class="comment">%   outputDirName - Name of the directory, where all outputs of EnergyPlus</span>
+0020 <span class="comment">%                   will be put. The directory is created under the working</span>
+0021 <span class="comment">%                   directory. (Default: 'eplusout')</span>
+0022 <span class="comment">%</span>
+0023 <span class="comment">% MLEP Methods:</span>
+0024 <span class="comment">%      initialize - Load and validate input files. Write configuration files.</span>
+0025 <span class="comment">%           start - Start an EnergyPlus process and establish communication.</span>
+0026 <span class="comment">%            read - Read outputs from the EnergyPlus.</span>
+0027 <span class="comment">%           write - Write inputs to the EnergyPlus.</span>
+0028 <span class="comment">%            stop - Close communication and terminate the EnergyPlus process.</span>
+0029 <span class="comment">%</span>
+0030 <span class="comment">% MLEP Inherited System Object Methods:</span>
+0031 <span class="comment">%     y = step(u) - Send variables 'u' to EnergyPlus and get variables</span>
+0032 <span class="comment">%                   'y' from EnergyPlus. 'u' and 'y' are vectors</span>
+0033 <span class="comment">%                   of appriate sizes defined by I/O definition in the</span>
+0034 <span class="comment">%                   IDF file. You can obtain the sizes by reading the</span>
+0035 <span class="comment">%                   'nIn' and 'nOut' properties.</span>
+0036 <span class="comment">%           setup - Initialize system object manually when necessary by</span>
+0037 <span class="comment">%                   invoking setup(obj,'init'). The routine will start the</span>
+0038 <span class="comment">%                   EnergyPlus process and establish communication.</span>
+0039 <span class="comment">%                   The setup routine is called automatically during the</span>
+0040 <span class="comment">%                   first 'step' call if not ran manually.</span>
+0041 <span class="comment">%         release - Equivalent to the stop method.</span>
+0042 <span class="comment">%</span>
+0043 <span class="comment">% Example - Using mlep methods (mlepMatlab_example.m)</span>
+0044 <span class="comment">%</span>
+0045 <span class="comment">%     % Initialize</span>
+0046 <span class="comment">%     ep = mlep;</span>
+0047 <span class="comment">%     ep.idfFile = 'SmOffPSZ';</span>
+0048 <span class="comment">%     ep.epwFile = 'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3';</span>
+0049 <span class="comment">%     ep.start;</span>
+0050 <span class="comment">%</span>
+0051 <span class="comment">%     % Run</span>
+0052 <span class="comment">%     [y, t] = ep.read; % Get EnergyPlus outputs</span>
+0053 <span class="comment">%     u = [20 25];</span>
+0054 <span class="comment">%     ep.write(u,t);    % Send EnergyPlus inputs</span>
+0055 <span class="comment">%</span>
+0056 <span class="comment">%     % Stop</span>
+0057 <span class="comment">%     ep.stop;</span>
+0058 <span class="comment">%</span>
+0059 <span class="comment">% Example - Using System Object (mlepMatlab_so_example.m)</span>
+0060 <span class="comment">%</span>
+0061 <span class="comment">%     % Initialize</span>
+0062 <span class="comment">%     ep = mlep;</span>
+0063 <span class="comment">%     ep.idfFile = 'SmOffPSZ';</span>
+0064 <span class="comment">%     ep.epwFile = 'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3';</span>
+0065 <span class="comment">%</span>
+0066 <span class="comment">%     % Run</span>
+0067 <span class="comment">%     u = [20 25];</span>
+0068 <span class="comment">%     y = ep.step(u); % Communicate with EnergyPlus</span>
+0069 <span class="comment">%     t = ep.time;</span>
+0070 <span class="comment">%</span>
+0071 <span class="comment">%     % Stop</span>
+0072 <span class="comment">%     ep.release;</span>
+0073 <span class="comment">%</span>
+0074 <span class="comment">% See also: MLEPSO, PROCESSMANAGER</span>
+0075 
+0076 <span class="comment">% Copyright (c) 2018, Jiri Dostal (jiri.dostal@cvut.cz)</span>
+0077 <span class="comment">% All rights reserved.</span>
+0078 <span class="comment">%</span>
+0079 <span class="comment">% Redistribution and use in source and binary forms, with or without</span>
+0080 <span class="comment">% modification, are permitted provided that the following conditions are</span>
+0081 <span class="comment">% met:</span>
+0082 <span class="comment">%</span>
+0083 <span class="comment">% 1. Redistributions of source code must retain the above copyright notice,</span>
+0084 <span class="comment">%    this list of conditions and the following disclaimer.</span>
+0085 <span class="comment">% 2. Redistributions in binary form must reproduce the above copyright</span>
+0086 <span class="comment">%    notice, this list of conditions and the following disclaimer in the</span>
+0087 <span class="comment">%    documentation and/or other materials provided with the distribution.</span>
+0088 <span class="comment">%</span>
+0089 <span class="comment">% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS</span>
+0090 <span class="comment">% &quot;AS IS&quot;. NO WARRANTIES ARE GRANTED.</span>
+0091 <span class="comment">%</span>
+0092 <span class="comment">% History:</span>
+0093 <span class="comment">%    2009-2013 by Truong Nghiem(truong@seas.upenn.edu)</span>
+0094 <span class="comment">%    2010-2015 by Willy Bernal(Willy.BernalHeredia@nrel.gov)</span>
+0095 <span class="comment">%    2018      by Jiri Dostal (jiri.dostal@cvut.cz)</span>
+0096 
+0097 classdef <a href="mlep.html" class="code" title="">mlep</a> &lt; mlepSO
+0098 
+0099 properties (Nontunable)
+0100     idfFile = <span class="string">''</span>;     <span class="comment">% Specify IDF file</span>
+0101     epwFile = <span class="string">''</span>;     <span class="comment">% Specify EPW file</span>
+0102     workDir = <span class="string">''</span>;          <span class="comment">% Working directory (default is the directory of the IDF file)</span>
+0103     outputDirName = <span class="string">'eplusout'</span>; <span class="comment">% EnergyPlus output directory (created under working folder)</span>
+0104 <span class="keyword">end</span>
+0105 
+0106 properties (SetAccess=protected, Nontunable)
+0107     timestep;               <span class="comment">% Simulation timestep [s] loaded from IDF.</span>
+0108     <span class="comment">% Timesteps of co-simulation processes must adhere.</span>
+0109     inputTable;             <span class="comment">% Table of inputs to EnergyPlus</span>
+0110     outputTable;            <span class="comment">% Table of outputs from EnergyPlus</span>
+0111     versionEnergyPlus;      <span class="comment">% EnergyPlus version (identified during intallation)</span>
+0112     versionProtocol;        <span class="comment">% Current version of the protocol</span>
+0113     idfData;                <span class="comment">% Structure with data from parsed IDF</span>
+0114     idfChecksum = <span class="string">''</span>;       <span class="comment">% Checksum of the loaded IDF file</span>
+0115     idfFullFilename;        <span class="comment">% Full path to IDF file</span>
+0116     env;                    <span class="comment">% Variable containing Environment settings for process run</span>
+0117     program;                <span class="comment">% EnergyPlus executable (detected during installation)</span>
+0118     isUserVarFile;          <span class="comment">% True if user-defined variables.cfg file is present</span>
+0119     epwFullFilename;        <span class="comment">% Full path to EPW file</span>
+0120     iddFullFilename;        <span class="comment">% Full path to IDD file</span>
+0121     varFullFilename;        <span class="comment">% Full path to variables config file</span>
+0122     outputDirFullPath;      <span class="comment">% Full path to the output directory</span>
+0123     epDir;                  <span class="comment">% EnergyPlus directory</span>
+0124 <span class="keyword">end</span>
+0125 
+0126 properties (SetAccess=private, Transient)
+0127     isInitialized = false;  <span class="comment">% Initialization flag</span>
+0128     isRunning = false;      <span class="comment">% Is co-simulation running?</span>
+0129 <span class="keyword">end</span>
+0130 
+0131 properties (Access = private)
+0132     workDirPrivate;         <span class="comment">% Private property mimicking the public nontunable workDir</span>
+0133     isValidateInputFilename = 1; <span class="comment">% Turn on input filename validation</span>
+0134 <span class="keyword">end</span>
+0135 
+0136 properties (Access = private)
+0137     serverSocket;           <span class="comment">% Server socket to listen to client</span>
+0138     commSocket;             <span class="comment">% Socket for sending/receiving data</span>
+0139     writer;                 <span class="comment">% Buffered writer stream</span>
+0140     reader;                 <span class="comment">% Buffered reader stream</span>
+0141     process;                <span class="comment">% Process object for E+</span>
+0142 <span class="keyword">end</span>
+0143 
+0144 properties (Constant, Access = private)
+0145     rwTimeout = 10000;      <span class="comment">% Timeout for sending/receiving data (0 = infinite) [ms]</span>
+0146     acceptTimeout = 6000;   <span class="comment">% Timeout for waiting for the client to connect [ms]</span>
+0147     port = 0;               <span class="comment">% Socket port (default 0 = any free port)</span>
+0148     host = <span class="string">''</span>;              <span class="comment">% Host name (default '' = localhost)</span>
+0149     verboseEP = true;       <span class="comment">% Print standard output of the E+ process into Matlab</span>
+0150     checkAndKillExistingEPprocesses = 1;       <span class="comment">% If selected, mlep will check on startup for other energyplus processes and kill them</span>
+0151 
+0152     socketConfigFileName = <span class="string">'socket.cfg'</span>;       <span class="comment">% Socket configuration file name</span>
+0153     variablesConfigFileName = <span class="string">'variables.cfg'</span>; <span class="comment">% ExternalInterface configuration file name</span>
+0154     iddFile = <span class="string">'Energy+.idd'</span>;                   <span class="comment">% IDD file name</span>
+0155     CRChar = newline;                          <span class="comment">% Defined marker by the BCVTB protocol (newline = char(10))</span>
+0156     file_not_found_str = <span class="string">'Could not find &quot;%s&quot; file. Please correct the file path or make sure it is on the Matlab search path.'</span>;
+0157 <span class="keyword">end</span>
+0158 
+0159 <span class="comment">%% =========================== MLEP ===================================</span>
+0160 methods
+0161     <a name="_sub0" href="#_subfunctions" class="code">function obj = mlep</a>
+0162         <span class="comment">% Class constructor</span>
+0163 
+0164         <a href="#_sub15" class="code" title="subfunction loadSettings(obj)">loadSettings</a>(obj);
+0165     <span class="keyword">end</span> <span class="comment">% /constructor</span>
+0166 
+0167     <a name="_sub1" href="#_subfunctions" class="code">function initialize(obj)</a>
+0168         <span class="comment">%INITIALIZE - Load and parse all input files, make interface I/O configuration</span>
+0169         <span class="comment">%</span>
+0170         <span class="comment">% Syntax:  initialize(obj)</span>
+0171         <span class="comment">%</span>
+0172         <span class="comment">% See also: START, READ, WRITE, STOP</span>
+0173 
+0174         <span class="keyword">if</span> obj.isRunning &amp;&amp; obj.isInitialized
+0175             <span class="comment">% do not reinitialize if it is running</span>
+0176             <span class="keyword">return</span>
+0177         <span class="keyword">end</span>
+0178 
+0179         <span class="keyword">if</span> ~obj.isInitialized &amp;&amp; obj.isRunning
+0180             <span class="comment">% restart, this should not occur, but for the sake of</span>
+0181             <span class="comment">% robustness..</span>
+0182             obj.stop;
+0183             obj.isRunning = 0;
+0184             <span class="comment">% and continue initialization</span>
+0185         <span class="keyword">end</span>
+0186 
+0187         <span class="comment">% Assert files availability</span>
+0188         assert(exist(obj.idfFullFilename,<span class="string">'file'</span>)&gt;0,obj.file_not_found_str,obj.idfFullFilename);
+0189         assert(exist(obj.epwFullFilename,<span class="string">'file'</span>)&gt;0,obj.file_not_found_str,obj.epwFullFilename);
+0190         assert(exist(obj.iddFile,<span class="string">'file'</span>)&gt;0,obj.file_not_found_str,obj.iddFile);
+0191         obj.iddFullFilename = which(obj.iddFile);
+0192 
+0193         <span class="comment">% Load IDF file</span>
+0194         currentChecksum = mlep.fileChecksum(obj.idfFullFilename);
+0195         <span class="keyword">if</span> ~strcmp(obj.idfChecksum,currentChecksum)
+0196             obj.loadIdf;
+0197             obj.idfChecksum = currentChecksum;
+0198         <span class="keyword">end</span>
+0199 
+0200         <span class="comment">% Check IDF version</span>
+0201         <span class="keyword">if</span> ~strcmp(obj.versionEnergyPlus,obj.idfData.version{1}{1})
+0202             warning(<span class="string">'IDF file of version &quot;%s&quot; is being simulated by an EnergyPlus of version &quot;%s&quot;.\n This may cause severe errors in the EnergyPlus simulation.\n Use IDFVersionUpdate utility to upgrade the file (&lt;EP_dir&gt;/PreProcess/IDFVersionUpdater/..).'</span>,<span class="keyword">...</span>
+0203                 obj.idfData.version{1}{1}, obj.versionEnergyPlus);
+0204         <span class="keyword">end</span>
+0205 
+0206         <span class="comment">% Set working directory</span>
+0207         <span class="keyword">if</span> isempty(obj.workDir)
+0208             <span class="comment">% Set the working directory as that of the IDF file</span>
+0209             obj.workDirPrivate = fileparts(obj.idfFullFilename);
+0210         <span class="keyword">else</span>
+0211             assert(exist(obj.workDir,<span class="string">'dir'</span>)==7,<span class="string">'Working directory ''%s'' not found.'</span>,obj.workDir);
+0212             obj.workDirPrivate = obj.workDir;
+0213         <span class="keyword">end</span>
+0214 
+0215         <span class="comment">% Check for possible hanging E+ processes and stop them</span>
+0216         <span class="keyword">if</span> obj.checkAndKillExistingEPprocesses
+0217             [~,progname] = fileparts(obj.program);
+0218             mlep.killProcessByName(progname);
+0219         <span class="keyword">end</span>
+0220 
+0221         <span class="comment">% Clean or create E+ output folder</span>
+0222         obj.cleanEP;
+0223         obj.outputDirFullPath = fullfile(obj.workDirPrivate,obj.outputDirName);
+0224         [st,ms] = mkdir(obj.outputDirFullPath);
+0225         assert(st,<span class="string">'%s'</span>,ms);
+0226 
+0227         <span class="comment">% Determine co-simulation inputs and outputs out of IDF or</span>
+0228         <span class="comment">% varibles.cfg files</span>
+0229         idfDir = fileparts(obj.idfFullFilename);
+0230         obj.varFullFilename = fullfile(idfDir, obj.variablesConfigFileName);
+0231         obj.isUserVarFile = (exist(obj.varFullFilename,<span class="string">'file'</span>) == 2);
+0232 
+0233         <span class="keyword">if</span> obj.isUserVarFile
+0234             [obj.inputTable, <span class="keyword">...</span>
+0235                 obj.outputTable] = mlep.parseVariablesConfigFile(obj.varFullFilename);
+0236         <span class="keyword">else</span>
+0237             <span class="comment">% Use all the inputs and outputs from IDF</span>
+0238             obj.inputTable = obj.idfData.inputTable;
+0239             obj.outputTable = obj.idfData.outputTable;
+0240         <span class="keyword">end</span>
+0241 
+0242         <span class="comment">% Check I/O configuration</span>
+0243         obj.checkIO;
+0244 
+0245         <span class="comment">% Create or copy ExternalInterface variable configuration file</span>
+0246         obj.makeVariablesConfigFile;
+0247 
+0248         <span class="comment">% Stop further initializations</span>
+0249         obj.isInitialized = true;
+0250     <span class="keyword">end</span>
+0251 
+0252     <a name="_sub2" href="#_subfunctions" class="code">function start(obj)</a>
+0253         <span class="comment">%START - Start the EnergyPlus process and establish connection.</span>
+0254         <span class="comment">%</span>
+0255         <span class="comment">% Syntax:  start(obj)</span>
+0256         <span class="comment">%</span>
+0257         <span class="comment">% See also: INITIALIZE, READ, WRITE, STOP</span>
+0258 
+0259         <span class="keyword">if</span> obj.isRunning, <span class="keyword">return</span>; <span class="keyword">end</span>
+0260 
+0261         <span class="comment">% Initialize</span>
+0262         <span class="keyword">if</span> ~obj.isInitialized
+0263             obj.initialize;
+0264         <span class="keyword">end</span>
+0265 
+0266         <span class="comment">% Save current directory and change directory if necessary</span>
+0267         changeDir = ~strcmp(obj.workDirPrivate,<span class="string">'.'</span>);
+0268         <span class="keyword">if</span> changeDir
+0269             runDir = cd(obj.workDirPrivate); <span class="comment">% actual dir returned by cd</span>
+0270         <span class="keyword">else</span>
+0271             runDir = pwd;
+0272         <span class="keyword">end</span>
+0273 
+0274         <span class="keyword">try</span>
+0275             <span class="comment">% Create server socket if necessary</span>
+0276             obj.makeSocket;
+0277 
+0278             <span class="comment">% Run the EnergyPlus process</span>
+0279             obj.runEnergyPlus;
+0280 
+0281             <span class="comment">% Establish connection</span>
+0282             pause(0.15);
+0283             obj.acceptSocket;
+0284 
+0285         <span class="keyword">catch</span> ErrObj
+0286             obj.closeSocket;
+0287             <span class="keyword">if</span> changeDir,cd(runDir); <span class="keyword">end</span>
+0288             rethrow(ErrObj);
+0289         <span class="keyword">end</span>
+0290 
+0291         <span class="comment">% Revert current folder</span>
+0292         <span class="keyword">if</span> changeDir,cd(runDir); <span class="keyword">end</span>
+0293     <span class="keyword">end</span>
+0294 
+0295     <a name="_sub3" href="#_subfunctions" class="code">function [outputs, time] = read(obj)</a>
+0296         <span class="comment">%READ - Read outputs from the EnergyPlus simulation.</span>
+0297         <span class="comment">%</span>
+0298         <span class="comment">%  Syntax:   [outputs, time] = read(obj)</span>
+0299         <span class="comment">%</span>
+0300         <span class="comment">% Outputs:</span>
+0301         <span class="comment">%      outputs - Vector of real values sent by EnergyPlus.</span>
+0302         <span class="comment">%         time - Time mark sent by EnergyPlus simulation.</span>
+0303         <span class="comment">%</span>
+0304         <span class="comment">% See also: INITIALIZE, START, WRITE</span>
+0305 
+0306         <span class="keyword">try</span>
+0307             <span class="comment">% Read data from EnergyPlus</span>
+0308             readPacket = <a href="#_sub28" class="code" title="subfunction packet = readSocket(obj)">readSocket</a>(obj);
+0309             assert( <span class="keyword">...</span>
+0310                 ~isempty(readPacket), <span class="keyword">...</span>
+0311                 <span class="string">'EnergyPlusCosim:readError'</span>, <span class="keyword">...</span>
+0312                 <span class="string">'Could not read data from EnergyPlus.'</span> );
+0313 
+0314             <span class="comment">% Decode data</span>
+0315             [flag, time, rValOut] = mlep.decodePacket(readPacket);
+0316             outputs = rValOut;
+0317 
+0318             <span class="comment">% Process outputs from EnergyPlus</span>
+0319             <span class="keyword">if</span> flag ~= 0
+0320                 err_str = sprintf(<span class="string">'EnergyPlusCosim: EnergyPlus process sent flag &quot;%d&quot; (%s).'</span>,<span class="keyword">...</span>
+0321                     flag, mlep.epFlag2str(flag));
+0322                 <span class="keyword">if</span> flag &lt; 0
+0323                     errFile = [obj.idfFile <span class="string">'.err'</span>];
+0324                     errFilePath = fullfile(pwd,obj.outputDirName,errFile);
+0325                     err_str = [err_str, <span class="keyword">...</span>
+0326                         sprintf(<span class="string">'Check the &lt;a href=&quot;matlab:open %s&quot;&gt;%s&lt;/a&gt; file for further information.'</span>,<span class="keyword">...</span>
+0327                         errFilePath, errFile)];
+0328                 <span class="keyword">end</span>
+0329                 error(err_str);
+0330             <span class="keyword">end</span>
+0331         <span class="keyword">catch</span> me
+0332             obj.stop;
+0333             rethrow(me);
+0334         <span class="keyword">end</span>
+0335     <span class="keyword">end</span>
+0336 
+0337     <a name="_sub4" href="#_subfunctions" class="code">function write(obj, inputs, time)</a>
+0338         <span class="comment">%WRITE - Write inputs to the EnergyPlus simulation.</span>
+0339         <span class="comment">%</span>
+0340         <span class="comment">%  Syntax:   write(obj, inputs, time)</span>
+0341         <span class="comment">%</span>
+0342         <span class="comment">%  Inputs:</span>
+0343         <span class="comment">%      inputs - Vector of real values to be send to the</span>
+0344         <span class="comment">%               EnergyPlus simulation.</span>
+0345         <span class="comment">%        time - Time mark to be send to the EnergyPlus simulation.</span>
+0346         <span class="comment">%</span>
+0347         <span class="comment">% See also: INITIALIZE, START, READ</span>
+0348 
+0349         <span class="keyword">try</span>
+0350             assert(isa(inputs,<span class="string">'numeric'</span>) &amp;&amp; isa(time,<span class="string">'numeric'</span>),<span class="string">'Inputs must be a numeric vectors.'</span>);
+0351             rValIn = inputs(:);
+0352             <span class="comment">% Write data</span>
+0353             <a href="#_sub29" class="code" title="subfunction writeSocket(obj, packet)">writeSocket</a>(obj,mlep.encodeRealData(obj.versionProtocol,<span class="keyword">...</span>
+0354                 0, <span class="keyword">...</span>
+0355                 time,<span class="keyword">...</span>
+0356                 rValIn));
+0357         <span class="keyword">catch</span> me
+0358             obj.stop;
+0359             rethrow(me);
+0360         <span class="keyword">end</span>
+0361     <span class="keyword">end</span>
+0362 
+0363     <a name="_sub5" href="#_subfunctions" class="code">function stop(obj, stopSignal)</a>
+0364         <span class="comment">%STOP - Close communication and stop the EnergyPlus process</span>
+0365         <span class="comment">%Send stop to EnergyPlus. Close socket connection. Stop EnergyPlus process.</span>
+0366         <span class="comment">%</span>
+0367         <span class="comment">% Syntax:  stop(obj)</span>
+0368         <span class="comment">%</span>
+0369         <span class="comment">% See also: INITIALIZE, START, SETTINGS</span>
+0370 
+0371         <span class="keyword">if</span> obj.isRunning
+0372             <span class="comment">% Send stop signal</span>
+0373             <span class="keyword">if</span> nargin &lt; 2 || stopSignal
+0374                 <span class="keyword">try</span>
+0375                     obj.writeSocket(mlep.encodeStatus(obj.versionProtocol, 1));
+0376                 <span class="keyword">catch</span>
+0377                     <span class="comment">% Connection may already be closed. Socket</span>
+0378                     <span class="comment">% exception is a normal behavior</span>
+0379                 <span class="keyword">end</span>
+0380             <span class="keyword">end</span>
+0381 
+0382             <span class="comment">% Close connection</span>
+0383             obj.closeSocket;
+0384         <span class="keyword">end</span>
+0385 
+0386         <span class="keyword">if</span> obj.isInitialized
+0387             <span class="comment">% There can be errors prior to &quot;running&quot; status, where the</span>
+0388             <span class="comment">% process has already been started</span>
+0389 
+0390             <span class="comment">% Destroy process E+</span>
+0391             <span class="keyword">if</span> isa(obj.process, <span class="string">'processManager'</span>) &amp;&amp; obj.process.running
+0392                 obj.process.stop;
+0393             <span class="keyword">end</span>
+0394         <span class="keyword">end</span>
+0395 
+0396         obj.isRunning = false;
+0397         obj.isInitialized = false;
+0398     <span class="keyword">end</span>
+0399 
+0400     <a name="_sub6" href="#_subfunctions" class="code">function s = save(obj)</a>
+0401         <span class="comment">%SAVE - Save object properties to a structure.</span>
+0402         <span class="comment">%</span>
+0403         <span class="comment">%  Syntax:  s = save(obj)</span>
+0404         <span class="comment">%</span>
+0405         <span class="comment">% Outputs:</span>
+0406         <span class="comment">%      s  - structure containing current object state. Not all</span>
+0407         <span class="comment">%           the saved properties are loadable.</span>
+0408         <span class="comment">%</span>
+0409         <span class="comment">% See also: LOAD, INITIALIZE, SETTINGS</span>
+0410 
+0411         <span class="comment">% Get properties</span>
+0412         s = get(obj);
+0413     <span class="keyword">end</span>
+0414 
+0415     <a name="_sub7" href="#_subfunctions" class="code">function s = load(obj,s)</a>
+0416         <span class="comment">%LOAD - Load object properties from a structure.</span>
+0417         <span class="comment">%</span>
+0418         <span class="comment">%  Syntax:  s = load(obj,s)</span>
+0419         <span class="comment">%</span>
+0420         <span class="comment">%  Inputs:</span>
+0421         <span class="comment">%      s  - structure containing object properties.</span>
+0422         <span class="comment">%</span>
+0423         <span class="comment">% Outputs:</span>
+0424         <span class="comment">%      s  - structure containing loaded object properties.</span>
+0425         <span class="comment">%</span>
+0426         <span class="comment">% See also: SAVE, INITIALIZE, SETTINGS</span>
+0427 
+0428         <span class="comment">% Get loadable object properties</span>
+0429         selectedProps = findPropByAttr(obj,<span class="keyword">...</span>
+0430             <span class="string">'Transient'</span>,0,<span class="keyword">...</span>
+0431             <span class="string">'NonCopyable'</span>,0,<span class="keyword">...</span>
+0432             <span class="string">'DefiningClass'</span>,<span class="string">'mlep'</span>,<span class="keyword">...</span>
+0433             <span class="string">'GetAccess'</span>,<span class="string">'public'</span>,<span class="keyword">...</span>
+0434             <span class="string">'SetAccess'</span>,{<span class="string">'protected'</span>,<span class="string">'private'</span>});
+0435 
+0436         <span class="comment">% Remove properties that are not loadable</span>
+0437         s = rmfield(s,setdiff(fieldnames(s),selectedProps));
+0438 
+0439         <span class="comment">% Set properties</span>
+0440         set(obj,s);
+0441     <span class="keyword">end</span>
+0442 
+0443     <a name="_sub8" href="#_subfunctions" class="code">function delete(obj)</a>
+0444         <span class="comment">% Class destructor.</span>
+0445 
+0446         <span class="keyword">if</span> obj.isRunning
+0447             obj.stop;
+0448         <span class="keyword">end</span>
+0449         obj.isInitialized = false;
+0450         obj.process = [];
+0451 
+0452         <span class="comment">% Close server socket</span>
+0453         <span class="keyword">if</span> isjava(obj.serverSocket)
+0454             obj.serverSocket.close;
+0455         <span class="keyword">end</span>
+0456         obj.serverSocket = [];
+0457     <span class="keyword">end</span> <span class="comment">% /destructor</span>
+0458 
+0459 <span class="keyword">end</span>
+0460 
+0461 <span class="comment">%% ------------------- Static mlep methods ----------------------------</span>
+0462 methods (Hidden, Static)
+0463     <a name="_sub9" href="#_subfunctions" class="code">function [filename, fullpath] = validateInputFilename(file, extension)</a>
+0464         <span class="comment">%VALIDATEINPUTFILENAME - validation routines for input files.</span>
+0465         <span class="comment">%Validates file given by a relative or absolute path. Returns</span>
+0466         <span class="comment">%absolute path of the file.</span>
+0467         <span class="comment">%</span>
+0468         <span class="comment">%  Syntax:  [filename, fullpath] = validateInputFilename(file, extension)</span>
+0469         <span class="comment">%</span>
+0470         <span class="comment">%  Inputs:</span>
+0471         <span class="comment">%      file  - name of a file or a relative path or an absolute</span>
+0472         <span class="comment">%              path. Dots '.' are allowed</span>
+0473         <span class="comment">%              (e.q. USA.LosAngels.2001.epw)</span>
+0474         <span class="comment">%  extension - expected extension the the file (e.q. 'EPW')</span>
+0475         <span class="comment">%</span>
+0476         <span class="comment">% Outputs:</span>
+0477         <span class="comment">%   filename - filename stripped of an extension.</span>
+0478         <span class="comment">%   fullpath - absolute path the the file.</span>
+0479 
+0480         <span class="comment">% Validate file and extract its name and fullpath.</span>
+0481         assert(~isempty(file),<span class="string">'%s file not specified.'</span>,upper(extension));
+0482         assert(ischar(file) || isstring(file),<span class="string">'Invalid file name.'</span>);
+0483 
+0484         file_not_found_str = <span class="string">'Could not find &quot;%s&quot; file. Please correct the file path or make sure it is on the Matlab search path.'</span>;
+0485 
+0486         <span class="comment">% Get path</span>
+0487         filepath = fileparts(file);
+0488         ext = [<span class="string">'.'</span> lower(strrep(strtrim(extension),<span class="string">'.'</span>,<span class="string">''</span>))];
+0489         <span class="keyword">if</span> ~isempty(filepath)
+0490             <span class="comment">% ---- Fullpath specified ---------------------------------</span>
+0491             <span class="comment">% Take the filename literally</span>
+0492 
+0493             assert(exist(file,<span class="string">'file'</span>)&gt;0,file_not_found_str,file);
+0494             [~, name] = fileparts(file);
+0495             filename = name; <span class="comment">% Filename without extension</span>
+0496             <span class="comment">% Save the fullpath</span>
+0497             s = dir(file); <span class="comment">% exist and dir trim spaces etc. from name</span>
+0498             fullpath = fullfile(s.folder, s.name);
+0499         <span class="keyword">else</span>
+0500             <span class="comment">% --- Relative path specified -----------------------------</span>
+0501             <span class="comment">% Do best to find the right file</span>
+0502 
+0503             <span class="comment">% Clean up filename</span>
+0504             idx = regexpi(file,ext); <span class="comment">% search for extension</span>
+0505             <span class="keyword">if</span> ~isempty(idx)
+0506                 <span class="comment">% Strip extension</span>
+0507                 file = file(1:idx-1);
+0508                 <span class="comment">% Remove any leading or trailing spaces</span>
+0509                 file = strtrim(file);
+0510             <span class="keyword">end</span>
+0511 
+0512             assert(exist([file ext],<span class="string">'file'</span>)&gt;0, file_not_found_str,[file ext]);
+0513             filename = file;
+0514 
+0515             <span class="comment">% Save the fullpath</span>
+0516             fullpath = which([file ext]);
+0517         <span class="keyword">end</span>
+0518     <span class="keyword">end</span>
+0519 
+0520     <a name="_sub10" href="#_subfunctions" class="code">function file = browseForFile(extension)</a>
+0521         <span class="comment">%BROWSEFORFILE - Open file dialog for the specific extension.</span>
+0522         <span class="comment">%Browse manually for a file and validate the selection.</span>
+0523         <span class="comment">%</span>
+0524         <span class="comment">%  Syntax:  file = browseForFile(extension)</span>
+0525         <span class="comment">%</span>
+0526         <span class="comment">%  Inputs:</span>
+0527         <span class="comment">%  extension - filter files by extension (e.q. 'EPW')</span>
+0528         <span class="comment">%</span>
+0529         <span class="comment">% Outputs:</span>
+0530         <span class="comment">%       file - absolute path of the selected file</span>
+0531 
+0532         validateattributes(extension,{<span class="string">'char'</span>},{<span class="string">'scalartext'</span>});
+0533         validOptions = {<span class="string">'IDF'</span>,<span class="string">'EPW'</span>};
+0534         extension = validatestring(extension,validOptions);
+0535 
+0536 
+0537         filefilter = [<span class="string">'*.'</span> lower(extension)];
+0538         dialogTitle = [<span class="string">'Select '</span> upper(extension) <span class="string">' File'</span>];
+0539 
+0540         <span class="comment">% Ask for file</span>
+0541         [file,path] = uigetfile(filefilter,dialogTitle);
+0542 
+0543         <span class="comment">% Validate selection</span>
+0544         <span class="keyword">if</span> file ~= 0 <span class="comment">% Cancel button</span>
+0545             [~, file] = mlep.validateInputFilename(fullfile(path,file), extension);
+0546         <span class="keyword">end</span>
+0547     <span class="keyword">end</span>
+0548 
+0549     <a name="_sub11" href="#_subfunctions" class="code">function checksum = fileChecksum(file)</a>
+0550         <span class="comment">% FILECHECKSUM - Calculate file checksum.</span>
+0551         <span class="comment">% This is a wrapper function for hashing command.</span>
+0552         <span class="comment">%</span>
+0553         <span class="comment">%  Syntax:   checksum = fileChecksum(file)</span>
+0554         <span class="comment">%</span>
+0555         <span class="comment">%  Inputs:</span>
+0556         <span class="comment">%       file - path to an existing file.</span>
+0557         <span class="comment">%</span>
+0558         <span class="comment">% Outputs:</span>
+0559         <span class="comment">%   checksum - calculated checksum.</span>
+0560 
+0561         <span class="comment">% Return checksum of a file.</span>
+0562         checksum = Simulink.getFileChecksum(file);
+0563     <span class="keyword">end</span>
+0564 <span class="keyword">end</span>
+0565 
+0566 <span class="comment">%% ---------------------- Get/Set methods -----------------------------</span>
+0567 methods
+0568     <a name="_sub12" href="#_subfunctions" class="code">function set.idfFile(obj, file)</a>
+0569         <span class="comment">% SET.IDFFILE - Check existance of the IDF file, then set. If</span>
+0570         <span class="comment">% the filename is absolute, then take it as it is. If the</span>
+0571         <span class="comment">% filename is relative (no path), then locate the file in</span>
+0572         <span class="comment">% search path.</span>
+0573 
+0574         <span class="keyword">if</span> obj.isValidateInputFilename &amp;&amp; <span class="keyword">...</span><span class="comment"> % user defined validation</span>
+0575                 (isempty(bdroot) || <span class="keyword">...</span><span class="comment"> % no simulink</span>
+0576                 (~strcmp(get_param(bdroot,<span class="string">'BlockDiagramType'</span>),<span class="string">'library'</span>) || <span class="keyword">...</span><span class="comment"> % library</span>
+0577                 ~strcmp(file,obj.idfFile))) <span class="comment">%#ok&lt;MCSUP&gt; % default</span>
+0578             <span class="comment">% Validate</span>
+0579             [obj.idfFile, obj.idfFullFilename] = <span class="keyword">...</span>
+0580                 mlep.validateInputFilename(file, <span class="string">'IDF'</span>);  <span class="comment">%#ok&lt;MCSUP&gt;</span>
+0581         <span class="keyword">else</span>
+0582             obj.idfFile = file;
+0583         <span class="keyword">end</span>
+0584     <span class="keyword">end</span>
+0585 
+0586     <a name="_sub13" href="#_subfunctions" class="code">function set.epwFile(obj,file)</a>
+0587         <span class="comment">% SET.EPWFILE - Check existance of the IDF file, then set. If</span>
+0588         <span class="comment">% the filename is absolute, then take it as it is. If the</span>
+0589         <span class="comment">% filename is relative (no path), then locate the file in</span>
+0590         <span class="comment">% search path.</span>
+0591 
+0592         <span class="keyword">if</span> obj.isValidateInputFilename &amp;&amp; <span class="keyword">...</span><span class="comment"> % user defined validation</span>
+0593                 (isempty(bdroot) || <span class="keyword">...</span><span class="comment"> % no simulink</span>
+0594                 (~strcmp(get_param(bdroot,<span class="string">'BlockDiagramType'</span>),<span class="string">'library'</span>) || <span class="keyword">...</span><span class="comment"> % library</span>
+0595                 ~strcmp(file,obj.epwFile))) <span class="comment">%#ok&lt;MCSUP&gt; % default</span>
+0596             [obj.epwFile, obj.epwFullFilename] =<span class="keyword">...</span>
+0597                 mlep.validateInputFilename(file, <span class="string">'EPW'</span>);  <span class="comment">%#ok&lt;MCSUP&gt;</span>
+0598         <span class="keyword">else</span>
+0599             obj.epwFile = file;
+0600         <span class="keyword">end</span>
+0601     <span class="keyword">end</span>
+0602 <span class="keyword">end</span>
+0603 
+0604 <span class="comment">%% ======================== EnergyPlus ================================</span>
+0605 methods (Access = private)
+0606 
+0607     <a name="_sub14" href="#_subfunctions" class="code">function loadSettings(obj)</a>
+0608         <span class="comment">%LOADSETTINGS - Load running environment configuration.</span>
+0609         <span class="comment">%Obtain settings from file MLEPSETTINGS.mat</span>
+0610         <span class="comment">%If it doesn't exist run installation.</span>
+0611         <span class="comment">%</span>
+0612         <span class="comment">% Syntax:  loadSettings(obj)</span>
+0613         <span class="comment">%</span>
+0614         <span class="comment">% See also: START</span>
+0615 
+0616         <span class="comment">% Try to load MLEPSETTING.mat file</span>
+0617         <span class="keyword">if</span> exist(<span class="string">'MLEPSETTINGS.mat'</span>,<span class="string">'file'</span>)
+0618             S = <a href="#_sub8" class="code" title="subfunction s = load(obj,s)">load</a>(<span class="string">'MLEPSETTINGS.mat'</span>,<span class="string">'MLEPSETTINGS'</span>);
+0619             mlepSetting = S.MLEPSETTINGS;
+0620 
+0621         <span class="keyword">elseif</span> exist(<span class="string">'installMlep.m'</span>, <span class="string">'file'</span>)
+0622             <span class="comment">% Run installation script</span>
+0623             installMlep();
+0624             <span class="keyword">if</span> exist(<span class="string">'MLEPSETTINGS.mat'</span>,<span class="string">'file'</span>)
+0625                 S = <a href="#_sub8" class="code" title="subfunction s = load(obj,s)">load</a>(<span class="string">'MLEPSETTINGS.mat'</span>,<span class="string">'MLEPSETTINGS'</span>);
+0626                 mlepSetting = S.MLEPSETTINGS;
+0627             <span class="keyword">else</span>
+0628                 error(<span class="string">'Error loading mlep settings. Run &quot;installMlep.m&quot; again and check that the file &quot;MLEPSETTINGS.mat&quot; is in your search path.'</span>);
+0629             <span class="keyword">end</span>
+0630         <span class="keyword">else</span>
+0631             error(<span class="string">'Error loading mlep settings. Run &quot;installMlep.m&quot; again and check that the file &quot;MLEPSETTINGS.mat&quot; is in your search path.'</span>);
+0632         <span class="keyword">end</span>
+0633 
+0634         <span class="keyword">if</span> isfield(mlepSetting,<span class="string">'versionProtocol'</span>) &amp;&amp; <span class="keyword">...</span>
+0635                 isfield(mlepSetting,<span class="string">'versionEnergyPlus'</span>) &amp;&amp; <span class="keyword">...</span>
+0636                 isfield(mlepSetting,<span class="string">'program'</span>) &amp;&amp; <span class="keyword">...</span>
+0637                 isfield(mlepSetting,<span class="string">'env'</span>) &amp;&amp; <span class="keyword">...</span>
+0638                 isfield(mlepSetting,<span class="string">'eplusDir'</span>) &amp;&amp; <span class="keyword">...</span>
+0639                 isfield(mlepSetting,<span class="string">'javaDir'</span>)
+0640 
+0641             obj.versionProtocol = mlepSetting.versionProtocol;
+0642             obj.versionEnergyPlus = mlepSetting.versionEnergyPlus;
+0643             obj.program = mlepSetting.program;
+0644             obj.env = mlepSetting.env;
+0645             obj.epDir = mlepSetting.eplusDir;
+0646             addpath(mlepSetting.eplusDir,mlepSetting.javaDir);
+0647         <span class="keyword">else</span>
+0648             error(<span class="string">'Error loading mlep settings. Please run &quot;installMlep.m&quot; again.'</span>);
+0649         <span class="keyword">end</span>
+0650     <span class="keyword">end</span>
+0651 
+0652     <a name="_sub15" href="#_subfunctions" class="code">function runEnergyPlus(obj)</a>
+0653         <span class="comment">%RUNENERGYPLUS - Start EnergyPlus process.</span>
+0654         <span class="comment">%Run EnergyPlus using ProcessManager class. Add listener to</span>
+0655         <span class="comment">%process exit event</span>
+0656         <span class="comment">%</span>
+0657         <span class="comment">% Syntax:  runEnergyPlus(obj)</span>
+0658         <span class="comment">%</span>
+0659         <span class="comment">% See also: START</span>
+0660 
+0661         <span class="comment">% Set local environment</span>
+0662         <span class="keyword">for</span> i = 1:numel(obj.env)
+0663             setenv(obj.env{i}{1}, obj.env{i}{2});
+0664         <span class="keyword">end</span>
+0665 
+0666         <span class="comment">% --- Create the external E+ process</span>
+0667 
+0668         <span class="comment">% Prepare EP command</span>
+0669         epcmd = javaArray(<span class="string">'java.lang.String'</span>,11);
+0670         epcmd(1) = java.lang.String(fullfile(obj.epDir,obj.program));
+0671         epcmd(2) = java.lang.String(<span class="string">'-w'</span>); <span class="comment">% weather file</span>
+0672         epcmd(3) = java.lang.String(obj.epwFullFilename);
+0673         epcmd(4) = java.lang.String(<span class="string">'-i'</span>); <span class="comment">% IDD file</span>
+0674         epcmd(5) = java.lang.String(obj.iddFullFilename);
+0675         epcmd(6) = java.lang.String(<span class="string">'-x'</span>); <span class="comment">% expand objects</span>
+0676         epcmd(7) = java.lang.String(<span class="string">'-p'</span>); <span class="comment">% output prefix</span>
+0677         epcmd(8) = java.lang.String(obj.idfFile); <span class="comment">% output prefix name</span>
+0678         epcmd(9) = java.lang.String(<span class="string">'-s'</span>); <span class="comment">% output suffix</span>
+0679         epcmd(10) = java.lang.String(<span class="string">'D'</span>); <span class="comment">% Dash style &quot;prefix-suffix&quot;</span>
+0680         epcmd(11) = java.lang.String(obj.idfFullFilename); <span class="comment">% IDF file</span>
+0681 
+0682         epproc = processManager(<span class="string">'command'</span>,epcmd,<span class="keyword">...</span>
+0683             <span class="string">'printStdout'</span>,obj.verboseEP,<span class="keyword">...</span>
+0684             <span class="string">'printStderr'</span>,obj.verboseEP,<span class="keyword">...</span>
+0685             <span class="string">'keepStdout'</span>,~obj.verboseEP,<span class="keyword">...</span>
+0686             <span class="string">'keepStderr'</span>,~obj.verboseEP,<span class="keyword">...</span>
+0687             <span class="string">'autoStart'</span>, false,<span class="keyword">...</span><span class="comment"> % start process by .start</span>
+0688             <span class="string">'id'</span>,<span class="string">'EP'</span>);     <span class="comment">% process ID (also sets stdout prefix)</span>
+0689         epproc.workingDir = obj.outputDirFullPath;
+0690         addlistener(epproc.state,<span class="string">'exit'</span>,@<a href="#_sub17" class="code" title="subfunction epProcListener(src,data)">epProcListener</a>);
+0691         epproc.start();
+0692 
+0693         <span class="keyword">if</span> ~epproc.running
+0694             error(<span class="string">'Unknown error while starting the EnergyPlus process. Check the *.err file for further information.'</span>);
+0695         <span class="keyword">else</span>
+0696             obj.process = epproc;
+0697         <span class="keyword">end</span>
+0698 
+0699         <a name="_sub16" href="#_subfunctions" class="code">function epProcListener(src,data)</a>
+0700             fprintf(<span class="string">'\n'</span>);
+0701             fprintf(<span class="string">'%s: EnergyPlus process stopped with exitValue = %d.\n'</span>,src.id,src.exitValue);
+0702 
+0703             <span class="keyword">if</span> src.exitValue ~= 1
+0704                 fprintf(<span class="string">'Event name %s\n'</span>,data.EventName);
+0705                 fprintf(<span class="string">'\n'</span>);
+0706                 <span class="keyword">if</span> ~isempty(src.stdout)
+0707                     fprintf(<span class="string">'StdOut of the process:\n\n'</span>);
+0708                     processManager.printStream(src.stdout,<span class="string">'StdOut'</span>,80);
+0709                 <span class="keyword">end</span>
+0710                 <span class="keyword">if</span> ~isempty(src.stderr)
+0711                     fprintf(<span class="string">'StdErr of the process:\n\n'</span>);
+0712                     processManager.printStream(src.stdout,<span class="string">'StdErr'</span>,80);
+0713                 <span class="keyword">end</span>
+0714             <span class="keyword">end</span>
+0715 
+0716         <span class="keyword">end</span>
+0717     <span class="keyword">end</span>
+0718 
+0719     <a name="_sub17" href="#_subfunctions" class="code">function loadIdf(obj)</a>
+0720         <span class="comment">%LOADIDF - Load I/O variables from the IDF file</span>
+0721         <span class="comment">%Read Timestep, RunPeriod, Version and input/output</span>
+0722         <span class="comment">%configuration from the specified IDF file. The inputs and</span>
+0723         <span class="comment">%outputs are stored into inputTable and outputTable variables.</span>
+0724         <span class="comment">%</span>
+0725         <span class="comment">% Syntax:  loadIdf(obj)</span>
+0726         <span class="comment">%</span>
+0727         <span class="comment">% See also: INITIALIZE</span>
+0728 
+0729         <span class="comment">% Parse IDF</span>
+0730         in = mlep.readIDF(obj.idfFullFilename,<span class="keyword">...</span>
+0731             {<span class="string">'Timestep'</span>,<span class="keyword">...</span>
+0732             <span class="string">'RunPeriod'</span>,<span class="keyword">...</span>
+0733             <span class="string">'ExternalInterface:Schedule'</span>,<span class="keyword">...</span>
+0734             <span class="string">'ExternalInterface:Actuator'</span>,<span class="keyword">...</span>
+0735             <span class="string">'ExternalInterface:Variable'</span>,<span class="keyword">...</span>
+0736             <span class="string">'Output:Variable'</span>,<span class="keyword">...</span>
+0737             <span class="string">'Version'</span>});
+0738         obj.idfData.timeStep = str2double(char(in(1).fields{1}));
+0739         obj.timestep = 60/obj.idfData.timeStep * 60; <span class="comment">%[s];</span>
+0740         obj.idfData.runPeriod = (str2double(char(in(2).fields{1}(4))) - str2double(char(in(2).fields{1}(2))))*31 + 1 + str2double(char(in(2).fields{1}(5))) - str2double(char(in(2).fields{1}(3)));
+0741         schedule = in(3).fields;
+0742         obj.idfData.schedule = schedule;
+0743         actuator = in(4).fields;
+0744         obj.idfData.actuator = actuator;
+0745         variable = in(5).fields;
+0746         obj.idfData.variable = variable;
+0747         output = in(6).fields;
+0748         obj.idfData.output = output;
+0749         obj.idfData.version = in(7).fields;
+0750 
+0751         <span class="comment">% List Schedules</span>
+0752         inTable = table(<span class="string">'Size'</span>,[0 2],<span class="string">'VariableTypes'</span>,{<span class="string">'string'</span>,<span class="string">'string'</span>},<span class="string">'VariableNames'</span>,{<span class="string">'Name'</span>,<span class="string">'Type'</span>});
+0753         <span class="keyword">for</span> i = 1:size(schedule,2)
+0754             <span class="keyword">if</span> ~size(schedule,1)
+0755                 <span class="keyword">break</span>;
+0756             <span class="keyword">end</span>
+0757             inTable(i,:) = {<span class="string">'schedule'</span>,<span class="keyword">...</span><span class="comment">   % Name</span>
+0758                 schedule{i}{1}}; <span class="comment">% Type</span>
+0759         <span class="keyword">end</span>
+0760 
+0761         <span class="comment">% List Actuators</span>
+0762         cInput = height(inTable);
+0763         <span class="keyword">for</span> i = 1:size(actuator,2)
+0764             <span class="keyword">if</span> ~size(actuator,1)
+0765                 <span class="keyword">break</span>;
+0766             <span class="keyword">end</span>
+0767             inTable(cInput+i) = {<span class="string">'actuator'</span>,<span class="keyword">...</span><span class="comment">   % Name</span>
+0768                 actuator{i}{1}}; <span class="comment">% Type</span>
+0769         <span class="keyword">end</span>
+0770 
+0771         <span class="comment">% List Variable</span>
+0772         cInput = height(inTable);
+0773         <span class="keyword">for</span> i = 1:size(obj.idfData.variable,2)
+0774             <span class="keyword">if</span> ~size(obj.idfData.variable,1)
+0775                 <span class="keyword">break</span>;
+0776             <span class="keyword">end</span>
+0777             inTable(cInput+i) = {<span class="string">'variable'</span>,<span class="keyword">...</span><span class="comment">   % Name</span>
+0778                 variable{i}{1}}; <span class="comment">% Type</span>
+0779         <span class="keyword">end</span>
+0780         obj.idfData.inputTable = inTable ;
+0781 
+0782         <span class="comment">% List Outputs</span>
+0783         outTable = table(<span class="string">'Size'</span>,[0 3],<span class="string">'VariableTypes'</span>,{<span class="string">'string'</span>,<span class="string">'string'</span>,<span class="string">'string'</span>},<span class="string">'VariableNames'</span>,{<span class="string">'Name'</span>,<span class="string">'Type'</span>,<span class="string">'Period'</span>});
+0784         <span class="keyword">for</span> i = 1:size(output,2)
+0785             outTable(i,:) = {output{i}{1}, <span class="keyword">...</span><span class="comment"> % Name</span>
+0786                 output{i}{2}, <span class="keyword">...</span><span class="comment"> % Type</span>
+0787                 output{i}{3}};    <span class="comment">% Period</span>
+0788         <span class="keyword">end</span>
+0789         obj.idfData.outputTable = outTable;
+0790     <span class="keyword">end</span>
+0791 
+0792     <a name="_sub18" href="#_subfunctions" class="code">function makeVariablesConfigFile(obj)</a>
+0793         <span class="comment">%MAKEVARIABLESCONFIGFILE - Create a variable.cfg config file or reuse user-defined one</span>
+0794         <span class="comment">%If there is a variable.cfg in the same directory as the IDF file</span>
+0795         <span class="comment">%use it (copy it into the outputFolder for E+ to use).</span>
+0796         <span class="comment">%Otherwise, create a new one based on the inputs and outputs</span>
+0797         <span class="comment">%defined in the IDF file.</span>
+0798         <span class="comment">%</span>
+0799         <span class="comment">% Syntax:  makeVariablesConfigFile(obj)</span>
+0800         <span class="comment">%</span>
+0801         <span class="comment">% See also: MLEP.WRITESOCKETCONFIG, INITIALIZE</span>
+0802 
+0803         <span class="keyword">if</span> obj.isUserVarFile
+0804             assert(exist(obj.varFullFilename,<span class="string">'file'</span>)==2,obj.file_not_found_str,obj.varFullFilename);
+0805             <span class="comment">% Copy variables.cfg to the output directory (= working dir for EP)</span>
+0806             <span class="keyword">if</span> ~copyfile(obj.varFullFilename, obj.outputDirFullPath)
+0807                 error(<span class="string">'Cannot copy &quot;%s&quot; to &quot;%s&quot;.'</span>, obj.varFullFilename, obj.outputDirFullPath);
+0808             <span class="keyword">end</span>
+0809             newVarFullFilename = fullfile(obj.outputDirFullPath, obj.variablesConfigFileName);
+0810             <span class="comment">% Add disclamer to the copied variables.cfg file</span>
+0811             S = fileread(newVarFullFilename);
+0812             disclaimer = [newline <span class="string">'&lt;!--'</span> newline,<span class="keyword">...</span>
+0813                 <span class="string">'|===========================================================|'</span> newline,<span class="keyword">...</span>
+0814                 <span class="string">'|                  THIS IS A FILE COPY.                     |'</span> newline,<span class="keyword">...</span>
+0815                 <span class="string">'| DO NOT EDIT THIS FILE AS ANY CHANGES WILL BE OVERWRITTEN! |'</span> newline,<span class="keyword">...</span>
+0816                 <span class="string">'|===========================================================|'</span> newline,<span class="keyword">...</span>
+0817                 <span class="string">'--&gt;'</span> newline];
+0818             anchor = <span class="string">'^&lt;\?xml.*\?&gt;'</span>;
+0819             [~,e] = regexp(S,anchor);
+0820             <span class="keyword">if</span> isempty(e), error(<span class="string">'Parsing of &quot;%s&quot; failed. Please check the file.'</span>,obj.variablesConfigFileName);
+0821             <span class="keyword">else</span>
+0822                 S = [S(1:e), disclaimer, S(e+1:end)];
+0823             <span class="keyword">end</span>
+0824             FID = fopen(newVarFullFilename, <span class="string">'w'</span>);
+0825             <span class="keyword">if</span> FID == -1, error(<span class="string">'Cannot open file &quot;%s&quot;.'</span>, newVarFullFilename); <span class="keyword">end</span>
+0826             fwrite(FID, S, <span class="string">'char'</span>);
+0827             fclose(FID);
+0828         <span class="keyword">else</span>
+0829             <span class="comment">% Create a new 'variables.cfg' file based on the input/output</span>
+0830             <span class="comment">% definition in the IDF file</span>
+0831 
+0832             mlep.writeVariableConfig(<span class="keyword">...</span>
+0833                 fullfile(obj.outputDirFullPath, obj.variablesConfigFileName),<span class="keyword">...</span>
+0834                 obj.inputTable,<span class="keyword">...</span>
+0835                 obj.outputTable);
+0836 
+0837         <span class="keyword">end</span>
+0838     <span class="keyword">end</span>
+0839 
+0840     <a name="_sub19" href="#_subfunctions" class="code">function checkIO(obj)</a>
+0841         <span class="comment">%CHECKIO - Check input/output configuration for duplicates,</span>
+0842         <span class="comment">% asterisks, wrong periods, etc.</span>
+0843         <span class="comment">%</span>
+0844         <span class="comment">% Syntax:  checkIO(obj)</span>
+0845         <span class="comment">%</span>
+0846         <span class="comment">% See also: INITIALIZE, MAKEVARIABLESCONFIGFILE</span>
+0847 
+0848         <span class="comment">% Check variables.cfg config for wrong entries</span>
+0849         assert(~isempty(obj.inputTable) &amp;&amp; ~isempty(obj.outputTable), <span class="string">'Run parsing of the variables.cfg file first.'</span>);
+0850 
+0851         <span class="comment">% Check validity of user specified variables.cfg file</span>
+0852         <span class="keyword">if</span> obj.isUserVarFile
+0853             chk = ismember(obj.inputTable,obj.idfData.inputTable);
+0854             assert(all(chk),<span class="string">'The following inputs to EnergyPlus (ExternalInterface) are defined in the &quot;variables.cfg file, but are missing in the IDF file:\n%s '</span>,<span class="keyword">...</span>
+0855                 evalc(<span class="string">'disp(obj.inputTable(~chk,:))'</span>));
+0856 
+0857             chk = ismember(obj.outputTable,obj.idfData.outputTable);
+0858             assert(all(chk),<span class="string">'The following inputs to EnergyPlus (ExternalInterface) are defined in the &quot;variables.cfg file, but are missing in the IDF file:\n%s '</span>,<span class="keyword">...</span>
+0859                 evalc(<span class="string">'disp(obj.outputTable(~chk,:))'</span>));
+0860         <span class="keyword">end</span>
+0861 
+0862         <span class="comment">% Check i/o tables for duplicates</span>
+0863         [obj.inputTable,ia] = unique(obj.inputTable,<span class="string">'rows'</span>,<span class="string">'stable'</span>);
+0864         dupl = setdiff(1:height(obj.inputTable),ia);
+0865         <span class="keyword">if</span> ~isempty(dupl)
+0866             warning(<span class="string">'Omitting the following duplicate input entries:\n%s '</span>,<span class="keyword">...</span>
+0867                 evalc(<span class="string">'disp(obj.inputTable(dupl,:))'</span>));
+0868         <span class="keyword">end</span>
+0869         [obj.outputTable,ia] = unique(obj.outputTable,<span class="string">'rows'</span>,<span class="string">'stable'</span>);
+0870         dupl = setdiff(1:height(obj.outputTable),ia);
+0871         <span class="keyword">if</span> ~isempty(dupl)
+0872             warning(<span class="string">'IDF file: Omitting the following duplicate output entries:\n%s '</span>,<span class="keyword">...</span>
+0873                 evalc(<span class="string">'disp(obj.outputTable(dupl,:))'</span>));
+0874         <span class="keyword">end</span>
+0875 
+0876         <span class="comment">% Check Outputs for asterisks</span>
+0877         chk = contains(obj.outputTable.Name,<span class="string">'*'</span>);
+0878         <span class="keyword">if</span> any(chk)
+0879             warning(<span class="string">'IDF file: Ambiguous &quot;*&quot; key value detected. Please specify the key value exactly (using &quot;Environment&quot;, zone name, surface name, etc.). The issue was detected in the following entries:\n%s\n'</span>,<span class="keyword">...</span>
+0880                 evalc(<span class="string">'disp(obj.outputTable(chk,:))'</span>));
+0881             obj.outputTable = obj.outputTable(~chk,:);
+0882         <span class="keyword">end</span>
+0883 
+0884         <span class="comment">% Check Outputs for reporting frequency other then</span>
+0885         chk = contains(obj.outputTable.Period,<span class="string">'timestep'</span>,<span class="string">'IgnoreCase'</span>,true);
+0886         <span class="keyword">if</span> any(~chk)
+0887             warning(<span class="string">'IDF file: Omitting the following output varibles with reporting frequency other then &quot;timestep&quot;:\n%s '</span>,<span class="keyword">...</span>
+0888                 evalc(<span class="string">'disp(obj.outputTable(~chk,:))'</span>));
+0889             obj.outputTable = obj.outputTable(chk,:);
+0890         <span class="keyword">end</span>
+0891     <span class="keyword">end</span>
+0892 
+0893     <a name="_sub20" href="#_subfunctions" class="code">function cleanEP(obj)</a>
+0894         <span class="comment">%CLEANEP - Delete files from the previous simulation</span>
+0895         <span class="comment">%</span>
+0896         <span class="comment">% Syntax:  cleanEP(obj)</span>
+0897         <span class="comment">%</span>
+0898         <span class="comment">% See also: INITIALIZE</span>
+0899 
+0900         <span class="comment">% Remove &quot;outputDir&quot; from the &quot;workDir&quot; folder</span>
+0901         <span class="keyword">if</span> strcmp(obj.workDirPrivate,<span class="string">'.'</span>)
+0902             rootDir = pwd;
+0903         <span class="keyword">else</span>
+0904             rootDir = obj.workDirPrivate;
+0905         <span class="keyword">end</span>
+0906 
+0907         dirname = fullfile(rootDir,obj.outputDirName);
+0908         <span class="keyword">if</span> exist(dirname,<span class="string">'dir'</span>)
+0909             rmdir(dirname,<span class="string">'s'</span>);
+0910         <span class="keyword">end</span>
+0911     <span class="keyword">end</span>
+0912 <span class="keyword">end</span>
+0913 
+0914 <span class="comment">%% ---------------------- Static EP methods ---------------------------</span>
+0915 methods (Access = private, Static)
+0916 
+0917     <a name="_sub21" href="#_subfunctions" class="code">function [inputTable, outputTable] = parseVariablesConfigFile(file)</a>
+0918         <span class="comment">%PARSEVARIABLESCONFIGFILE - Parse variables.cfg file for the desired I/O.</span>
+0919         <span class="comment">%</span>
+0920         <span class="comment">% Syntax:  [inputTable, outputTable] = parseVariablesConfigFile(file)</span>
+0921         <span class="comment">%</span>
+0922         <span class="comment">% Inputs:</span>
+0923         <span class="comment">%    file   - Path to the &quot;variables.cfg&quot; file.</span>
+0924         <span class="comment">%</span>
+0925         <span class="comment">% Outputs:</span>
+0926         <span class="comment">%    inputTable  - Table with parsed inputs.</span>
+0927         <span class="comment">%    outputTable - Table with parsed outputs.</span>
+0928         <span class="comment">%</span>
+0929         <span class="comment">% See also: MLEP, MLEP.MAKEVARIABLESCONFIGFILE</span>
+0930 
+0931         assert(exist(file,<span class="string">'file'</span>) &gt; 0,<span class="string">'File &quot;%s&quot; not found.'</span>);
+0932 
+0933         inputTable = table(<span class="string">'Size'</span>,[0 2],<span class="string">'VariableTypes'</span>,{<span class="string">'string'</span>,<span class="string">'string'</span>},<span class="string">'VariableNames'</span>,{<span class="string">'Name'</span>,<span class="string">'Type'</span>});
+0934         cInput = 1;
+0935         outputTable = table(<span class="string">'Size'</span>,[0 3],<span class="string">'VariableTypes'</span>,{<span class="string">'string'</span>,<span class="string">'string'</span>,<span class="string">'string'</span>},<span class="string">'VariableNames'</span>,{<span class="string">'Name'</span>,<span class="string">'Type'</span>,<span class="string">'Period'</span>});
+0936         cOutput = 1;
+0937 
+0938         <span class="comment">% Start parsing</span>
+0939         s = xml2struct(file); <span class="comment">%modified version of xml2struct allowing for not checking the .dtd file</span>
+0940         s = struct2cell(s);
+0941         vars = s{1}{2}.variable;
+0942         <span class="keyword">for</span> i = 1:numel(vars)
+0943             <span class="keyword">switch</span> vars{i}.Attributes.source
+0944                 <span class="comment">% Output from E+</span>
+0945                 <span class="keyword">case</span> <span class="string">'EnergyPlus'</span>
+0946                     out = vars{i}.EnergyPlus.Attributes;
+0947                     assert(isfield(out,<span class="string">'name'</span>) &amp;&amp; isfield(out,<span class="string">'type'</span>),<span class="string">'Fields &quot;name&quot; and/or &quot;type&quot; are not existing'</span>);
+0948                     outputTable(cOutput,:) = {out.name, out.type, <span class="string">'timestep'</span>};
+0949                     cOutput = cOutput + 1;
+0950 
+0951                     <span class="comment">% Input to E+</span>
+0952                 <span class="keyword">case</span> <span class="string">'Ptolemy'</span>
+0953                     name = fieldnames(vars{i}.EnergyPlus.Attributes);
+0954                     assert(any(contains({<span class="string">'schedule'</span>,<span class="string">'variable'</span>,<span class="string">'actuator'</span>},name)),<span class="keyword">...</span>
+0955                         <span class="string">'Unknown variable name &quot;%s&quot;.'</span>,name);
+0956                     inputTable(cInput,:) = {name{1}, vars{i}.EnergyPlus.Attributes.(name{1})};
+0957                     cInput = cInput + 1;
+0958 
+0959                     <span class="comment">% Error</span>
+0960                 <span class="keyword">otherwise</span>
+0961                     error(<span class="string">'Unknown varible source &quot;%s&quot;.'</span>,vars{i}.Attributes.source)
+0962             <span class="keyword">end</span>
+0963         <span class="keyword">end</span>
+0964     <span class="keyword">end</span>
+0965 
+0966     <a name="_sub22" href="#_subfunctions" class="code">function killProcessByName(name, varargin)</a>
+0967         <span class="comment">%KILLPROCESSBYNAME - Helper function for killing processes identified by name.</span>
+0968         <span class="comment">%</span>
+0969         <span class="comment">% Syntax:  killProcessByName(name)</span>
+0970         <span class="comment">%</span>
+0971         <span class="comment">% Inputs:</span>
+0972         <span class="comment">%         name - Name of the process to be killed.</span>
+0973         <span class="comment">% issueWarning - Notify when killing processes. (Default: true)</span>
+0974         <span class="comment">%</span>
+0975         <span class="comment">% See also: MLEP, MLEP.RUNENERGYPLUS</span>
+0976 
+0977         <span class="keyword">if</span> nargin &lt; 2
+0978             issueWarning = true;
+0979         <span class="keyword">else</span>
+0980             issueWarning = varargin{1};
+0981             assert(isa(issueWarning,<span class="string">'numeric'</span>) || isa(issueWarning,<span class="string">'logical'</span>));
+0982         <span class="keyword">end</span>
+0983 
+0984         p = System.Diagnostics.Process.GetProcessesByName(name);
+0985         <span class="keyword">for</span> i = 1:p.Length
+0986             <span class="keyword">try</span>
+0987                 dt = p(i).StartTime.Now - p(i).StartTime;
+0988                 <span class="keyword">if</span> issueWarning
+0989                     warning(<span class="string">'Found process &quot;%s&quot;, ID = %d, started %d minutes ago. Terminating the process.'</span>,name, p(i).Id, dt.Minutes);
+0990                 <span class="keyword">end</span>
+0991                 p(i).Kill();
+0992                 p(i).WaitForExit(100);
+0993             <span class="keyword">catch</span>
+0994                 warning(<span class="string">'Couldn''t kill process &quot;%s&quot; with ID = %d.'</span>,name,p(i).Id);
+0995                 <span class="comment">% process was terminating or can't be terminated - deal with it</span>
+0996                 <span class="comment">% process has already exited - might be able to let this one go</span>
+0997             <span class="keyword">end</span>
+0998         <span class="keyword">end</span>
+0999     <span class="keyword">end</span>
+1000 
+1001     <a name="_sub23" href="#_subfunctions" class="code">function str = epFlag2str(flag)</a>
+1002         <span class="comment">%EPFLAG2STR - Transform numeric flag returned by EnergyPlus into a human readable form.</span>
+1003         <span class="comment">% Flag    Description:</span>
+1004         <span class="comment">% +1    Simulation reached end time.</span>
+1005         <span class="comment">% 0        Normal operation.</span>
+1006         <span class="comment">% -1    Simulation terminated due to an unspecified error.</span>
+1007         <span class="comment">% -10    Simulation terminated due to an error during the initialization.</span>
+1008         <span class="comment">% -20    Simulation terminated due to an error during the time integration.%</span>
+1009         <span class="comment">%</span>
+1010         <span class="comment">% Syntax:  str = epFlag2str(flag)</span>
+1011         <span class="comment">%</span>
+1012         <span class="comment">% Inputs:</span>
+1013         <span class="comment">%         flag - EnergyPlus return flag.</span>
+1014         <span class="comment">%</span>
+1015         <span class="comment">% Outputs:</span>
+1016         <span class="comment">%          str - Flag description.</span>
+1017         <span class="comment">%</span>
+1018         <span class="comment">% See also: MLEP, MLEP.RUNENERGYPLUS</span>
+1019 
+1020         <span class="keyword">switch</span> flag
+1021             <span class="keyword">case</span> 1
+1022                 str = <span class="string">'Simulation reached end time. If this is not intended, extend the simulation period in the IDF file'</span>;
+1023             <span class="keyword">case</span> 0
+1024                 str = <span class="string">'Normal operation'</span>;
+1025             <span class="keyword">case</span> -1
+1026                 str = <span class="string">'Simulation terminated due to an unspecified runtime error'</span>;
+1027             <span class="keyword">case</span> -10
+1028                 str = <span class="string">'Simulation terminated due to an error during initialization'</span>;
+1029             <span class="keyword">case</span> -20
+1030                 str = <span class="string">'Simulation terminated due to an error during the time integration'</span>;
+1031             <span class="keyword">otherwise</span>
+1032                 str = sprintf(<span class="string">'Unknown flag &quot;%d&quot;.'</span>,flag);
+1033         <span class="keyword">end</span>
+1034     <span class="keyword">end</span>
+1035 
+1036     <a name="_sub24" href="#_subfunctions" class="code">function [ver, minor] = getEPversion(iddFullpath)</a>
+1037         <span class="comment">%GETEPVERSION - Get EnergyPlus version out of Energy+.idd file</span>
+1038         <span class="comment">%</span>
+1039         <span class="comment">%  Syntax:  [ver, minor] = getEPversion(iddFullpath)</span>
+1040         <span class="comment">%</span>
+1041         <span class="comment">%  Inputs:</span>
+1042         <span class="comment">%  iddFullpath - Path to a .IDD file.</span>
+1043         <span class="comment">%</span>
+1044         <span class="comment">% Outputs:</span>
+1045         <span class="comment">%          ver - EnergyPlus version (e.g. 8.9)</span>
+1046         <span class="comment">%        minor - Last digit of the EnergyPlus version (e.g. 0)</span>
+1047         <span class="comment">%</span>
+1048         <span class="comment">% See also: MLEP, MLEP.INITIALIZE</span>
+1049 
+1050         <span class="comment">% Parse EnergyPlus version out of Energy+.idd file</span>
+1051         assert(exist(iddFullpath,<span class="string">'file'</span>)&gt;0,<span class="string">'Could not find &quot;%s&quot; file. Please correct the file path or make sure it is on the Matlab search path.'</span>,iddFullpath);
+1052         <span class="comment">% Read file</span>
+1053         fid = fopen(iddFullpath);
+1054         <span class="keyword">if</span> fid == -1, error(<span class="string">'Cannot open file &quot;%s&quot;.'</span>, iddFullpath); <span class="keyword">end</span>
+1055         str = fread(fid,100,<span class="string">'*char'</span>)';
+1056         fclose(fid);
+1057         <span class="comment">% Parse the string</span>
+1058         expr = <span class="string">'(?&gt;^!IDD_Version\s+|\G)(\d{1}\.\d{1}|\G)\.(\d+)'</span>;
+1059         tokens = regexp(str,expr,<span class="string">'tokens'</span>);
+1060         assert(~isempty(tokens)&amp;&amp;size(tokens{1},2)==2,<span class="string">' Error while parsing &quot;%s&quot; for EnergyPlus version'</span>,iddFullpath);
+1061         ver = tokens{1}{1};
+1062         minor = tokens{1}{2};
+1063     <span class="keyword">end</span>
+1064 
+1065     <span class="comment">% Parse IDF file</span>
+1066     data = <a href="readIDF.html" class="code" title="function data = readIDF(filename, classnames)">readIDF</a>(filename, classnames);
+1067 <span class="keyword">end</span>
+1068 
+1069 <span class="comment">%% ======================= Communication ==============================</span>
+1070 methods (Access = private)
+1071 
+1072     <a name="_sub25" href="#_subfunctions" class="code">function makeSocket(obj)</a>
+1073         <span class="comment">%MAKESOCKET - Create or reuse java socket.</span>
+1074         <span class="comment">%Open a socket on a free port on localhost. Make the</span>
+1075         <span class="comment">%&quot;socket.cfg&quot; file to be read by BCVTB.</span>
+1076         <span class="comment">%</span>
+1077         <span class="comment">%  Syntax:  makeSocket(obj)</span>
+1078         <span class="comment">%</span>
+1079         <span class="comment">% See also: INITIALIZE, ACCEPTSOCKET</span>
+1080 
+1081         <span class="keyword">if</span> isempty(obj.serverSocket) || <span class="keyword">...</span>
+1082                 (~isempty(obj.serverSocket) &amp;&amp; isClosed(obj.serverSocket))
+1083             <span class="comment">% If any error happens, this function will be interrupted</span>
+1084             <span class="keyword">if</span> ~isempty(obj.host)
+1085                 serversock = java.net.ServerSocket(obj.port, 0, obj.host);
+1086                 hostname = obj.host;
+1087             <span class="keyword">else</span>
+1088                 serversock = java.net.ServerSocket(obj.port);
+1089 
+1090                 <span class="comment">% The following get local host address for incoming connections even</span>
+1091                 <span class="comment">% from outside, but it seems unstable, sometimes E+ cannot connect.</span>
+1092                 <span class="comment">% hostname = char(getHostName(java.net.InetAddress.getLocalHost));</span>
+1093 
+1094                 <span class="comment">% The following get address that can only be used locally on this</span>
+1095                 <span class="comment">% machine, no connections from outside. It may be more stable.</span>
+1096                 hostname = char(getHostName(javaMethod(<span class="string">'getLocalHost'</span>, <span class="string">'java.net.InetAddress'</span>)));
+1097                 <span class="comment">%hostname = char(getHostAddress(serversock.getInetAddress));</span>
+1098             <span class="keyword">end</span>
+1099             obj.serverSocket = serversock;
+1100         <span class="keyword">else</span>
+1101             hostname = char(getHostName(javaMethod(<span class="string">'getLocalHost'</span>, <span class="string">'java.net.InetAddress'</span>)));
+1102             <span class="comment">%hostname = char(getHostAddress(serversock.getInetAddress));</span>
+1103         <span class="keyword">end</span>
+1104 
+1105         <span class="comment">% Set accept timeout</span>
+1106         setSoTimeout(obj.serverSocket, obj.acceptTimeout);
+1107 
+1108         <span class="comment">% Write socket config file</span>
+1109         mlep.writeSocketConfig(<span class="keyword">...</span>
+1110             fullfile(obj.outputDirFullPath,obj.socketConfigFileName),<span class="keyword">...</span>
+1111             hostname,<span class="keyword">...</span>
+1112             obj.serverSocket.getLocalPort);
+1113 
+1114         obj.commSocket = [];
+1115     <span class="keyword">end</span>
+1116 
+1117     <a name="_sub26" href="#_subfunctions" class="code">function acceptSocket(obj)</a>
+1118         <span class="comment">%ACCEPTSOCKET - Establish connection by accepting socket.</span>
+1119         <span class="comment">%</span>
+1120         <span class="comment">%  Syntax:  acceptSocket(obj)</span>
+1121         <span class="comment">%</span>
+1122         <span class="comment">% See also: MAKESOCKET, READSOCKET, WRITESOCKET, CLOSESOCKET,</span>
+1123         <span class="comment">%           READ, WRITE</span>
+1124 
+1125         assert(obj.isInitialized, <span class="string">'Initialize the object first.'</span>);
+1126         <span class="comment">% Accept Socket</span>
+1127         obj.commSocket = accept(obj.serverSocket);
+1128 
+1129         <span class="comment">% Create Streams</span>
+1130         <span class="keyword">if</span> isjava(obj.commSocket)
+1131             <span class="comment">% Create writer and reader</span>
+1132             <span class="keyword">if</span> obj.rwTimeout ~= 0
+1133                 setSoTimeout(obj.commSocket,obj.rwTimeout);
+1134             <span class="keyword">end</span>
+1135             obj.createStreams;
+1136             obj.isRunning = true;
+1137         <span class="keyword">else</span>
+1138             error(<span class="string">'Could not establish socket connection. Check that the EnergyPlus process is running and socket configuration.'</span>);
+1139         <span class="keyword">end</span>
+1140     <span class="keyword">end</span>
+1141 
+1142     <a name="_sub27" href="#_subfunctions" class="code">function packet = readSocket(obj)</a>
+1143         <span class="comment">%READSOCKET - Read from socket.</span>
+1144         <span class="comment">%</span>
+1145         <span class="comment">%  Syntax: packet = readSocket(obj)</span>
+1146         <span class="comment">%</span>
+1147         <span class="comment">% Outputs: packet - One line of data obtained from the socket.</span>
+1148         <span class="comment">%</span>
+1149         <span class="comment">% See also: MAKESOCKET, WRITESOCKET</span>
+1150 
+1151         <span class="keyword">if</span> obj.isRunning
+1152             packet = char(readLine(obj.reader));
+1153             <span class="comment">%                 packet = char(readLine(java.io.BufferedReader(java.io.InputStreamReader(obj.commSocket.getInputStream))));</span>
+1154         <span class="keyword">else</span>
+1155             error(<span class="string">'Co-simulation is not running.'</span>);
+1156         <span class="keyword">end</span>
+1157     <span class="keyword">end</span>
+1158 
+1159     <a name="_sub28" href="#_subfunctions" class="code">function writeSocket(obj, packet)</a>
+1160         <span class="comment">%WRITESOCKET - Write data to socket.</span>
+1161         <span class="comment">%</span>
+1162         <span class="comment">%  Syntax: writeSocket(obj, packet)</span>
+1163         <span class="comment">%</span>
+1164         <span class="comment">%  Inputs: packet - Data to be sent to the socket.</span>
+1165         <span class="comment">%</span>
+1166         <span class="comment">% See also: MAKESOCKET, READSOCKET</span>
+1167 
+1168         <span class="keyword">if</span> obj.isRunning
+1169             <span class="comment">%                 wr = java.io.BufferedWriter(java.io.OutputStreamWriter(obj.commSocket.getOutputStream));</span>
+1170             <span class="comment">%                 wr.write(sprintf('%s\n', packet));</span>
+1171             <span class="comment">%                 wr.flush;</span>
+1172             assert(numel(packet) &lt; 21621);
+1173             <a href="#_sub5" class="code" title="subfunction write(obj, inputs, time)">write</a>(obj.writer,[packet mlep.CRChar]);
+1174             flush(obj.writer);
+1175         <span class="keyword">else</span>
+1176             error(<span class="string">'Co-simulation is not running.'</span>);
+1177         <span class="keyword">end</span>
+1178     <span class="keyword">end</span>
+1179 
+1180     <a name="_sub29" href="#_subfunctions" class="code">function setRWTimeout(obj, timeout)</a>
+1181         <span class="comment">%SETRWTIMEOUT - Set read/write timeout for the communication socket.</span>
+1182         <span class="comment">%</span>
+1183         <span class="comment">%  Syntax: setRWTimeout(obj, value)</span>
+1184         <span class="comment">%</span>
+1185         <span class="comment">%  Inputs: timeout - Communication timeout in [ms].</span>
+1186         <span class="comment">%</span>
+1187         <span class="comment">% See also: MAKESOCKET, READ, WRITE</span>
+1188 
+1189         <span class="keyword">if</span> timeout &lt; 0, timeout = 0; <span class="keyword">end</span>
+1190         obj.rwTimeout = timeout;
+1191         <span class="keyword">if</span> isjava(obj.commSocket)
+1192             setSoTimeout(obj.commSocket,timeout);
+1193             obj.createStreams;  <span class="comment">% Recreate reader and writer streams</span>
+1194         <span class="keyword">end</span>
+1195     <span class="keyword">end</span>
+1196 
+1197     <a name="_sub30" href="#_subfunctions" class="code">function closeSocket(obj)</a>
+1198         <span class="comment">%CLOSESOCKET - Close socket connection.</span>
+1199         <span class="comment">%</span>
+1200         <span class="comment">%  Syntax: closeSocket(obj)</span>
+1201         <span class="comment">%</span>
+1202         <span class="comment">% See also: MAKESOCKET, READ, WRITE</span>
+1203 
+1204         <span class="keyword">if</span> isjava(obj.serverSocket)
+1205             close(obj.serverSocket);
+1206         <span class="keyword">end</span>
+1207 
+1208         <span class="comment">% Close commSocket</span>
+1209         <span class="keyword">if</span> isjava(obj.commSocket)
+1210             close(obj.commSocket);
+1211         <span class="keyword">end</span>
+1212 
+1213         <span class="comment">% Close Reader</span>
+1214         <span class="keyword">if</span> isjava(obj.reader)
+1215             close(obj.reader);
+1216         <span class="keyword">end</span>
+1217 
+1218         <span class="comment">% Close Writer</span>
+1219         <span class="keyword">if</span> isjava(obj.writer)
+1220             close(obj.writer);
+1221         <span class="keyword">end</span>
+1222 
+1223         <span class="comment">% Delete Java Objects</span>
+1224         obj.reader = [];
+1225         obj.writer = [];
+1226         obj.serverSocket = [];
+1227         obj.commSocket = [];
+1228     <span class="keyword">end</span>
+1229 
+1230     <a name="_sub31" href="#_subfunctions" class="code">function createStreams(obj)</a>
+1231         <span class="comment">%CREATESTREAMS - Prepare Java I/O streams.</span>
+1232         <span class="comment">%</span>
+1233         <span class="comment">%  Syntax: createStreams(obj)</span>
+1234         <span class="comment">%</span>
+1235         <span class="comment">% See also: READ, WRITE</span>
+1236 
+1237         obj.writer = java.io.BufferedWriter(java.io.OutputStreamWriter(getOutputStream(obj.commSocket)));
+1238         obj.reader = java.io.BufferedReader(java.io.InputStreamReader(getInputStream(obj.commSocket)));
+1239     <span class="keyword">end</span>
+1240 <span class="keyword">end</span>
+1241 
+1242 <span class="comment">%% ---------------- Static communication methods ----------------------</span>
+1243 methods (Access = private, Hidden, Static)
+1244     <span class="comment">% Decode BCVTB protocol packet</span>
+1245     [flag, timevalue, realvalues, intvalues, boolvalues] = <a href="decodePacket.html" class="code" title="function [flag, timevalue, realvalues, intvalues, boolvalues] = decodePacket(packet)">decodePacket</a>(packet);
+1246 
+1247     <span class="comment">% Encode BCVTB protocol packet</span>
+1248     packet = <a href="encodeData.html" class="code" title="function packet = encodeData(vernumber, flag, timevalue, realvalues, intvalues, boolvalues)">encodeData</a>(vernumber, flag, timevalue, realvalues, intvalues, boolvalues);
+1249 
+1250     <span class="comment">% Encode BCVTB protocol packet with only real values</span>
+1251     packet = <a href="encodeRealData.html" class="code" title="function packet = encodeRealData(vernumber, flag, timevalue, realvalues)">encodeRealData</a>(vernumber, flag, timevalue, realvalues);
+1252 
+1253     <span class="comment">% Encode BCVTB protocol simulation status</span>
+1254     packet = <a href="encodeStatus.html" class="code" title="function packet = encodeStatus(vernumber, flag)">encodeStatus</a>(vernumber, flag);
+1255 
+1256     <span class="comment">% Make socket configuration file</span>
+1257     <a href="writeSocketConfig.html" class="code" title="function writeSocketConfig(fullFilePath, hostname, port)">writeSocketConfig</a>(fullFilePath, hostname, port);
+1258 
+1259     <span class="comment">% Make co-simulation I/O configuration file</span>
+1260     <a href="writeVariableConfig.html" class="code" title="function writeVariableConfig(fullFilePath, inputTable, outputTable)">writeVariableConfig</a>(fullFilePath, inputTable, outputTable);
+1261 <span class="keyword">end</span>
+1262 
+1263 <span class="keyword">end</span>
+1264</pre></div>
+<hr><address>EnergyPlus Co-simulation Toolbox &copy; 2018</address>
+</body>
+</html>

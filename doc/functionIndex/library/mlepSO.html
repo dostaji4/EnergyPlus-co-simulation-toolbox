@@ -1,0 +1,711 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of mlepSO</title>
+  <meta name="keywords" content="mlepSO">
+  <meta name="description" content="MLEPSO EnergyPlus co-simulation system object.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../functionIndex.html">Home</a> &gt;  <a href="functionIndex.html">library</a> &gt; mlepSO.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../functionIndex.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="functionIndex.html">Index for library&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>mlepSO
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>MLEPSO EnergyPlus co-simulation system object.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment">MLEPSO EnergyPlus co-simulation system object.
+Simulate EnergyPlus models in Matlab/Simulink using a loose coupling
+co-simulation mechanism. 
+
+ Selected Properties and Methods:
+
+ MLEPSO Properties:
+   idfFile       - EnergyPlus simulation configuration file (*.IDF)
+   epwFile       - Weather file (*.EPW).
+   inputBusName  - Name of a Simulink.Bus object created from the
+                   interface input specification (IDF/variables.cfg).
+   outputBusName - Name of a Simulink.Bus object created from the
+                   interface output specification (IDF/variables.cfg).
+   time          - Current simulation time.
+
+ MLEPSO Methods:
+   y = step(u)   - Send variables 'u' to EnergyPlus and get variables
+                   'y' from EnergyPlus. 'u' and 'y' are vectors
+                   of appriate sizes defined by I/O definition in the
+                   IDF file. You can obtain the sizes by reading the
+                   'nIn' and 'nOut' properties.
+
+ See also: MLEP, mlepLibrary.slx</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="mlepSO.html" class="code" title="">mlepSO</a>	MLEPSO EnergyPlus co-simulation system object.</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="mlepSO.html" class="code" title="">mlepSO</a>	MLEPSO EnergyPlus co-simulation system object.</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function obj = mlepSO(varargin)</a></li><li><a href="#_sub2" class="code">function setupImpl(obj)</a></li><li><a href="#_sub3" class="code">function validatePropertiesImpl(obj)</a></li><li><a href="#_sub4" class="code">function validateInputsImpl(obj,in)</a></li><li><a href="#_sub5" class="code">function updateImpl(obj,input)</a></li><li><a href="#_sub6" class="code">function output = outputImpl(obj,~)</a></li><li><a href="#_sub7" class="code">function resetImpl(obj)</a></li><li><a href="#_sub8" class="code">function releaseImpl(obj)</a></li><li><a href="#_sub9" class="code">function s = saveObjectImpl(obj)</a></li><li><a href="#_sub10" class="code">function loadObjectImpl(obj,s,~)</a></li><li><a href="#_sub11" class="code">function loadBusObjects(obj)</a></li><li><a href="#_sub12" class="code">function [inBus, outBus] = createBusObjects(obj)</a></li><li><a href="#_sub13" class="code">function saveToUserData(obj, block)</a></li><li><a href="#_sub14" class="code">function isReinitialize = requiresReinitialization(idfFile)</a></li><li><a href="#_sub15" class="code">function block = getDataStoreBlock</a></li><li><a href="#_sub16" class="code">function value = get.nIn(obj)</a></li><li><a href="#_sub17" class="code">function value = get.inputSigName(obj)</a></li><li><a href="#_sub18" class="code">function value = get.nOut(obj)</a></li><li><a href="#_sub19" class="code">function value = get.outputSigName(obj)</a></li><li><a href="#_sub20" class="code">function set.inputBusName(obj,value)</a></li><li><a href="#_sub21" class="code">function set.outputBusName(obj,value)</a></li><li><a href="#_sub22" class="code">function [out] = getOutputDataTypeImpl(obj)</a></li><li><a href="#_sub23" class="code">function [sz,dt,cp] = getDiscreteStateSpecificationImpl(obj,name)</a></li><li><a href="#_sub24" class="code">function [out] = getOutputSizeImpl(obj)</a></li><li><a href="#_sub25" class="code">function [out] = isOutputFixedSizeImpl(obj)</a></li><li><a href="#_sub26" class="code">function [out] = isOutputComplexImpl(obj)</a></li><li><a href="#_sub27" class="code">function sts = getSampleTimeImpl(obj)</a></li><li><a href="#_sub28" class="code">function icon = getIconImpl(obj)</a></li><li><a href="#_sub29" class="code">function name = getInputNamesImpl(obj)</a></li><li><a href="#_sub30" class="code">function [out] = getOutputNamesImpl(obj)</a></li><li><a href="#_sub31" class="code">function simMode = getSimulateUsingImpl</a></li><li><a href="#_sub32" class="code">function flag = showSimulateUsingImpl</a></li><li><a href="#_sub33" class="code">function header = getHeaderImpl(obj)</a></li><li><a href="#_sub34" class="code">function groups = getPropertyGroupsImpl(obj)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">%MLEPSO EnergyPlus co-simulation system object.</span>
+0002 <span class="comment">%Simulate EnergyPlus models in Matlab/Simulink using a loose coupling</span>
+0003 <span class="comment">%co-simulation mechanism.</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">% Selected Properties and Methods:</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% MLEPSO Properties:</span>
+0008 <span class="comment">%   idfFile       - EnergyPlus simulation configuration file (*.IDF)</span>
+0009 <span class="comment">%   epwFile       - Weather file (*.EPW).</span>
+0010 <span class="comment">%   inputBusName  - Name of a Simulink.Bus object created from the</span>
+0011 <span class="comment">%                   interface input specification (IDF/variables.cfg).</span>
+0012 <span class="comment">%   outputBusName - Name of a Simulink.Bus object created from the</span>
+0013 <span class="comment">%                   interface output specification (IDF/variables.cfg).</span>
+0014 <span class="comment">%   time          - Current simulation time.</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">% MLEPSO Methods:</span>
+0017 <span class="comment">%   y = step(u)   - Send variables 'u' to EnergyPlus and get variables</span>
+0018 <span class="comment">%                   'y' from EnergyPlus. 'u' and 'y' are vectors</span>
+0019 <span class="comment">%                   of appriate sizes defined by I/O definition in the</span>
+0020 <span class="comment">%                   IDF file. You can obtain the sizes by reading the</span>
+0021 <span class="comment">%                   'nIn' and 'nOut' properties.</span>
+0022 <span class="comment">%</span>
+0023 <span class="comment">% See also: MLEP, mlepLibrary.slx</span>
+0024 <span class="comment">%</span>
+0025 
+0026 <span class="comment">% Copyright (c) 2018, Jiri Dostal (jiri.dostal@cvut.cz)</span>
+0027 <span class="comment">% All rights reserved.</span>
+0028 <span class="comment">%</span>
+0029 <span class="comment">% Redistribution and use in source and binary forms, with or without</span>
+0030 <span class="comment">% modification, are permitted provided that the following conditions are</span>
+0031 <span class="comment">% met:</span>
+0032 <span class="comment">%</span>
+0033 <span class="comment">% 1. Redistributions of source code must retain the above copyright notice,</span>
+0034 <span class="comment">%    this list of conditions and the following disclaimer.</span>
+0035 <span class="comment">% 2. Redistributions in binary form must reproduce the above copyright</span>
+0036 <span class="comment">%    notice, this list of conditions and the following disclaimer in the</span>
+0037 <span class="comment">%    documentation and/or other materials provided with the distribution.</span>
+0038 <span class="comment">%</span>
+0039 <span class="comment">% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS</span>
+0040 <span class="comment">% &quot;AS IS&quot;. NO WARRANTIES ARE GRANTED.</span>
+0041 <span class="comment">%</span>
+0042 
+0043 classdef <a href="mlepSO.html" class="code" title="">mlepSO</a> &lt; matlab.System &amp;<span class="keyword">...</span>
+0044         matlab.system.mixin.SampleTime &amp;<span class="keyword">...</span>
+0045         matlab.system.mixin.Propagates &amp;<span class="keyword">...</span>
+0046         matlab.system.mixin.CustomIcon &amp;<span class="keyword">...</span>
+0047         matlab.system.mixin.Nondirect
+0048     
+0049     properties(DiscreteState)
+0050         time;                       <span class="comment">% Current simulation time</span>
+0051     <span class="keyword">end</span>
+0052     
+0053     properties (Nontunable, Abstract)
+0054         idfFile;                    <span class="comment">% Specify IDF file</span>
+0055         epwFile;                    <span class="comment">% Specify EPW file</span>
+0056     <span class="keyword">end</span>
+0057     
+0058     properties (Nontunable)
+0059         inputBusName = <span class="string">'epInbus'</span>;   <span class="comment">% Input bus name</span>
+0060         outputBusName = <span class="string">'epOutbus'</span>; <span class="comment">% Output bus name</span>
+0061         dataDictionaryName = <span class="string">'EnergyPlusSimulation.sldd'</span>; <span class="comment">% Data Dictionary</span>
+0062     <span class="keyword">end</span>
+0063     
+0064     properties (SetAccess=protected, Nontunable, Abstract)
+0065         idfFullFilename;
+0066         epwFullFilename;
+0067     <span class="keyword">end</span>
+0068     
+0069     properties (Logical, Nontunable)
+0070         useDataDictionary = false;  <span class="comment">% Store Bus objects in Data dictionary?</span>
+0071     <span class="keyword">end</span>
+0072     
+0073     properties (Dependent)
+0074         nOut;               <span class="comment">% Number of outputs</span>
+0075         nIn;                <span class="comment">% Number of inputs</span>
+0076         outputSigName;      <span class="comment">% List of output signal names</span>
+0077         inputSigName;       <span class="comment">% List of input signal names</span>
+0078     <span class="keyword">end</span>
+0079     
+0080     properties (Access = private)
+0081         <span class="comment">% Signal naming function (use with caution)</span>
+0082         sigNameFcn = @(name,type) [<span class="string">'EP_'</span> regexprep([name <span class="string">'__'</span> type],<span class="string">'\W'</span>,<span class="string">'_'</span>)];
+0083         inputMap;
+0084     <span class="keyword">end</span>
+0085     
+0086     <span class="comment">%% ======================= Runtime methods ============================</span>
+0087     methods
+0088         <a name="_sub0" href="#_subfunctions" class="code">function obj = mlepSO(varargin)</a>
+0089             <span class="comment">% Support name-value pair arguments when constructing object</span>
+0090             setProperties(obj,nargin,varargin{:})
+0091         <span class="keyword">end</span>
+0092         
+0093     <span class="keyword">end</span>
+0094     
+0095     methods (Access = protected)
+0096         
+0097         <a name="_sub1" href="#_subfunctions" class="code">function setupImpl(obj)</a>
+0098             <span class="comment">% Start the EnergyPlus process and initialize communication</span>
+0099             obj.start;
+0100         <span class="keyword">end</span>
+0101         
+0102         <a name="_sub2" href="#_subfunctions" class="code">function validatePropertiesImpl(obj)</a>
+0103             <span class="comment">% Properties of mlepSO cannot be changed here. Only setAccess = protecte properties of 'mlep'</span>
+0104             <span class="comment">% can be changed freely!</span>
+0105             
+0106             <span class="comment">% Running from Simulink?</span>
+0107             <span class="keyword">try</span>
+0108                 isSimulink = ~isempty(get_param(gcb,<span class="string">'System'</span>));
+0109             <span class="keyword">catch</span>
+0110                 isSimulink = 0;
+0111             <span class="keyword">end</span>
+0112             
+0113             <span class="comment">% Load properties</span>
+0114             [~, idfFullpath] = mlep.validateInputFilename(obj.idfFullFilename, <span class="string">'IDF'</span>);
+0115             isReinitialize = mlepSO.requiresReinitialization(idfFullpath);
+0116             
+0117             <span class="keyword">if</span> isReinitialize
+0118                 <span class="comment">% Run initialization</span>
+0119                 obj.initialize;
+0120                 
+0121                 <span class="keyword">if</span> isSimulink
+0122                     <span class="comment">% Save the data</span>
+0123                     dataStoreBlock = mlepSO.getDataStoreBlock;
+0124                     <span class="keyword">if</span> ~isempty(dataStoreBlock)
+0125                         <a href="#_sub13" class="code" title="subfunction saveToUserData(obj, block)">saveToUserData</a>(obj, dataStoreBlock);
+0126                     <span class="keyword">end</span>
+0127                 <span class="keyword">end</span>
+0128             <span class="keyword">else</span>
+0129                 <span class="keyword">if</span> isSimulink
+0130                     
+0131                     <span class="comment">% Get saved data</span>
+0132                     dataStoreBlock = mlepSO.getDataStoreBlock;
+0133                     inUserData = get_param(dataStoreBlock,<span class="string">'UserData'</span>);
+0134                     
+0135                     <span class="comment">% Load object properties</span>
+0136                     load(obj,inUserData.mlepSavedObjStruct);
+0137                 <span class="keyword">end</span>
+0138             <span class="keyword">end</span>
+0139         <span class="keyword">end</span>
+0140         
+0141         <a name="_sub3" href="#_subfunctions" class="code">function validateInputsImpl(obj,in)</a>
+0142             <span class="comment">% Validate inputs to the step method at initialization</span>
+0143             <span class="keyword">try</span>
+0144                 <span class="keyword">if</span> isstruct(in)
+0145                     assert(isequal(obj.inputSigName,fieldnames(in)),<span class="string">'Input bus doesn''t comply with the specification derived from IDF file.'</span>);
+0146                 <span class="keyword">elseif</span> isnumeric(in)
+0147                     assert(numel(in) == obj.nIn,<span class="string">'The size of input %dx%d does not comply with the required size %dx%d.'</span>,<span class="keyword">...</span>
+0148                         size(in,1),size(in,2),obj.nIn, 1);
+0149                 <span class="keyword">elseif</span> ischar(in) &amp;&amp; strcmpi(in,<span class="string">'init'</span>)
+0150                     <span class="comment">%do nothing, it is the setup('init') call.</span>
+0151                 <span class="keyword">else</span>
+0152                     error(<span class="string">'Invalid input type &quot;%s&quot;. Use either numerical vector of appropriate size or a string ''init''.'</span>,<span class="keyword">...</span>
+0153                         class(in));
+0154                 <span class="keyword">end</span>
+0155             <span class="keyword">catch</span> me
+0156                 obj.stop;
+0157                 rethrow(me);
+0158             <span class="keyword">end</span>
+0159         <span class="keyword">end</span>
+0160         
+0161         <a name="_sub4" href="#_subfunctions" class="code">function updateImpl(obj,input)</a>
+0162             <span class="comment">% Send signals to E+</span>
+0163             <span class="keyword">if</span> isstruct(input)
+0164                 inputs = struct2array(input);
+0165             <span class="keyword">else</span>
+0166                 inputs = input;
+0167             <span class="keyword">end</span>
+0168             
+0169             outtime = obj.getCurrentTime;
+0170             <span class="keyword">if</span> isempty(outtime), outtime = obj.time; <span class="keyword">end</span>
+0171             
+0172             <span class="comment">% Write data</span>
+0173             obj.write(inputs, outtime);
+0174         <span class="keyword">end</span>
+0175         
+0176         <a name="_sub5" href="#_subfunctions" class="code">function output = outputImpl(obj,~)</a>
+0177             <span class="comment">% Read data from EnergyPlus and output them as a collumn vector</span>
+0178             
+0179             assert(obj.isRunning, <span class="string">'EnergyPlusCosim: Co-simulation process in not running.'</span>);
+0180             <span class="comment">% Read data from EnergyPlus</span>
+0181             [outputs, obj.time] = read(obj);
+0182             <span class="keyword">if</span> ~(numel(outputs)==obj.nOut)
+0183                 obj.stopError(<span class="string">'EnergyPlus data output dimension not correct.'</span>);
+0184             <span class="keyword">end</span>
+0185             
+0186             <span class="comment">% Output as a collumn vector</span>
+0187             output = outputs(:);
+0188         <span class="keyword">end</span>
+0189         
+0190         <a name="_sub6" href="#_subfunctions" class="code">function resetImpl(obj)</a>
+0191             <span class="comment">% Initialize / reset discrete-state properties</span>
+0192             obj.time = 0;
+0193         <span class="keyword">end</span>
+0194         
+0195         <a name="_sub7" href="#_subfunctions" class="code">function releaseImpl(obj)</a>
+0196             <span class="comment">% Release resources, such as file handles</span>
+0197             
+0198             <span class="comment">% Stop the process</span>
+0199             obj.stop;
+0200         <span class="keyword">end</span>
+0201         
+0202         <a name="_sub8" href="#_subfunctions" class="code">function s = saveObjectImpl(obj)</a>
+0203             <span class="comment">% Save object</span>
+0204             s = save(obj);
+0205         <span class="keyword">end</span>
+0206         
+0207         <a name="_sub9" href="#_subfunctions" class="code">function loadObjectImpl(obj,s,~)</a>
+0208             <span class="comment">% Load object</span>
+0209             load(obj,s);
+0210         <span class="keyword">end</span>
+0211     <span class="keyword">end</span>
+0212     
+0213     methods (Hidden)
+0214         <a name="_sub10" href="#_subfunctions" class="code">function loadBusObjects(obj)</a>
+0215             <span class="comment">% Load or create bus objects for a Simulink implementation</span>
+0216             <span class="comment">% Reinitialize only when necessary (i.e. IDF file change)</span>
+0217             
+0218             isReinitialize = mlepSO.requiresReinitialization(obj.idfFullFilename);
+0219             
+0220             <span class="keyword">if</span> isReinitialize
+0221                 <span class="comment">% Run initialization</span>
+0222                 obj.initialize;
+0223                 
+0224                 <span class="comment">% Save the data</span>
+0225                 dataStoreBlock = mlepSO.getDataStoreBlock;
+0226                 <span class="keyword">if</span> ~isempty(dataStoreBlock)
+0227                     <a href="#_sub13" class="code" title="subfunction saveToUserData(obj, block)">saveToUserData</a>(obj, dataStoreBlock);
+0228                 <span class="keyword">end</span>
+0229                 
+0230             <span class="keyword">else</span>
+0231                 <span class="comment">% --- Load initialized data from block ----------------</span>
+0232                 <span class="comment">% We are in Simulink and there is loadable UserData</span>
+0233                 
+0234                 <span class="comment">% Reassign bus objects</span>
+0235                 <span class="keyword">if</span> ~obj.useDataDictionary
+0236                     
+0237                     dataStoreBlock = mlepSO.getDataStoreBlock;
+0238                     
+0239                     <span class="comment">% Get Bus objects</span>
+0240                     inUserData = get_param(dataStoreBlock,<span class="string">'UserData'</span>);
+0241                     
+0242                     <span class="comment">% Assign them</span>
+0243                     assignin(<span class="string">'base'</span>,obj.inputBusName,inUserData.inBus);
+0244                     assignin(<span class="string">'base'</span>,obj.outputBusName,inUserData.outBus);
+0245                 <span class="keyword">end</span>
+0246             <span class="keyword">end</span>
+0247         <span class="keyword">end</span>
+0248     <span class="keyword">end</span>
+0249     
+0250     methods (Access = private)
+0251         <a name="_sub11" href="#_subfunctions" class="code">function [inBus, outBus] = createBusObjects(obj)</a>
+0252             <span class="comment">% Create Bus objects</span>
+0253             <span class="comment">% The fastest way is by using the Simulink.Bus.cellToObject</span>
+0254             <span class="comment">% method. Avoid calling object properties in the for loop.</span>
+0255             <span class="comment">% Dot notation is expensive!</span>
+0256             
+0257             busDescr = <span class="string">'EnergyPlus Simulation bus'</span>;
+0258             
+0259             <span class="comment">% --- Clear all existing EnergyPlus Bus objects in data</span>
+0260             <span class="comment">% dictionary</span>
+0261             
+0262             <span class="comment">% Get Data dictionary variables</span>
+0263             <span class="keyword">if</span> obj.useDataDictionary
+0264                 ddRootName = get_param(bdroot,<span class="string">'DataDictionary'</span>);
+0265                 <span class="keyword">if</span> ~isempty(ddRootName)
+0266                     rootDD = Simulink.data.dictionary.open(ddRootName);
+0267                     ddSec = getSection(rootDD,<span class="string">'Design Data'</span>);
+0268                     ddVars = find(ddSec,<span class="string">'-value'</span>,<span class="string">'-class'</span>,<span class="string">'Simulink.Bus'</span>); <span class="comment">%#ok&lt;GTARG&gt;</span>
+0269                     <span class="keyword">for</span> i = 1:numel(ddVars)
+0270                         val = getValue(ddVars(i));
+0271                         <span class="keyword">if</span> isprop(val,<span class="string">'Description'</span>) &amp;&amp; strcmp(val.Description, busDescr)
+0272                             deleteEntry(ddSec,ddVars(i).Name);
+0273                         <span class="keyword">end</span>
+0274                     <span class="keyword">end</span>
+0275                     <span class="comment">% Close all</span>
+0276                     saveChanges(rootDD);
+0277                     close(rootDD);
+0278                 <span class="keyword">end</span>
+0279             <span class="keyword">end</span>
+0280             
+0281             <span class="comment">% --- Create outbus</span>
+0282             elems = cell(obj.nOut,1);
+0283             Ts = obj.timestep;
+0284             signames = obj.outputSigName;
+0285             <span class="keyword">for</span> i = 1:obj.nOut
+0286                 elems{i} = cell(1,6);
+0287                 elems{i}{1} = signames{i};   <span class="comment">%Element name</span>
+0288                 elems{i}{2} = 1;            <span class="comment">%Dimensions</span>
+0289                 elems{i}{3} = <span class="string">'double'</span>;     <span class="comment">%Data type</span>
+0290                 elems{i}{4} = Ts;           <span class="comment">%Sample time</span>
+0291                 elems{i}{5} = <span class="string">'real'</span>;       <span class="comment">%Complexity</span>
+0292                 elems{i}{6} = <span class="string">'Sample'</span>;     <span class="comment">%Sampling mode</span>
+0293             <span class="keyword">end</span>
+0294             
+0295             
+0296             <span class="comment">%Bus object information, specified as a cell array of cell arrays. Each subordinate cell array must contain this bus object information:</span>
+0297             outbus = {<span class="keyword">...</span>
+0298                 obj.outputBusName,<span class="keyword">...</span><span class="comment"> %Bus name</span>
+0299                 <span class="string">''</span>,<span class="keyword">...</span><span class="comment"> %Header file</span>
+0300                 busDescr,<span class="keyword">...</span><span class="comment"> %Description</span>
+0301                 <span class="string">'Auto'</span>,<span class="keyword">...</span><span class="comment"> %Data scope</span>
+0302                 <span class="string">'-1'</span>,<span class="keyword">...</span><span class="comment"> %Alignment</span>
+0303                 elems<span class="keyword">...</span><span class="comment"> %Elements</span>
+0304                 };
+0305             
+0306             <span class="comment">% --- Create inbus</span>
+0307             elems = cell(obj.nIn,1);
+0308             signames = obj.inputSigName;
+0309             <span class="keyword">for</span> i = 1:obj.nIn
+0310                 elems{i} = cell(1,6);
+0311                 elems{i}{1} = signames{i};   <span class="comment">%Element name</span>
+0312                 elems{i}{2} = 1;            <span class="comment">%Dimensions</span>
+0313                 elems{i}{3} = <span class="string">'double'</span>;     <span class="comment">%Data type</span>
+0314                 elems{i}{4} = Ts;           <span class="comment">%Sample time</span>
+0315                 elems{i}{5} = <span class="string">'real'</span>;       <span class="comment">%Complexity</span>
+0316                 elems{i}{6} = <span class="string">'Sample'</span>;     <span class="comment">%Sampling mode</span>
+0317             <span class="keyword">end</span>
+0318             
+0319             
+0320             <span class="comment">%Bus object information, specified as a cell array of cell arrays. Each subordinate cell array must contain this bus object information:</span>
+0321             inbus = {<span class="keyword">...</span>
+0322                 obj.inputBusName,<span class="keyword">...</span><span class="comment"> %Bus name</span>
+0323                 <span class="string">''</span>,<span class="keyword">...</span><span class="comment"> %Header file</span>
+0324                 busDescr,<span class="keyword">...</span><span class="comment"> %Description</span>
+0325                 <span class="string">'Auto'</span>,<span class="keyword">...</span><span class="comment"> %Data scope</span>
+0326                 <span class="string">'-1'</span>,<span class="keyword">...</span><span class="comment"> %Alignment</span>
+0327                 elems<span class="keyword">...</span><span class="comment"> %Elements</span>
+0328                 };
+0329             
+0330             <span class="comment">% --- Create the bus objects and assign them to base workspace</span>
+0331             Simulink.Bus.cellToObject({outbus, inbus});
+0332             
+0333             <span class="comment">% Get the Bus Objects</span>
+0334             inBus = evalin(<span class="string">'base'</span>,obj.inputBusName);
+0335             outBus = evalin(<span class="string">'base'</span>,obj.outputBusName);
+0336             
+0337             <span class="comment">% --- Save data to data dictionary</span>
+0338             <span class="keyword">if</span> obj.useDataDictionary
+0339                 <span class="comment">% Create/open Data Dictionary for EnergyPlus</span>
+0340                 epDictionaryName = obj.dataDictionaryName;
+0341                 epDictionaryFilename = [fileparts(get_param(bdroot,<span class="string">'FileName'</span>)) filesep epDictionaryName];
+0342                 <span class="keyword">if</span> exist(epDictionaryFilename,<span class="string">'file'</span>)
+0343                     epDD = Simulink.data.dictionary.open(epDictionaryFilename);
+0344                 <span class="keyword">else</span>
+0345                     epDD = Simulink.data.dictionary.create(epDictionaryFilename);
+0346                 <span class="keyword">end</span>
+0347                 epSec = getSection(epDD,<span class="string">'Design Data'</span>);
+0348                 
+0349                 <span class="comment">% Save to model workspace (it would be the obvious choice,</span>
+0350                 <span class="comment">% but it is not allowed to load bus objects from here the moment)</span>
+0351                 <span class="comment">%                 ws = get_param(bdroot,'ModelWorkspace');</span>
+0352                 <span class="comment">%                 assignin(ws,obj.inputBusName,inBus);</span>
+0353                 <span class="comment">%                 assignin(ws,obj.outputBusName,outBus);</span>
+0354                 
+0355                 <span class="comment">% Assign the Bus Objects to the Data Dictionary</span>
+0356                 assignin(epSec, obj.inputBusName, inBus);
+0357                 assignin(epSec, obj.outputBusName, outBus);
+0358                 
+0359                 <span class="comment">% Save data dictionary</span>
+0360                 saveChanges(epDD);
+0361                 
+0362                 <span class="comment">% Clear base workspace variables</span>
+0363                 evalin(<span class="string">'base'</span>,[<span class="string">'clearvars('''</span> obj.inputBusName <span class="string">''','''</span> obj.outputBusName <span class="string">''');'</span>]);
+0364                 
+0365                 <span class="comment">% Connect to model dictionary or assign dictionary to model</span>
+0366                 ddRootName = get_param(bdroot,<span class="string">'DataDictionary'</span>);
+0367                 <span class="keyword">if</span> isempty(ddRootName)
+0368                     <span class="comment">% Assign EnergyPlus dictionary to the model</span>
+0369                     set_param(bdroot,<span class="string">'DataDictionary'</span>,epDictionaryName);
+0370                 <span class="keyword">else</span>
+0371                     <span class="comment">% Add data source to the existing Data Dictionary of</span>
+0372                     <span class="comment">% the model</span>
+0373                     rootDD = Simulink.data.dictionary.open(ddRootName);
+0374                     addDataSource(rootDD, epDictionaryName);
+0375                     saveChanges(rootDD);
+0376                 <span class="keyword">end</span>
+0377                 
+0378                 <span class="comment">% Close all</span>
+0379                 Simulink.data.dictionary.closeAll;
+0380             <span class="keyword">end</span>
+0381         <span class="keyword">end</span>
+0382         
+0383         <a name="_sub12" href="#_subfunctions" class="code">function saveToUserData(obj, block)</a>
+0384             <span class="comment">% --- Save initialized data to block ------------------</span>
+0385             <span class="keyword">if</span> isempty(gcb), <span class="keyword">return</span>, <span class="keyword">end</span>
+0386             
+0387             <span class="comment">% Get data store block</span>
+0388             dataStoreBlock = find_system(gcb,<span class="string">'LookUnderMasks'</span>,<span class="string">'on'</span>,<span class="keyword">...</span>
+0389                 <span class="string">'FollowLinks'</span>,<span class="string">'on'</span>,<span class="keyword">...</span>
+0390                 <span class="string">'SearchDepth'</span>, 1,<span class="keyword">...</span>
+0391                 <span class="string">'System'</span>,<span class="string">'mlep'</span>);
+0392             
+0393             <span class="keyword">if</span> numel(dataStoreBlock) ~= 1, <span class="keyword">return</span>, <span class="keyword">end</span>
+0394             
+0395             <span class="comment">% Create bus objects</span>
+0396             [inBus, outBus] = obj.createBusObjects;
+0397             
+0398             <span class="comment">% Save IDF checksum</span>
+0399             outUserData = struct;
+0400             outUserData.idfChecksum = obj.idfChecksum;
+0401             
+0402             <span class="comment">% Save bus objects</span>
+0403             outUserData.inBus = inBus;
+0404             outUserData.outBus = outBus;
+0405             
+0406             <span class="comment">% Save the object (all data)</span>
+0407             outUserData.mlepSavedObjStruct = save(obj);
+0408             
+0409             <span class="comment">% Save object into the block UserData</span>
+0410             set_param(block,<span class="string">'UserData'</span>,outUserData);
+0411             set_param(block,<span class="string">'UserDataPersistent'</span>,1);
+0412         <span class="keyword">end</span>
+0413         
+0414     <span class="keyword">end</span>
+0415     
+0416     methods (Static, Access = private)
+0417         <a name="_sub13" href="#_subfunctions" class="code">function isReinitialize = requiresReinitialization(idfFile)</a>
+0418             <span class="comment">% Data store block = 'The system object block';</span>
+0419             isReinitialize = 1;
+0420             
+0421             <span class="keyword">if</span> isempty(bdroot) || <span class="keyword">...</span>
+0422                     strcmpi(get_param(bdroot,<span class="string">'BlockDiagramType'</span>),<span class="string">'library'</span>) || <span class="keyword">...</span>
+0423                     strcmpi(get_param(gcb,<span class="string">'Commented'</span>),<span class="string">'on'</span>)                       <span class="comment">% is commented out?</span>
+0424                 <span class="keyword">return</span>
+0425             <span class="keyword">end</span>
+0426             
+0427             <span class="comment">% Get data store block</span>
+0428             dataStoreBlock = find_system(gcb,<span class="string">'LookUnderMasks'</span>,<span class="string">'on'</span>,<span class="keyword">...</span>
+0429                 <span class="string">'FollowLinks'</span>,<span class="string">'on'</span>,<span class="keyword">...</span>
+0430                 <span class="string">'SearchDepth'</span>, 1,<span class="keyword">...</span>
+0431                 <span class="string">'System'</span>,<span class="string">'mlep'</span>);
+0432             
+0433             <span class="keyword">if</span> isempty(dataStoreBlock), <span class="keyword">return</span>, <span class="keyword">end</span>
+0434             
+0435             <span class="comment">% Get saved UserData</span>
+0436             inUserData = get_param(gcb,<span class="string">'UserData'</span>);
+0437             
+0438             
+0439             <span class="keyword">if</span> isempty(inUserData) || <span class="keyword">...</span><span class="comment">                     % has saved state?</span>
+0440                     ~isfield(inUserData,<span class="string">'idfChecksum'</span>) || <span class="keyword">...</span><span class="comment"> % checksum exists?</span>
+0441                     ~isfield(inUserData,<span class="string">'inBus'</span>) || <span class="keyword">...</span><span class="comment">       % inBus exists?</span>
+0442                     ~isfield(inUserData,<span class="string">'outBus'</span>) || <span class="keyword">...</span><span class="comment">      % outBus exists?</span>
+0443                     ~isfield(inUserData,<span class="string">'mlepSavedObjStruct'</span>) <span class="comment">% saved obj data exist?</span>
+0444                 <span class="keyword">return</span>
+0445             <span class="keyword">end</span>
+0446             
+0447             <span class="comment">% --- Compare IDF checksums</span>
+0448             <span class="comment">% Get old checksum</span>
+0449             oldChecksum = inUserData.idfChecksum;
+0450             
+0451             <span class="comment">% Create current IDF file checksum</span>
+0452             currentChecksum = mlep.fileChecksum(idfFile);
+0453             
+0454             <span class="keyword">if</span> strcmp(oldChecksum, currentChecksum)
+0455                 <span class="comment">% Do not load again, just assure busObjects are</span>
+0456                 <span class="comment">% assigned</span>
+0457                 isReinitialize = 0;
+0458             <span class="keyword">end</span>
+0459         <span class="keyword">end</span>
+0460         
+0461         <a name="_sub14" href="#_subfunctions" class="code">function block = getDataStoreBlock</a>
+0462             block = <span class="string">''</span>;
+0463             <span class="keyword">if</span> isempty(gcb), <span class="keyword">return</span>, <span class="keyword">end</span>
+0464             
+0465             <span class="comment">% Get data store block</span>
+0466             dataStoreBlock = find_system(gcb,<span class="string">'LookUnderMasks'</span>,<span class="string">'on'</span>,<span class="keyword">...</span>
+0467                 <span class="string">'FollowLinks'</span>,<span class="string">'on'</span>,<span class="keyword">...</span>
+0468                 <span class="string">'SearchDepth'</span>, 1,<span class="keyword">...</span>
+0469                 <span class="string">'System'</span>,<span class="string">'mlep'</span>);
+0470             
+0471             <span class="keyword">if</span> numel(dataStoreBlock) ~= 1, <span class="keyword">return</span>, <span class="keyword">end</span>
+0472             
+0473             block = dataStoreBlock{1};
+0474         <span class="keyword">end</span>
+0475     <span class="keyword">end</span>
+0476     
+0477     <span class="comment">%% ----------------------- Get/Set methods -----------------------------</span>
+0478     methods
+0479         <a name="_sub15" href="#_subfunctions" class="code">function value = get.nIn(obj)</a>
+0480             <span class="keyword">if</span> ~isempty(obj.inputTable)
+0481                 value = height(obj.inputTable);
+0482             <span class="keyword">else</span>
+0483                 value = 0;
+0484             <span class="keyword">end</span>
+0485         <span class="keyword">end</span>
+0486         
+0487         <a name="_sub16" href="#_subfunctions" class="code">function value = get.inputSigName(obj)</a>
+0488             value = cell(obj.nIn,1);
+0489             <span class="keyword">for</span> i = 1: obj.nIn
+0490                 signame = obj.sigNameFcn(obj.inputTable.Name{i},<span class="keyword">...</span>
+0491                     obj.inputTable.Type{i});
+0492                 value{i} = signame;
+0493             <span class="keyword">end</span>
+0494         <span class="keyword">end</span>
+0495         
+0496         <a name="_sub17" href="#_subfunctions" class="code">function value = get.nOut(obj)</a>
+0497             <span class="keyword">if</span> ~isempty(obj.outputTable)
+0498                 value = height(obj.outputTable);
+0499             <span class="keyword">else</span>
+0500                 value = 0;
+0501             <span class="keyword">end</span>
+0502         <span class="keyword">end</span>
+0503         
+0504         <a name="_sub18" href="#_subfunctions" class="code">function value = get.outputSigName(obj)</a>
+0505             value = cell(obj.nOut,1);
+0506             <span class="keyword">for</span> i = 1: obj.nOut
+0507                 signame = obj.sigNameFcn(obj.outputTable.Name{i},<span class="keyword">...</span>
+0508                     obj.outputTable.Type{i});
+0509                 value{i} = signame;
+0510             <span class="keyword">end</span>
+0511         <span class="keyword">end</span>
+0512         
+0513         <a name="_sub19" href="#_subfunctions" class="code">function set.inputBusName(obj,value)</a>
+0514             validateattributes(value, {<span class="string">'char'</span>},{<span class="string">'scalartext'</span>,<span class="string">'nonempty'</span>});
+0515             <span class="comment">% Check if it is a valid variable name</span>
+0516             assert(isvarname(value), <span class="string">'Invalid variable name &quot;%s&quot;.'</span>, value);
+0517             <span class="comment">% Avoid duplicate name</span>
+0518             assert(~strcmp(value,obj.outputBusName),<span class="string">'Bus objects cannot have the same name.'</span>); <span class="comment">%#ok&lt;MCSUP&gt;</span>
+0519             obj.inputBusName = value;
+0520         <span class="keyword">end</span>
+0521         
+0522         <a name="_sub20" href="#_subfunctions" class="code">function set.outputBusName(obj,value)</a>
+0523             validateattributes(value, {<span class="string">'char'</span>},{<span class="string">'scalartext'</span>,<span class="string">'nonempty'</span>});
+0524             <span class="comment">% Check if it is a valid variable name</span>
+0525             assert(isvarname(value), <span class="string">'Invalid variable name &quot;%s&quot;.'</span>, value);
+0526             <span class="comment">% Avoid duplicate name</span>
+0527             assert(~strcmp(value,obj.inputBusName),<span class="string">'Bus objects cannot have the same name.'</span>); <span class="comment">%#ok&lt;MCSUP&gt;</span>
+0528             obj.outputBusName = value;
+0529         <span class="keyword">end</span>
+0530         
+0531         <span class="comment">%         function set.idfFile_SO(obj,value)</span>
+0532         <span class="comment">%             obj.idfFile_SO = value;</span>
+0533         <span class="comment">%</span>
+0534         <span class="comment">%             if ~isempty(gcb) &amp;&amp; strcmpi(get_param(bdroot,'BlockDiagramType'),'library')</span>
+0535         <span class="comment">%                 %Trigger idfFile set</span>
+0536         <span class="comment">%                 obj.idfFile = value;</span>
+0537         <span class="comment">%             end</span>
+0538         <span class="comment">%         end</span>
+0539         <span class="comment">%</span>
+0540         <span class="comment">%         function set.epwFile_SO(obj,value)</span>
+0541         <span class="comment">%             obj.epwFile_SO = value;</span>
+0542         <span class="comment">%</span>
+0543         <span class="comment">%             %Trigger epwFile set</span>
+0544         <span class="comment">%             obj.epwFile = value;</span>
+0545         <span class="comment">%         end</span>
+0546     <span class="keyword">end</span>
+0547     
+0548     <span class="comment">%% ===================== Simulink I/O methods =========================</span>
+0549     methods (Access = protected)
+0550         
+0551         <a name="_sub21" href="#_subfunctions" class="code">function [out] = getOutputDataTypeImpl(obj) </a><span class="comment">%#ok&lt;MANU&gt;</span>
+0552             <span class="comment">% Return data type for each output port</span>
+0553             out = &quot;double&quot;;
+0554         <span class="keyword">end</span>
+0555         
+0556         <a name="_sub22" href="#_subfunctions" class="code">function [sz,dt,cp] = getDiscreteStateSpecificationImpl(obj,name) </a><span class="comment">%#ok&lt;INUSD&gt;</span>
+0557             <span class="comment">% Return size, data type, and complexity of discrete-state</span>
+0558             <span class="comment">% specified in name</span>
+0559             sz = [1 1];
+0560             dt = &quot;double&quot;;
+0561             cp = false;
+0562         <span class="keyword">end</span>
+0563         
+0564         <a name="_sub23" href="#_subfunctions" class="code">function [out] = getOutputSizeImpl(obj)</a>
+0565             <span class="comment">% Return size for each output port</span>
+0566             out = [obj.nOut 1];
+0567         <span class="keyword">end</span>
+0568         
+0569         <a name="_sub24" href="#_subfunctions" class="code">function [out] = isOutputFixedSizeImpl(obj) </a><span class="comment">%#ok&lt;MANU&gt;</span>
+0570             <span class="comment">% Return true for each output port with fixed size</span>
+0571             out = true;
+0572         <span class="keyword">end</span>
+0573         
+0574         <a name="_sub25" href="#_subfunctions" class="code">function [out] = isOutputComplexImpl(obj) </a><span class="comment">%#ok&lt;MANU&gt;</span>
+0575             <span class="comment">% Return true for each output port with complex data</span>
+0576             out = false;
+0577         <span class="keyword">end</span>
+0578         
+0579         <a name="_sub26" href="#_subfunctions" class="code">function sts = getSampleTimeImpl(obj)</a>
+0580             <span class="comment">% Specify sampling time</span>
+0581             sts = obj.createSampleTime(&quot;Type&quot;, &quot;Discrete&quot;, <span class="keyword">...</span>
+0582                 &quot;SampleTime&quot;, obj.timestep);
+0583         <span class="keyword">end</span>
+0584     <span class="keyword">end</span>
+0585     
+0586     <span class="comment">%% ================== Simulink Block Appearence =======================</span>
+0587     methods(Access = protected)
+0588         <a name="_sub27" href="#_subfunctions" class="code">function icon = getIconImpl(obj) </a><span class="comment">%#ok&lt;MANU&gt;</span>
+0589             <span class="comment">% Define icon for System block</span>
+0590             icon = matlab.system.display.Icon(&quot;mlepIcon.jpg&quot;); <span class="comment">% Example: image file icon</span>
+0591         <span class="keyword">end</span>
+0592         
+0593         <a name="_sub28" href="#_subfunctions" class="code">function name = getInputNamesImpl(obj)</a>
+0594             <span class="comment">% Return input port names for System block</span>
+0595             name = obj.inputBusName;
+0596         <span class="keyword">end</span>
+0597         
+0598         <a name="_sub29" href="#_subfunctions" class="code">function [out] = getOutputNamesImpl(obj)</a>
+0599             <span class="comment">% Return output port names for System block</span>
+0600             out = obj.outputBusName;
+0601         <span class="keyword">end</span>
+0602     <span class="keyword">end</span>
+0603     
+0604     methods(Access = protected, Static)
+0605         
+0606         <a name="_sub30" href="#_subfunctions" class="code">function simMode = getSimulateUsingImpl</a>
+0607             simMode = <span class="string">'Interpreted execution'</span>;
+0608         <span class="keyword">end</span>
+0609         
+0610         <a name="_sub31" href="#_subfunctions" class="code">function flag = showSimulateUsingImpl</a>
+0611             <span class="comment">% Hide Simulate using block</span>
+0612             flag = false;
+0613         <span class="keyword">end</span>
+0614         
+0615         <a name="_sub32" href="#_subfunctions" class="code">function header = getHeaderImpl(obj) </a><span class="comment">%#ok&lt;INUSD&gt;</span>
+0616             <span class="comment">% Define header panel for System block dialog</span>
+0617             header = matlab.system.display.Header(mfilename(&quot;class&quot;));
+0618         <span class="keyword">end</span>
+0619         
+0620         <a name="_sub33" href="#_subfunctions" class="code">function groups = getPropertyGroupsImpl(obj) </a><span class="comment">%#ok&lt;INUSD&gt;</span>
+0621             simGroup = matlab.system.display.Section(<span class="keyword">...</span>
+0622                 <span class="string">'Title'</span>,<span class="string">'Simulation settings'</span>,<span class="keyword">...</span>
+0623                 <span class="string">'PropertyList'</span>,{<span class="string">'idfFile'</span>,<span class="string">'epwFile'</span>});
+0624             
+0625             simTab = matlab.system.display.SectionGroup(<span class="keyword">...</span>
+0626                 <span class="string">'Title'</span>,<span class="string">'Simulation'</span>, <span class="keyword">...</span>
+0627                 <span class="string">'Sections'</span>,simGroup);
+0628             
+0629             busGroup = matlab.system.display.Section(<span class="keyword">...</span>
+0630                 <span class="string">'Title'</span>,<span class="string">'Bus'</span>,<span class="keyword">...</span>
+0631                 <span class="string">'PropertyList'</span>,{<span class="string">'inputBusName'</span>,<span class="string">'outputBusName'</span>,<span class="string">'useDataDictionary'</span>,<span class="string">'dataDictionaryName'</span>});
+0632             
+0633             busTab = matlab.system.display.SectionGroup(<span class="keyword">...</span>
+0634                 <span class="string">'Title'</span>,<span class="string">'Bus'</span>, <span class="keyword">...</span>
+0635                 <span class="string">'Sections'</span>,busGroup);
+0636             groups = [simTab,busTab];
+0637         <span class="keyword">end</span>
+0638     <span class="keyword">end</span>
+0639     
+0640 <span class="keyword">end</span></pre></div>
+<hr><address>EnergyPlus Co-simulation Toolbox &copy; 2018</address>
+</body>
+</html>

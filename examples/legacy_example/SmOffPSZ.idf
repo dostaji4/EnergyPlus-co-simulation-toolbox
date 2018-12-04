@@ -2035,8 +2035,8 @@ ZoneControl:Thermostat,
 
 ThermostatSetpoint:DualSetpoint,
     DualSetPoint,            !- Name
-    TSetHea,                 !- Heating Setpoint Temperature Schedule Name
-    TSetCoo;                 !- Cooling Setpoint Temperature Schedule Name
+    HeatingSetpointTemperature,                 !- Heating Setpoint Temperature Schedule Name
+    CoolingSetpointTemperature;                 !- Cooling Setpoint Temperature Schedule Name
 
 
 !-   ===========  ALL OBJECTS IN CLASS: AIRTERMINAL:SINGLEDUCT:UNCONTROLLED ===========
@@ -2851,12 +2851,12 @@ ExternalInterface,
 ! Heating schedule. This schedule is set directly by the external interface.
 ! During warm-up and system-sizing, it is fixed at 20 degC.
 ExternalInterface:Schedule,
-    TSetHea,                 !- Name
+    HeatingSetpointTemperature,                 !- Name
     Temperature,             !- Schedule Type Limits Name
     20;                      !- Initial Value
 
 ExternalInterface:Schedule,
-    TSetCoo,                 !- Name
+    CoolingSetpointTemperature,                 !- Name
     Temperature,             !- Schedule Type Limits Name
     24;                      !- Initial Value
 
@@ -3035,12 +3035,12 @@ Output:Variable,    ZNF1,    Zone Mean Air Temperature,    timestep;
 Output:Variable,    ZSF1,     Zone Operative Temperature,    timestep;
 Output:Variable,    ZNF1,     Zone Operative Temperature,    timestep;
 
-Output:Variable, ZSF1, Zone Air System Sensible Heating Rate,timestep; !- HVAC Average [W]
-Output:Variable, ZNF1, Zone Air System Sensible Heating Rate,timestep; !- HVAC Average [W]
+! Output:Variable, ZSF1, Zone Air System Sensible Heating Rate,timestep; !- HVAC Average [W]
+! Output:Variable, ZNF1, Zone Air System Sensible Heating Rate,timestep; !- HVAC Average [W]
 
-Output:Variable, ZSF1, Zone Air System Sensible Cooling Rate,timestep; !- HVAC Average [W]
-Output:Variable, ZNF1, Zone Air System Sensible Cooling Rate,timestep; !- HVAC Average [W]
+! Output:Variable, ZSF1, Zone Air System Sensible Cooling Rate,timestep; !- HVAC Average [W]
+! Output:Variable, ZNF1, Zone Air System Sensible Cooling Rate,timestep; !- HVAC Average [W]
 
-Output:Variable, ZSF1,  	Zone Windows Total Transmitted Solar Radiation Rate,timestep; !- Zone Average [W]
-Output:Variable, ZNF1,  	Zone Windows Total Transmitted Solar Radiation Rate,timestep; !- Zone Average [W]
+! Output:Variable, ZSF1,  	Zone Windows Total Transmitted Solar Radiation Rate,timestep; !- Zone Average [W]
+! Output:Variable, ZNF1,  	Zone Windows Total Transmitted Solar Radiation Rate,timestep; !- Zone Average [W]
 

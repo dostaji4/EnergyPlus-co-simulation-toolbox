@@ -7,11 +7,11 @@ function mlepEnergyPlusSimulation_clbk(block, type, varargin)
 
 switch type
     case 'OpenFcn'
-        mlepEnergyPlusSimulation_OpenFcn(block);
-    case 'maskInit'
-        mlepEnergyPlusSimulation_maskInit(block);
+        mlepEnergyPlusSimulation_OpenFcn(block);            
+    case {'InitFcn','generateBus'}
+        mlepEnergyPlusSimulation_InitFcn(block);
     case 'browseButton'
-        mlepEnergyPlusSimulation_browseButton(block, varargin{:});
+        mlepEnergyPlusSimulation_browseButton(block, varargin{:});    
     otherwise
         error('Unknown callback: ''%s.''', type);
 end
@@ -26,73 +26,67 @@ function mlepEnergyPlusSimulation_OpenFcn(block)
 open_system(block,'mask');
 end
 
-function mlepEnergyPlusSimulation_maskInit(block)
-% This method is triggered when the mask is being drawn or after mask
-% parameters are changed and button "ok" or "apply" is pressed.
+function mlepEnergyPlusSimulation_InitFcn(block)
+% Create new mlep instance (the actual existing instance is not reachable
+% at the moment) and run validate properties routine of the system object!
 
-% Make mlep reinitialize
-% would be great to be able to set <system_obj>.isInitialized = 0;
-% - don't know how to access the system object properties
+if strcmp(get_param(bdroot, 'BlockDiagramType'),'library') %strcmp(get_param(bdroot, 'SimulationStatus'),'initializing')        
+    return
+end
 
-% Get bus objects names
+% Get bus names
 inputBusName = get_param(block,'inputBusName');
 outputBusName = get_param(block,'outputBusName');
 
-% Check bus objects existence
-baseVars = evalin('base',['who(''' inputBusName ''',''' outputBusName ''');']);
-if numel(baseVars) ~= 2, return, end
+% Create mlep instance
+ep = mlep;
 
-%Set Vector2Bus
+% Set its properties
+ep.idfFile = get_param(block,'idfFile');
+ep.epwFile = get_param(block,'epwFile');
+ep.useDataDictionary = strcmp(...
+                        get_param(block,'useDataDictionary'),...
+                        'on');
+ep.inputBusName = inputBusName;
+ep.outputBusName = outputBusName;
+
+% Load bus objects
+loadBusObjects(ep);      
+
+% The bus objects are available now. Set them into all necessary blocks.
+% Set Vector2Bus
 set_param([block '/Vector to Bus'], 'busType', ['Bus: ' outputBusName]);
 vector2Bus_clbk([block '/Vector to Bus'],'popup');
 
-%Set output
+% Set output
 set_param([block '/Out'], 'OutDataTypeStr', ['Bus: ' outputBusName]);
 
-%Set input
+% Set input
 set_param([block '/In'], 'OutDataTypeStr', ['Bus: ' inputBusName]);
-
 end
 
 function selectedFile = mlepEnergyPlusSimulation_browseButton(block, varargin)
-%mlepEnergyPlusSimulation_browseButton Browse button callback. 
+%mlepEnergyPlusSimulation_browseButton Browse button callback.
 % Syntax: mlepEnergyPlusSimulation_browseButton(block, filetype) The
 % filetype is either 'IDF' or 'EPW' and the the block parameters are set or
-% 
+%
 
-if nargin == 2
-    validateattributes(varargin{1},{'char'},{'scalartext'});
-    filetype = validatestring(varargin{1},{'IDF','EPW'});
-else
-    filetype = '*';
-end
+assert(nargin == 2);
+validateattributes(varargin{1},{'char'},{'scalartext'});
+filetype = validatestring(varargin{1},{'IDF','EPW'});
 
-switch filetype
-    case 'IDF'
-        filefilter = '*.idf';
-        fileNameToSet = 'idfFile';
-        dialogTitle = 'Select IDF File';
-    case 'EPW'
-        filefilter = '*.epw';
-        fileNameToSet = 'epwFile';
-        dialogTitle = 'Select EPW File';
-    otherwise
-        filefilter = '*';
-        fileNameToSet = '';
-        dialogTitle = 'Select File to Open';
-end
+fileNameToSet = [lower(filetype), 'File']; % 'idfFile_SO' or 'epwFile_SO'
 
 % Ask for file
-[file,path] = uigetfile(filefilter,dialogTitle);
-if file ~= 0 % not a Cancel button    
+selectedFile = mlep.browseForFile(filetype);
+if selectedFile ~= 0 % not a Cancel button
     if isfield(get_param(block, 'ObjectParameters'),fileNameToSet) % parameter exists
         % Set mask parameters
-        set_param(block, fileNameToSet, fullfile(path,file));
+        set_param(block, fileNameToSet, selectedFile);
     else
         warning('Parameter ''%s'' does not exist in block ''%s''. Not setting the selected path anywhere.', fileNameToSet, block);
     end
 end
-selectedFile = fullfile(path,file);
 end
 
 

@@ -1,0 +1,246 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of busObjectBusCreator_clbk</title>
+  <meta name="keywords" content="busObjectBusCreator_clbk">
+  <meta name="description" content="BUSOBJECTBUSCREATOR_CLBK - Callback functions for the 'BusObjectBusCreator' block.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../functionIndex.html">Home</a> &gt;  <a href="functionIndex.html">library</a> &gt; busObjectBusCreator_clbk.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../functionIndex.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="functionIndex.html">Index for library&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>busObjectBusCreator_clbk
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>BUSOBJECTBUSCREATOR_CLBK - Callback functions for the 'BusObjectBusCreator' block.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>function busObjectBusCreator_clbk(block, type) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment">BUSOBJECTBUSCREATOR_CLBK - Callback functions for the 'BusObjectBusCreator' block.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function busObjectBusCreator_popup(block)</a></li><li><a href="#_sub2" class="code">function busObjectBusCreator_button(block)</a></li><li><a href="#_sub3" class="code">function busObjectBusCreator_CopyFcn(block)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function busObjectBusCreator_clbk(block, type)</a>
+0002 <span class="comment">%BUSOBJECTBUSCREATOR_CLBK - Callback functions for the 'BusObjectBusCreator' block.</span>
+0003 
+0004 <span class="comment">% Copyright (c) 2018, Jiri Dostal (jiri.dostal@cvut.cz)</span>
+0005 <span class="comment">% All rights reserved.</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% Code influenced by Landon Wagner, 2015 code of 'Bus Object Bus Creator'.</span>
+0008 
+0009 <span class="comment">% String to be displayed when no Bus object is selected</span>
+0010 default_str = <span class="string">'Select a Bus object...'</span>;
+0011 
+0012 <span class="comment">% String to be displayed when no Bus object is found</span>
+0013 empty_str = <span class="string">'No Bus objects found.'</span>;
+0014 
+0015 <span class="keyword">switch</span> type
+0016     <span class="keyword">case</span> <span class="string">'popup'</span>
+0017         <a href="#_sub1" class="code" title="subfunction busObjectBusCreator_popup(block)">busObjectBusCreator_popup</a>(block);
+0018     <span class="keyword">case</span> <span class="string">'button'</span>
+0019         <a href="#_sub2" class="code" title="subfunction busObjectBusCreator_button(block)">busObjectBusCreator_button</a>(block);
+0020     <span class="keyword">case</span> <span class="string">'CopyFcn'</span>
+0021         <a href="#_sub3" class="code" title="subfunction busObjectBusCreator_CopyFcn(block)">busObjectBusCreator_CopyFcn</a>(block);
+0022     <span class="keyword">otherwise</span>
+0023         error(<span class="string">'Unknown callback: ''%s.'''</span>, type);
+0024 <span class="keyword">end</span>
+0025 
+0026 
+0027     <a name="_sub1" href="#_subfunctions" class="code">function busObjectBusCreator_popup(block)</a>
+0028         <span class="comment">% Get the current block handle and mask handle.</span>
+0029         bch = get_param(block,<span class="string">'handle'</span>);
+0030         maskObj = Simulink.Mask.get(block);
+0031         popupParam = maskObj.getParameter(<span class="string">'busType'</span>);        
+0032         
+0033         <span class="comment">% --- Find Bus objects ---</span>
+0034         <span class="comment">% Get base workspace variables</span>
+0035         bwVars = evalin(<span class="string">'base'</span>,<span class="string">'whos'</span>);
+0036         allBusNames = {};
+0037         <span class="keyword">if</span> ~isempty(bwVars)
+0038             flag = strcmp({bwVars.class},<span class="string">'Simulink.Bus'</span>);
+0039             allBusNames = {bwVars(flag).name};                    
+0040         <span class="keyword">end</span>
+0041         
+0042         <span class="comment">% Get Data dictionary - Design Data Bus objects</span>
+0043         ddName = get_param(bdroot(block),<span class="string">'DataDictionary'</span>);
+0044         <span class="keyword">if</span> ~isempty(ddName)
+0045             dd = Simulink.data.dictionary.open(ddName);  
+0046             ddSec = getSection(dd,<span class="string">'Design Data'</span>);
+0047             ddVars = find(ddSec,<span class="string">'-value'</span>,<span class="string">'-class'</span>,<span class="string">'Simulink.Bus'</span>); <span class="comment">%#ok&lt;GTARG&gt;</span>
+0048             allBusNames = [allBusNames {ddVars.Name}];
+0049         <span class="keyword">end</span>
+0050         
+0051         <span class="comment">% --- Create popup ---</span>
+0052         <span class="comment">% Create popup entries</span>
+0053         busOpts = strcat({<span class="string">'Bus: '</span>}, allBusNames);
+0054         
+0055         <span class="keyword">if</span> ~isempty(busOpts)            
+0056             <span class="comment">% Add default option</span>
+0057             extOpts = [{default_str}, busOpts];
+0058             
+0059             <span class="comment">% Current number of options</span>
+0060             old_opts = popupParam.TypeOptions;
+0061             
+0062             <span class="comment">% Fill out the BusType options</span>
+0063             <span class="keyword">if</span> ~strcmp([old_opts{:}],[extOpts{:}])
+0064                 popupParam.TypeOptions = extOpts;
+0065             <span class="keyword">end</span>
+0066         <span class="keyword">end</span>
+0067         
+0068         <span class="comment">% If the currently selected bus data type ('OutDataTypeStr') is not</span>
+0069         <span class="comment">% 'Inherit: auto' then get the current 'OutDataTypeStr' and 'maskVal.'</span>
+0070         currentOutDataTypeStr = get_param(bch, <span class="string">'OutDataTypeStr'</span>);
+0071         <span class="keyword">if</span> ~strcmp(currentOutDataTypeStr, <span class="string">'Inherit: auto'</span>)
+0072             
+0073             <span class="keyword">if</span> ismember(currentOutDataTypeStr, busOpts)
+0074                 <span class="comment">% Upon re-opening the mask if the default 'TypeOptions' list member</span>
+0075                 <span class="comment">% (The first one.) contained in 'maskVal' does not match the</span>
+0076                 <span class="comment">% currently selected bus data type ('OutDataTypeStr') then set the</span>
+0077                 <span class="comment">% 'TypeOptions' list member to the selected bus data type. (Cuts down</span>
+0078                 <span class="comment">% on confusion to have the displayed list member match the selected</span>
+0079                 <span class="comment">% bus data type rather than the first entry.)</span>
+0080                 popupParam.Value = currentOutDataTypeStr;
+0081             <span class="keyword">else</span>
+0082                 <span class="keyword">if</span> isempty(busOpts)
+0083                     popupParam.TypeOptions = {empty_str};
+0084                     popupParam.Value = empty_str;
+0085                 <span class="keyword">else</span>
+0086                     popupParam.Value = default_str;                    
+0087                 <span class="keyword">end</span>                
+0088                 warning(<span class="string">'The Output Data Type ''%s'' is no longer available in a data dictionary nor base workspace. Setting the Output Data Type to ''Inherit: auto''.'</span>,<span class="keyword">...</span>
+0089                     currentOutDataTypeStr);                
+0090                 set_param(bch, <span class="string">'OutDataTypeStr'</span>,<span class="string">'Inherit: auto'</span>);
+0091             <span class="keyword">end</span>
+0092         <span class="keyword">end</span> 
+0093     <span class="keyword">end</span>
+0094 
+0095     <a name="_sub2" href="#_subfunctions" class="code">function busObjectBusCreator_button(block)</a>
+0096         <span class="comment">% Using variable names terminated with &quot;_BOBC&quot; to lessen the chances of</span>
+0097         <span class="comment">% collisions with existing workspace variables.</span>
+0098         
+0099         <span class="comment">% Get the current block, current block handle and mask handle.</span>
+0100         bch = get_param(block,<span class="string">'handle'</span>);
+0101         
+0102         <span class="comment">% Get the desired bus type...</span>
+0103         selectedBusTypeStr = get_param(bch, <span class="string">'busType'</span>);
+0104         
+0105         <span class="keyword">if</span> ismember(selectedBusTypeStr,{default_str, empty_str}) 
+0106             helpdlg(selectedBusTypeStr);
+0107             <span class="keyword">return</span> 
+0108         <span class="keyword">elseif</span> isempty(regexp(selectedBusTypeStr,<span class="string">'Bus: '</span>,<span class="string">'ONCE'</span>))
+0109             warndlg(<span class="string">'Invalid data entry &quot;%s&quot;'</span>,selectedBusTypeStr);
+0110             <span class="keyword">return</span>
+0111         <span class="keyword">else</span>
+0112             set_param(bch, <span class="string">'OutDataTypeStr'</span>,<span class="string">'Inherit: auto'</span>);            
+0113         <span class="keyword">end</span>
+0114         
+0115         <span class="comment">% ... and set the 'OutDataTypeStr' to it.</span>
+0116         set_param(bch, <span class="string">'OutDataTypeStr'</span>, selectedBusTypeStr);
+0117         
+0118                 
+0119         <span class="comment">% Get the block path for 'add_line' function.</span>
+0120         blockPath = get_param(bch, <span class="string">'Parent'</span>);
+0121         
+0122         <span class="comment">% Get the newly selected bus type ('OutDataTypeStr')...</span>
+0123         busType = get_param(block, <span class="string">'OutDataTypeStr'</span>);
+0124         
+0125         <span class="comment">% ... and parse off &quot;Bus: &quot; so the string of the desired bus contained in</span>
+0126         <span class="comment">% 'OutDataTypeStr' matches the raw workspace bus names.</span>
+0127         busType = busType(6:end);
+0128         
+0129         <span class="comment">% Load the selected Bus object</span>
+0130         <span class="keyword">if</span> Simulink.data.existsInGlobal(bdroot(block),busType)
+0131             <span class="comment">% From Data Dictionary first</span>
+0132             busObj = Simulink.data.evalinGlobal(bdroot(block),busType);
+0133         <span class="keyword">elseif</span> evalin(<span class="string">'base'</span>,[<span class="string">'exist('''</span> busType <span class="string">''',''var'')'</span>])
+0134             busObj = evalin(<span class="string">'base'</span>,busType);
+0135         <span class="keyword">else</span>
+0136             error(<span class="string">'Simulink.Bus object ''%s'' not found in a data dictionary nor the base workspace.'</span>,<span class="keyword">...</span>
+0137                 busType);
+0138         <span class="keyword">end</span>
+0139                 
+0140         <span class="comment">% From the parameters grab the number of lines to add.</span>
+0141         nElems = busObj.getNumLeafBusElements;        
+0142         assert(nElems &gt; 0, <span class="string">'The Simulink.Bus object ''%s'' contains zero elements.'</span>, busType);
+0143         
+0144         <span class="comment">% First delete any existing lines on the port.</span>
+0145         <span class="comment">% Get the line handles.</span>
+0146         lineHandle = get_param(bch, <span class="string">'LineHandles'</span>);
+0147         
+0148         <span class="comment">% If any lines exist (Non- -1 line handles.), delete them and start over.</span>
+0149         <span class="keyword">if</span> max(lineHandle.Inport &gt; 0)
+0150             
+0151             <span class="keyword">for</span> i = 1:length(lineHandle.Inport)
+0152                 <span class="keyword">if</span> lineHandle.Inport(i) &gt; 0
+0153                     delete_line(lineHandle.Inport(i))
+0154                 <span class="keyword">end</span>
+0155             <span class="keyword">end</span>
+0156         <span class="keyword">end</span>
+0157         
+0158         <span class="comment">% Set the number of inputs of the masked bus creator to the number of lines</span>
+0159         <span class="comment">% to add.</span>
+0160         set_param(bch, <span class="string">'Inputs'</span>, num2str(nElems));
+0161         
+0162         <span class="comment">% Set heigh</span>
+0163         sz = get_param(bch, <span class="string">'Position'</span>);
+0164         y0 = sz(2) + (sz(4)-sz(2))/2; <span class="comment">% vertical center</span>
+0165         h  = max(95, nElems*10); <span class="comment">% height</span>
+0166         sz = [sz(1), <span class="keyword">...</span>
+0167             y0 - h/2, <span class="keyword">...</span>
+0168             sz(3), <span class="keyword">...</span>
+0169             y0 + h/2];
+0170         set_param(bch, <span class="string">'Position'</span>, sz);
+0171                 
+0172         <span class="comment">% Get Input port handles so we can grab the positions of them.</span>
+0173         portHandle = get_param(bch, <span class="string">'PortHandles'</span>);
+0174         
+0175         <span class="comment">% Get longest signal name to adjust the line lenght right</span>
+0176         signalNames = {busObj.Elements.Name};
+0177         lineLength = ceil(50/10*max(strlength(signalNames)))+10;
+0178         <span class="keyword">for</span> i = 1:nElems            
+0179             <span class="comment">% Get the position of input port number 'i'.</span>
+0180             portPos = get_param(portHandle.Inport(i), <span class="string">'Position'</span>);            
+0181             <span class="comment">% Add a line long as the longest name</span>
+0182             <span class="comment">%(This must be done because it's the lines that get named,</span>
+0183             <span class="comment">% not the port positions.)</span>
+0184             portLine = add_line(blockPath, <span class="keyword">...</span>
+0185                 [portPos - [lineLength 0]; portPos]);
+0186             
+0187             <span class="comment">% Rename the new line to the bus 'i-st/nd/rd/th' element name.</span>
+0188             set_param(portLine, <span class="string">'Name'</span>, busObj.Elements(i).Name)
+0189         <span class="keyword">end</span>
+0190         
+0191     <span class="keyword">end</span>
+0192 
+0193     <a name="_sub3" href="#_subfunctions" class="code">function busObjectBusCreator_CopyFcn(block)</a>
+0194         <span class="comment">% Disable library link</span>
+0195         set_param(block,<span class="string">'LinkStatus'</span>,<span class="string">'none'</span>);
+0196     <span class="keyword">end</span>
+0197 <span class="keyword">end</span></pre></div>
+<hr><address>EnergyPlus Co-simulation Toolbox &copy; 2018</address>
+</body>
+</html>

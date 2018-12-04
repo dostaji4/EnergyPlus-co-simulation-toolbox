@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of encodeStatus</title>
+  <meta name="keywords" content="encodeStatus">
+  <meta name="description" content="ENCODESTATUS - Encode status flag to a packet.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../functionIndex.html">Home</a> &gt;  <a href="functionIndex.html">@mlep</a> &gt; encodeStatus.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../functionIndex.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="functionIndex.html">Index for @mlep&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>encodeStatus
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>ENCODESTATUS - Encode status flag to a packet.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>function packet = encodeStatus(vernumber, flag) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ENCODESTATUS - Encode status flag to a packet.
+Encode a status flag to a packet (a string) that can be sent to the
+external program.  This function is a special version of
+mlepEncodeData in which only a flag (non-zero) is transferred. 
+
+   Syntax: packet = mlepEncodeStatus(vernumber, flag)
+
+   Inputs:
+  vernumber - Version of the protocol to be used. Currently, version 1
+              and 2 are supported.
+       flag - An integer specifying the (status) flag. Refer to the BCVTB
+              protocol for allowed flag values.
+
+   Output:
+     packet - A string that contains the encoded data.
+
+   See also: <a href="mlep.html" class="code" title="">MLEP</a>.<a href="decodePacket.html" class="code" title="function [flag, timevalue, realvalues, intvalues, boolvalues] = decodePacket(packet)">DECODEPACKET</a>, <a href="mlep.html" class="code" title="">MLEP</a>.<a href="encodeData.html" class="code" title="function packet = encodeData(vernumber, flag, timevalue, realvalues, intvalues, boolvalues)">ENCODEDATA</a>, <a href="mlep.html" class="code" title="">MLEP</a>.<a href="encodeRealData.html" class="code" title="function packet = encodeRealData(vernumber, flag, timevalue, realvalues)">ENCODEREALDATA</a>,
+             WRITE
+
+ (C) 2010, Truong Nghiem (nghiem@seas.upenn.edu)</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="mlep.html" class="code" title="">mlep</a>	MLEP Main EnergyPlus co-simulation toolbox class.</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function packet = encodeStatus(vernumber, flag)</a>
+0002 <span class="comment">%ENCODESTATUS - Encode status flag to a packet.</span>
+0003 <span class="comment">%Encode a status flag to a packet (a string) that can be sent to the</span>
+0004 <span class="comment">%external program.  This function is a special version of</span>
+0005 <span class="comment">%mlepEncodeData in which only a flag (non-zero) is transferred.</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">%   Syntax: packet = mlepEncodeStatus(vernumber, flag)</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">%   Inputs:</span>
+0010 <span class="comment">%  vernumber - Version of the protocol to be used. Currently, version 1</span>
+0011 <span class="comment">%              and 2 are supported.</span>
+0012 <span class="comment">%       flag - An integer specifying the (status) flag. Refer to the BCVTB</span>
+0013 <span class="comment">%              protocol for allowed flag values.</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">%   Output:</span>
+0016 <span class="comment">%     packet - A string that contains the encoded data.</span>
+0017 <span class="comment">%</span>
+0018 <span class="comment">%   See also: MLEP.DECODEPACKET, MLEP.ENCODEDATA, MLEP.ENCODEREALDATA,</span>
+0019 <span class="comment">%             WRITE</span>
+0020 <span class="comment">%</span>
+0021 <span class="comment">% (C) 2010, Truong Nghiem (nghiem@seas.upenn.edu)</span>
+0022 
+0023 ni = nargin;
+0024 <span class="keyword">if</span> ni &lt; 2
+0025     error(<span class="string">'Not enough arguments: all input arguments are required.'</span>);
+0026 <span class="keyword">end</span>
+0027 
+0028 <span class="keyword">if</span> vernumber &lt;= 2
+0029     packet = sprintf(<span class="string">'%d %d'</span>, vernumber, flag);
+0030 <span class="keyword">else</span>
+0031     packet = <span class="string">''</span>;
+0032 <span class="keyword">end</span>
+0033 
+0034 <span class="keyword">end</span>
+0035 
+0036 <span class="comment">% Protocol Version 1 &amp; 2:</span>
+0037 <span class="comment">% Packet has the form:</span>
+0038 <span class="comment">%       v f dr di db t r1 r2 ... i1 i2 ... b1 b2 ...</span>
+0039 <span class="comment">% where</span>
+0040 <span class="comment">%   v    - version number (1,2)</span>
+0041 <span class="comment">%   f    - flag (0: communicate, 1: finish, -10: initialization error,</span>
+0042 <span class="comment">%                -20: time integration error, -1: unknown error)</span>
+0043 <span class="comment">%   dr   - number of real values</span>
+0044 <span class="comment">%   di   - number of integer values</span>
+0045 <span class="comment">%   db   - number of boolean values</span>
+0046 <span class="comment">%   t    - current simulation time in seconds (format %20.15e)</span>
+0047 <span class="comment">%   r1 r2 ... are real values (format %20.15e)</span>
+0048 <span class="comment">%   i1 i2 ... are integer values (format %d)</span>
+0049 <span class="comment">%   b1 b2 ... are boolean values (format %d)</span>
+0050 <span class="comment">%</span>
+0051 <span class="comment">% Note that if f is non-zero, other values after it will not be processed.</span></pre></div>
+<hr><address>EnergyPlus Co-simulation Toolbox &copy; 2018</address>
+</body>
+</html>

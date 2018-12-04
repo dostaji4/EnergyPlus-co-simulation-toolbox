@@ -22,8 +22,8 @@ function writeVariableConfig(fullFilePath, inputTable, outputTable)
 % XML header
 docType = com.mathworks.xml.XMLUtils.createDocumentType('SYSTEM', [],'variables.dtd');
 docNode = com.mathworks.xml.XMLUtils.createDocument([], 'BCVTB-variables', docType);
-docNode.setEncoding('ISO-8859-1');
-docNode.setVersion('1.0')
+setEncoding(docNode, 'ISO-8859-1');
+setVersion(docNode, '1.0')
 
 % Disclaimer
 disclaimer = docNode.createComment([newline, ...
@@ -35,39 +35,46 @@ disclaimer = docNode.createComment([newline, ...
 
 % INPUT to E+
 docRootNode = docNode.getDocumentElement;
-docNode.insertBefore(disclaimer, docRootNode);
+insertBefore(docNode, disclaimer, docRootNode);
 %docRootNode.setAttribute('SYSTEM','variables.dtd');
-docRootNode.appendChild(docNode.createComment('INPUT to E+'));
+appendChild(docRootNode, docNode.createComment('INPUT to E+'));
+
+table = inputTable;
+names = table.Name;
+types = table.Type;
 for i=1:height(inputTable)
     
     %Example: <variable source="Ptolemy">
-    thisElement = docNode.createElement('variable');
-    thisElement.setAttribute('source','Ptolemy');
+    thisElement = createElement(docNode, 'variable');
+    setAttribute(thisElement, 'source','Ptolemy');
     
     %Example: <EnergyPlus schedule="TSetHea"/>
-    newElement = docNode.createElement('EnergyPlus');
-    newElement.setAttribute(inputTable.Name{i},... % schedule, actuator, variable
-                            inputTable.Type{i});   % particular name
+    newElement = createElement(docNode, 'EnergyPlus');
+    setAttribute(newElement, names(i),... % schedule, actuator, variable
+                             types(i));   % particular name
     
-    thisElement.appendChild(newElement);
-    docRootNode.appendChild(thisElement);
+    appendChild(thisElement, newElement);
+    appendChild(docRootNode, thisElement);
 end
 
 % OUTPUT from E+
 docRootNode.appendChild(docNode.createComment('OUTPUT from E+'));
+table = outputTable;
+names = table.Name;
+types = table.Type;
 for i=1:height(outputTable)
     
     %Example: <variable source="EnergyPlus">
-    thisElement = docNode.createElement('variable');
-    thisElement.setAttribute('source','EnergyPlus');
+    thisElement = createElement(docNode, 'variable');
+    setAttribute(thisElement, 'source','EnergyPlus');
     
     %Example: <EnergyPlus name="ZSF1" type="Zone Air Temperature"/>
-    newElement = docNode.createElement('EnergyPlus');
-    newElement.setAttribute('name',outputTable.Name{i}); % key value ('zone name')
-    newElement.setAttribute('type',outputTable.Type{i}); % variable name ('signal')
+    newElement = createElement(docNode, 'EnergyPlus');
+    setAttribute(newElement, 'name',names(i)); % key value ('zone name')
+    setAttribute(newElement, 'type',types(i)); % variable name ('signal')
     
-    thisElement.appendChild(newElement);
-    docRootNode.appendChild(thisElement);
+    appendChild(thisElement, newElement);
+    appendChild(docRootNode, thisElement);
 end
 
 xmlwrite_r18a(fullFilePath,docNode);

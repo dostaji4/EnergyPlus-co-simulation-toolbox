@@ -48,8 +48,10 @@ function data = readIDF(filename, classnames)
 %               fields: {{1x3 cell}  {1x3 cell}}
 %
 %
+% (C) 2018 by Jiri Dostal (jiri.dostal@cvut.cz)
 % (C) 2012 by Truong X. Nghiem (nghiem@seas.upenn.edu)
 
+% --- Input check ---------------------------------------------------------
 narginchk(1, 2);
 assert(ischar(filename), 'File name must be a string.');
 if ~exist('classnames', 'var')
@@ -71,12 +73,20 @@ end
 noClassnames = isempty(classnames);
 nClassnames = length(classnames);
 
+% --- Open File - preallocate ---------------------------------------------
 
 % Open the file in text mode
 [fid, msg] = fopen(filename, 'rt');
 if fid < 0
     error('Cannot open IDF file: %s', msg);
 end
+
+% Read the file to system cache (performance)
+filetext = fileread(filename);
+lineIdx = strfind(filetext,newline);
+nLines = numel(lineIdx);
+
+% Close the file
 
 % Read line by line and parse
 syntaxerr = false;  % If there is a syntax error in the IDF file
@@ -95,50 +105,42 @@ end
 inBlock = false;  % A block is a block of code ended with ;
 saveBlock = false;  % Is the current block being saved?
 
-% The regular expression for parsing a line in the IDF file
+% --- Parse ---------------------------------------------------------------
 %   A field is a group of 0 or more characters not including comma,
 %   semi-colon and exclamation; a line consists of a number of fields,
 %   separated by either a comma or a semi-colon.
-rexp = '([^,;]*)([;,])';
 
-while true
-    l = fgetl(fid);
+startLineIdx = 1;
+for iLine = 1:nLines
     
-    if ~ischar(l), break; end % EOF
+    % Get line 
+    endLineIdx = lineIdx(iLine);
+    line = filetext(startLineIdx:endLineIdx);
+    startLineIdx = endLineIdx + 1;    
     
-    if isempty(l), continue; end
-    % Although MATLAB documents say that an empty line is an indication of
-    % error, the errnum code returned is actually an EOF. That's confusing.
-    % So I simply continue the reading for now.
-    %%%%%
-    %    [msg, errnum] = ferror(fid);
-    %    if errnum ~= 0
-    %        disp(errnum);
-    %        error('Error while reading IDF file: %s', msg);
-    %    end
-    %end
-    
-    % Now that l is read successfully, remove all surrounding spaces
-    l = strtrim(l);
+    % Remove all surrounding spaces
+    line = strtrim(line);
     
     % If l is empty or a comment line, ignore it
-    if isempty(l) || l(1) == '!' % ~isempty(regexp(l, '^!.*', 'start', 'once'))
+    if isempty(line) || line(1) == '!'
         continue;
     end
     
-    % Remove the comment part if available
-    foundIdx = strfind(l, '!');
-    if ~isempty(foundIdx)
+    % Remove the comment part if any
+    dataEndIdx = strfind(line, '!');
+    if ~isempty(dataEndIdx)
         % Remove from the first occurence of '!' to the end
-        l = strtrim(l(1:foundIdx(1)-1));
+        line = strtrim(line(1:dataEndIdx(1)-1));
     end
+    
+
     
     % If we are not in a block and if class names are given, we search
     % for any class name in the current line and only parse the line if we
     % find an interested class name.  Because we are not in a block, the
     % class name must be at the beginning of the line.
     if ~inBlock && ~noClassnames
-        lowerL = lower(l);
+        lowerL = lower(line);
         foundClassname = false;
         
         for k = 1:nClassnames
@@ -154,15 +156,28 @@ while true
         end
     end
     
-    toks = regexp(l, rexp, 'tokens');
-    if isempty(toks)
-        % Syntax error
-        syntaxerr = true;
-        syntaxmsg = l;
-        break;
+    % Get all fields in the line
+    dataEndIdx = strfind(line, ',');
+    semIdx = strfind(line, ';');        
+    
+    if (isempty(dataEndIdx) && isempty(semIdx)) || ...
+            (~isempty(semIdx) && ~isempty(dataEndIdx) && (semIdx < dataEndIdx(end)))
+            % Syntax error
+            syntaxerr = true;
+            syntaxmsg = line;
+            break;
+    end
+    
+    % Append semicolon position if any
+    if ~isempty(semIdx) 
+        dataEndIdx = [dataEndIdx semIdx]; %#ok<AGROW> % When there is only ";" in the line
     end
 
-    for k = 1:length(toks)
+    % Parse fields
+    nFields = numel(dataEndIdx);
+    dataEndIdx = [0 dataEndIdx]; %#ok<AGROW>
+    for k = 1:nFields  
+        field = strtrim(line(dataEndIdx(k)+1:dataEndIdx(k+1)-1));
         if ~inBlock
             % Start a new block
             inBlock = true;
@@ -171,11 +186,11 @@ while true
             if noClassnames
                 saveBlock = true;
                 nBlocks = nBlocks + 1;
-                data(nBlocks).class = strtrim(toks{k}{1});
+                data(nBlocks).class = field;
                 data(nBlocks).fields = {};
             else
                 [saveBlock, classIdx] = ...
-                    ismember(lower(strtrim(toks{k}{1})), classnames);
+                    ismember(lower(field), classnames);
                 
                 if saveBlock
                     data(classIdx).fields{end+1} = {};
@@ -184,20 +199,18 @@ while true
         elseif saveBlock
             % Continue the previous block
             if noClassnames
-                data(nBlocks).fields{end+1} = strtrim(toks{k}{1});
+                data(nBlocks).fields{end+1} = field;
             else
-                data(classIdx).fields{end}{end+1} = strtrim(toks{k}{1});
+                data(classIdx).fields{end}{end+1} = field;
             end
         end
-        
-        % If the delimiter is ; then close the block
-        if toks{k}{2} == ';'
-            inBlock = false;
-        end
     end
+    
+    % Close block?
+    if ~isempty(semIdx)
+        inBlock = false;
+    end      
 end
-
-fclose(fid);
 
 if syntaxerr
     error('Syntax error: %s', syntaxmsg);
@@ -207,5 +220,4 @@ end
 if noClassnames
     data((1+nBlocks):end) = [];
 end
-
 end
