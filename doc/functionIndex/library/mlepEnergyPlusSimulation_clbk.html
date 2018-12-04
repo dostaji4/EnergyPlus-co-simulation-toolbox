@@ -1,0 +1,142 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of mlepEnergyPlusSimulation_clbk</title>
+  <meta name="keywords" content="mlepEnergyPlusSimulation_clbk">
+  <meta name="description" content="MLEPENERGYPLUSSIMULATION_CLBK - Callback functions for the 'EnergyPlus Simulation' block.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../functionIndex.html">Home</a> &gt;  <a href="functionIndex.html">library</a> &gt; mlepEnergyPlusSimulation_clbk.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../functionIndex.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="functionIndex.html">Index for library&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>mlepEnergyPlusSimulation_clbk
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>MLEPENERGYPLUSSIMULATION_CLBK - Callback functions for the 'EnergyPlus Simulation' block.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>function mlepEnergyPlusSimulation_clbk(block, type, varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment">MLEPENERGYPLUSSIMULATION_CLBK - Callback functions for the 'EnergyPlus Simulation' block.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="vector2Bus_clbk.html" class="code" title="function vector2Bus_clbk(block, type)">vector2Bus_clbk</a>	VECTOR2BUS_CLBK - Callback functions.</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function mlepEnergyPlusSimulation_OpenFcn(block)</a></li><li><a href="#_sub2" class="code">function mlepEnergyPlusSimulation_InitFcn(block)</a></li><li><a href="#_sub3" class="code">function selectedFile = mlepEnergyPlusSimulation_browseButton(block, varargin)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function mlepEnergyPlusSimulation_clbk(block, type, varargin)</a>
+0002 <span class="comment">%MLEPENERGYPLUSSIMULATION_CLBK - Callback functions for the 'EnergyPlus Simulation' block.</span>
+0003 
+0004 <span class="comment">% Copyright (c) 2018, Jiri Dostal (jiri.dostal@cvut.cz)</span>
+0005 <span class="comment">% All rights reserved.</span>
+0006 <span class="comment">%</span>
+0007 
+0008 <span class="keyword">switch</span> type
+0009     <span class="keyword">case</span> <span class="string">'OpenFcn'</span>
+0010         <a href="#_sub1" class="code" title="subfunction mlepEnergyPlusSimulation_OpenFcn(block)">mlepEnergyPlusSimulation_OpenFcn</a>(block);            
+0011     <span class="keyword">case</span> {<span class="string">'InitFcn'</span>,<span class="string">'generateBus'</span>}
+0012         <a href="#_sub2" class="code" title="subfunction mlepEnergyPlusSimulation_InitFcn(block)">mlepEnergyPlusSimulation_InitFcn</a>(block);
+0013     <span class="keyword">case</span> <span class="string">'browseButton'</span>
+0014         <a href="#_sub3" class="code" title="subfunction selectedFile = mlepEnergyPlusSimulation_browseButton(block, varargin)">mlepEnergyPlusSimulation_browseButton</a>(block, varargin{:});    
+0015     <span class="keyword">otherwise</span>
+0016         error(<span class="string">'Unknown callback: ''%s.'''</span>, type);
+0017 <span class="keyword">end</span>
+0018 <span class="keyword">end</span>
+0019 
+0020 <a name="_sub1" href="#_subfunctions" class="code">function mlepEnergyPlusSimulation_OpenFcn(block)</a>
+0021 
+0022 <span class="comment">% Mask of a System Object cannot be programatically opened (r18a). So</span>
+0023 <span class="comment">% promoted parameters are used instead (at least semi-automatic way).</span>
+0024 
+0025 <span class="comment">% Open mask</span>
+0026 open_system(block,<span class="string">'mask'</span>);
+0027 <span class="keyword">end</span>
+0028 
+0029 <a name="_sub2" href="#_subfunctions" class="code">function mlepEnergyPlusSimulation_InitFcn(block)</a>
+0030 <span class="comment">% Create new mlep instance (the actual existing instance is not reachable</span>
+0031 <span class="comment">% at the moment) and run validate properties routine of the system object!</span>
+0032 
+0033 <span class="keyword">if</span> strcmp(get_param(bdroot, <span class="string">'BlockDiagramType'</span>),<span class="string">'library'</span>) <span class="comment">%strcmp(get_param(bdroot, 'SimulationStatus'),'initializing')</span>
+0034     <span class="keyword">return</span>
+0035 <span class="keyword">end</span>
+0036 
+0037 <span class="comment">% Get bus names</span>
+0038 inputBusName = get_param(block,<span class="string">'inputBusName'</span>);
+0039 outputBusName = get_param(block,<span class="string">'outputBusName'</span>);
+0040 
+0041 <span class="comment">% Create mlep instance</span>
+0042 ep = mlep;
+0043 
+0044 <span class="comment">% Set its properties</span>
+0045 ep.idfFile = get_param(block,<span class="string">'idfFile'</span>);
+0046 ep.epwFile = get_param(block,<span class="string">'epwFile'</span>);
+0047 ep.useDataDictionary = strcmp(<span class="keyword">...</span>
+0048                         get_param(block,<span class="string">'useDataDictionary'</span>),<span class="keyword">...</span>
+0049                         <span class="string">'on'</span>);
+0050 ep.inputBusName = inputBusName;
+0051 ep.outputBusName = outputBusName;
+0052 
+0053 <span class="comment">% Load bus objects</span>
+0054 loadBusObjects(ep);      
+0055 
+0056 <span class="comment">% The bus objects are available now. Set them into all necessary blocks.</span>
+0057 <span class="comment">% Set Vector2Bus</span>
+0058 set_param([block <span class="string">'/Vector to Bus'</span>], <span class="string">'busType'</span>, [<span class="string">'Bus: '</span> outputBusName]);
+0059 <a href="vector2Bus_clbk.html" class="code" title="function vector2Bus_clbk(block, type)">vector2Bus_clbk</a>([block <span class="string">'/Vector to Bus'</span>],<span class="string">'popup'</span>);
+0060 
+0061 <span class="comment">% Set output</span>
+0062 set_param([block <span class="string">'/Out'</span>], <span class="string">'OutDataTypeStr'</span>, [<span class="string">'Bus: '</span> outputBusName]);
+0063 
+0064 <span class="comment">% Set input</span>
+0065 set_param([block <span class="string">'/In'</span>], <span class="string">'OutDataTypeStr'</span>, [<span class="string">'Bus: '</span> inputBusName]);
+0066 <span class="keyword">end</span>
+0067 
+0068 <a name="_sub3" href="#_subfunctions" class="code">function selectedFile = mlepEnergyPlusSimulation_browseButton(block, varargin)</a>
+0069 <span class="comment">%mlepEnergyPlusSimulation_browseButton Browse button callback.</span>
+0070 <span class="comment">% Syntax: mlepEnergyPlusSimulation_browseButton(block, filetype) The</span>
+0071 <span class="comment">% filetype is either 'IDF' or 'EPW' and the the block parameters are set or</span>
+0072 <span class="comment">%</span>
+0073 
+0074 assert(nargin == 2);
+0075 validateattributes(varargin{1},{<span class="string">'char'</span>},{<span class="string">'scalartext'</span>});
+0076 filetype = validatestring(varargin{1},{<span class="string">'IDF'</span>,<span class="string">'EPW'</span>});
+0077 
+0078 fileNameToSet = [lower(filetype), <span class="string">'File'</span>]; <span class="comment">% 'idfFile_SO' or 'epwFile_SO'</span>
+0079 
+0080 <span class="comment">% Ask for file</span>
+0081 selectedFile = mlep.browseForFile(filetype);
+0082 <span class="keyword">if</span> selectedFile ~= 0 <span class="comment">% not a Cancel button</span>
+0083     <span class="keyword">if</span> isfield(get_param(block, <span class="string">'ObjectParameters'</span>),fileNameToSet) <span class="comment">% parameter exists</span>
+0084         <span class="comment">% Set mask parameters</span>
+0085         set_param(block, fileNameToSet, selectedFile);
+0086     <span class="keyword">else</span>
+0087         warning(<span class="string">'Parameter ''%s'' does not exist in block ''%s''. Not setting the selected path anywhere.'</span>, fileNameToSet, block);
+0088     <span class="keyword">end</span>
+0089 <span class="keyword">end</span>
+0090 <span class="keyword">end</span>
+0091 
+0092 
+0093</pre></div>
+<hr><address>EnergyPlus Co-simulation Toolbox &copy; 2018</address>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of mlepMatlab_so_example</title>
+  <meta name="keywords" content="mlepMatlab_so_example">
+  <meta name="description" content="% Co-simulation example using System Object">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../functionIndex.html">Home</a> &gt;  <a href="#">examples</a> &gt; <a href="functionIndex.html">legacy_example</a> &gt; mlepMatlab_so_example.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../functionIndex.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="functionIndex.html">Index for examples\legacy_example&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>mlepMatlab_so_example
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>% Co-simulation example using System Object</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">% Co-simulation example using System Object
+ Demonstrates the functionality of the mlep (MatLab-EnergyPlus) tool on 
+ a small office building simulation scenario.
+
+ Note that a start of the simulation period as well as a timestep and
+ an input/output configuration is defined by the the EnergyPlus simulation
+ configuration file (.IDF). Climatic conditions are obtained from a
+ EnergyPlus Weather data file (.EPW). 
+
+ For a detailed description of mlep usage please refere to the
+ 'mlepMatlab_example.m' example.
+
+ See also: mlepSimulink_example.slx</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">%% Co-simulation example using System Object</span>
+0002 <span class="comment">% Demonstrates the functionality of the mlep (MatLab-EnergyPlus) tool on</span>
+0003 <span class="comment">% a small office building simulation scenario.</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">% Note that a start of the simulation period as well as a timestep and</span>
+0006 <span class="comment">% an input/output configuration is defined by the the EnergyPlus simulation</span>
+0007 <span class="comment">% configuration file (.IDF). Climatic conditions are obtained from a</span>
+0008 <span class="comment">% EnergyPlus Weather data file (.EPW).</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% For a detailed description of mlep usage please refere to the</span>
+0011 <span class="comment">% 'mlepMatlab_example.m' example.</span>
+0012 <span class="comment">%</span>
+0013 <span class="comment">% See also: mlepSimulink_example.slx</span>
+0014 clear all
+0015 
+0016 <span class="comment">%% Instantiate mlep and configure simulation</span>
+0017 ep = mlep;
+0018 ep.idfFile = <span class="string">'SmOffPSZ'</span>;
+0019 ep.epwFile = <span class="string">'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3'</span>;
+0020 
+0021 <span class="comment">% Use user-defined I/O configuration</span>
+0022 cd(fileparts(mfilename(<span class="string">'fullpath'</span>)));
+0023 copyfile(<span class="string">'variables_example.cfg'</span>,<span class="string">'variables.cfg'</span>);
+0024 
+0025 ep.setup(<span class="string">'init'</span>); 
+0026 pause(1); <span class="comment">% pause to have the initial EnergyPlus output in this section</span>
+0027 
+0028 <span class="comment">%% Simulate</span>
+0029 
+0030 endTime = 4*24*60*60;
+0031 nRows = ceil(endTime / ep.timestep);
+0032 logTable = table(<span class="string">'Size'</span>,[0, 1 + ep.nOut],<span class="keyword">...</span>
+0033     <span class="string">'VariableTypes'</span>,repmat({<span class="string">'double'</span>},1,1 + ep.nOut),<span class="keyword">...</span>
+0034     <span class="string">'VariableNames'</span>,[{<span class="string">'Time'</span>}; ep.outputSigName]);
+0035 iLog = 1;
+0036 t = 0;
+0037 
+0038 <span class="keyword">while</span> t &lt; endTime
+0039     
+0040     u = [20 25];
+0041     
+0042     <span class="comment">% Send inputs to/ get outputs from EnergyPlus</span>
+0043     y = ep.step(u); 
+0044     
+0045     <span class="comment">% Obtain elapsed simulation time [s]</span>
+0046     t = ep.time;
+0047 
+0048     <span class="comment">% Log data</span>
+0049     logTable(iLog, :) = num2cell([t y']);
+0050     iLog = iLog + 1;    
+0051 <span class="keyword">end</span>
+0052 ep.release;
+0053 
+0054 <span class="comment">%% Plot results</span>
+0055 plot(seconds(table2array(logTable(:,1))),<span class="keyword">...</span>
+0056     table2array(logTable(:,2:end)));
+0057 xtickformat(<span class="string">'hh:mm:ss'</span>);
+0058 legend(logTable.Properties.VariableNames(2:end),<span class="string">'Interpreter'</span>,<span class="string">'none'</span>);
+0059 
+0060 title(ep.idfFile);
+0061 xlabel(<span class="string">'Time [hh:mm:ss]'</span>);
+0062 ylabel(<span class="string">'Temperature [C]'</span>);
+0063 
+0064 <span class="comment">%% Clean up</span>
+0065 delete variables.cfg</pre></div>
+<hr><address>EnergyPlus Co-simulation Toolbox &copy; 2018</address>
+</body>
+</html>

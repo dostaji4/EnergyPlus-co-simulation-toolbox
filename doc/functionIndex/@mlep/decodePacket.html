@@ -1,0 +1,184 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of decodePacket</title>
+  <meta name="keywords" content="decodePacket">
+  <meta name="description" content="DECODEPACKET - Decode packet to data.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../functionIndex.html">Home</a> &gt;  <a href="functionIndex.html">@mlep</a> &gt; decodePacket.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../functionIndex.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="functionIndex.html">Index for @mlep&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>decodePacket
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>DECODEPACKET - Decode packet to data.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>function [flag, timevalue, realvalues, intvalues, boolvalues] = decodePacket(packet) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment">DECODEPACKET - Decode packet to data.
+Decode a packet (a string) to data.  The packet format follows the
+BCVTB co-simulation communication protocol .
+
+   Syntax: [flag, timevalue, realvalues, intvalues, boolvalues] = mlepDecodePacket(packet)
+
+   Inputs:
+       packet: the packet to be decoded (a string).
+
+   Outputs:
+             flag - An integer specifying the (status) flag. Refer to the BCVTB
+                    protocol for allowed flag values.
+        timevalue - A real value which is the current simulation time in
+                    seconds.
+       realvalues - A vector of received real value data.
+        intvalues - a vector of received integer value data.
+       boolvalues - a vector of received boolean value data.
+
+       Each of the received data vector can be empty if there is no data
+       of that type sent.
+
+ Protocol Version 1 &amp; 2:
+ Packet has the form:
+       &quot;v f dr di db t r1 r2 ... i1 i2 ... b1 b2 ... \n&quot;
+ where
+   v    - version number (1,2)
+   f    - flag (0: communicate, 1: finish, -10: initialization error,
+                -20: time integration error, -1: unknown error)
+   dr   - number of real values
+   di   - number of integer values
+   db   - number of boolean values
+   t    - current simulation time in seconds (format %20.15e)
+   r1 r2 ... are real values (format %20.15e)
+   i1 i2 ... are integer values (format %d)
+   b1 b2 ... are boolean values (format %d)
+   \n   - carriage return
+
+ Note that if f is non-zero, other values after it will not be processed.
+
+   See also: <a href="mlep.html" class="code" title="">MLEP</a>.<a href="encodeData.html" class="code" title="function packet = encodeData(vernumber, flag, timevalue, realvalues, intvalues, boolvalues)">ENCODEDATA</a>, <a href="mlep.html" class="code" title="">MLEP</a>.<a href="encodeRealData.html" class="code" title="function packet = encodeRealData(vernumber, flag, timevalue, realvalues)">ENCODEREALDATA</a>, <a href="mlep.html" class="code" title="">MLEP</a>.<a href="encodeStatus.html" class="code" title="function packet = encodeStatus(vernumber, flag)">ENCODESTATUS</a>,
+             READ
+
+ (C) 2010, Truong Nghiem (nghiem@seas.upenn.edu)</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="mlep.html" class="code" title="">mlep</a>	MLEP Main EnergyPlus co-simulation toolbox class.</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [flag, timevalue, realvalues, intvalues, boolvalues] = decodePacket(packet)</a>
+0002 <span class="comment">%DECODEPACKET - Decode packet to data.</span>
+0003 <span class="comment">%Decode a packet (a string) to data.  The packet format follows the</span>
+0004 <span class="comment">%BCVTB co-simulation communication protocol .</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">%   Syntax: [flag, timevalue, realvalues, intvalues, boolvalues] = mlepDecodePacket(packet)</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">%   Inputs:</span>
+0009 <span class="comment">%       packet: the packet to be decoded (a string).</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">%   Outputs:</span>
+0012 <span class="comment">%             flag - An integer specifying the (status) flag. Refer to the BCVTB</span>
+0013 <span class="comment">%                    protocol for allowed flag values.</span>
+0014 <span class="comment">%        timevalue - A real value which is the current simulation time in</span>
+0015 <span class="comment">%                    seconds.</span>
+0016 <span class="comment">%       realvalues - A vector of received real value data.</span>
+0017 <span class="comment">%        intvalues - a vector of received integer value data.</span>
+0018 <span class="comment">%       boolvalues - a vector of received boolean value data.</span>
+0019 <span class="comment">%</span>
+0020 <span class="comment">%       Each of the received data vector can be empty if there is no data</span>
+0021 <span class="comment">%       of that type sent.</span>
+0022 <span class="comment">%</span>
+0023 <span class="comment">% Protocol Version 1 &amp; 2:</span>
+0024 <span class="comment">% Packet has the form:</span>
+0025 <span class="comment">%       &quot;v f dr di db t r1 r2 ... i1 i2 ... b1 b2 ... \n&quot;</span>
+0026 <span class="comment">% where</span>
+0027 <span class="comment">%   v    - version number (1,2)</span>
+0028 <span class="comment">%   f    - flag (0: communicate, 1: finish, -10: initialization error,</span>
+0029 <span class="comment">%                -20: time integration error, -1: unknown error)</span>
+0030 <span class="comment">%   dr   - number of real values</span>
+0031 <span class="comment">%   di   - number of integer values</span>
+0032 <span class="comment">%   db   - number of boolean values</span>
+0033 <span class="comment">%   t    - current simulation time in seconds (format %20.15e)</span>
+0034 <span class="comment">%   r1 r2 ... are real values (format %20.15e)</span>
+0035 <span class="comment">%   i1 i2 ... are integer values (format %d)</span>
+0036 <span class="comment">%   b1 b2 ... are boolean values (format %d)</span>
+0037 <span class="comment">%   \n   - carriage return</span>
+0038 <span class="comment">%</span>
+0039 <span class="comment">% Note that if f is non-zero, other values after it will not be processed.</span>
+0040 <span class="comment">%</span>
+0041 <span class="comment">%   See also: MLEP.ENCODEDATA, MLEP.ENCODEREALDATA, MLEP.ENCODESTATUS,</span>
+0042 <span class="comment">%             READ</span>
+0043 <span class="comment">%</span>
+0044 <span class="comment">% (C) 2010, Truong Nghiem (nghiem@seas.upenn.edu)</span>
+0045 
+0046 <span class="comment">% Remove non-printable characters from packet, then</span>
+0047 <span class="comment">% convert packet string to a vector of numbers</span>
+0048 [data, status] = str2num(packet(isstrprop(packet, <span class="string">'print'</span>)));  <span class="comment">% This function is very fast</span>
+0049 <span class="keyword">if</span> ~status
+0050     error(<span class="string">'Error while parsing the packet string: %s'</span>, packet);
+0051 <span class="keyword">end</span>
+0052 
+0053 <span class="comment">% Check data</span>
+0054 datalen = length(data);
+0055 <span class="keyword">if</span> datalen &lt; 2
+0056     error(<span class="string">'Invalid packet format: length is only %d.'</span>, datalen);
+0057 <span class="keyword">end</span>
+0058 
+0059 <span class="comment">% data(1) is version number</span>
+0060 <span class="keyword">if</span> data(1) &lt;= 2
+0061     <span class="comment">% Get the flag number</span>
+0062     flag = data(2);
+0063     
+0064     realvalues = [];
+0065     intvalues = [];
+0066     boolvalues = [];
+0067     
+0068     <span class="keyword">if</span> flag == 0  <span class="comment">% Read on</span>
+0069         <span class="keyword">if</span> datalen &lt; 5
+0070             error(<span class="string">'Invalid packet: lacks lengths of data.'</span>);
+0071         <span class="keyword">end</span>
+0072         
+0073         data(3:5) = fix(data(3:5));
+0074         pos1 = data(3) + data(4);
+0075         pos2 = pos1 + data(5);
+0076         <span class="keyword">if</span> 6 + pos2 &gt; datalen
+0077             error(<span class="string">'Invalid packet: not enough data.'</span>);
+0078         <span class="keyword">end</span>
+0079         
+0080         <span class="comment">% Now read data to vectors</span>
+0081         timevalue = data(6);
+0082         realvalues = data(7:6+data(3));
+0083         intvalues = data(7+data(3):6+pos1);
+0084         boolvalues = logical(data(7+pos1:6+pos2));
+0085     <span class="keyword">else</span>
+0086         <span class="comment">% Non-zero flag --&gt; don't need to read on</span>
+0087         timevalue = [];
+0088     <span class="keyword">end</span>
+0089     
+0090 <span class="keyword">else</span>
+0091     error(<span class="string">'Unsupported packet format version: %g.'</span>, data(1));
+0092 <span class="keyword">end</span>
+0093 
+0094 <span class="keyword">end</span>
+0095</pre></div>
+<hr><address>EnergyPlus Co-simulation Toolbox &copy; 2018</address>
+</body>
+</html>

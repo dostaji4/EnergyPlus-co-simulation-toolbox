@@ -1,0 +1,320 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of readIDF</title>
+  <meta name="keywords" content="readIDF">
+  <meta name="description" content="READIDF - Read and parse EnergyPlus IDF file.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../functionIndex.html">Home</a> &gt;  <a href="functionIndex.html">@mlep</a> &gt; readIDF.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../functionIndex.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="functionIndex.html">Index for @mlep&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>readIDF
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>READIDF - Read and parse EnergyPlus IDF file.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>function data = readIDF(filename, classnames) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> READIDF - Read and parse EnergyPlus IDF file.
+
+   data = readIDF(filename) reads all data entries from an IDF
+   file with name filename. The output data is a structure array,
+   where each item is one data entry. Each item k has two fields:
+     data(k).class is a string of the class name
+     data(k).fields is a cell array of strings, each cell is a
+                    data field after the class name.
+   The order of the entries is the same as in the IDF file.
+
+   data = readIDF(filename, classnames) reads all data entries
+   of the classes given in classnames, from a given IDF
+   file. Input argument classnames is either a string or a cell
+   array of strings specifying the class(es) that will be
+   read. Data entries not of those classes will be skipped. The output
+   'data' is a structure array (a bit DIFFERENT from above): each item k
+   of the array contains ALL data entries for CLASS k in 'classnames' (not
+   entry k in the IDF file), with 2 fields:
+     data(k).class is a string, the name of the class k in 'classnames',
+                   converted to lower-case (e.g. 'TimeStep' becomes
+                   'timestep').
+     data(k).fields is a cell array of cell arrays of strings, each cell
+                   contains the fields' strings for one entry of class k.
+                   If there is no entry of class k then this field is an
+                   empty cell.
+
+ Class names are case insensitive.
+
+ Examples:
+   data = readIDF('SmOffPSZ.idf', 'Timestep')
+       to read only the time step, e.g. data could be
+           data = 
+               class: 'timestep'
+               fields: {{1x1 cell}}
+           with data(1).fields{1} = {'4'}
+
+   data = readIDF('SmOffPSZ.idf',...
+                   {'Timestep', 'ExternalInterface:Schedule'})
+       to read time step and all external schedule variables.
+           data = 
+           1x2 struct array with fields:
+               class
+               fields
+
+           data(2) =
+               class: 'externalinterface:schedule'
+               fields: {{1x3 cell}  {1x3 cell}}
+
+
+ (C) 2018 by Jiri Dostal (jiri.dostal@cvut.cz)
+ (C) 2012 by Truong X. Nghiem (nghiem@seas.upenn.edu)</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="mlep.html" class="code" title="">mlep</a>	MLEP Main EnergyPlus co-simulation toolbox class.</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function data = readIDF(filename, classnames)</a>
+0002 <span class="comment">% READIDF - Read and parse EnergyPlus IDF file.</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%   data = readIDF(filename) reads all data entries from an IDF</span>
+0005 <span class="comment">%   file with name filename. The output data is a structure array,</span>
+0006 <span class="comment">%   where each item is one data entry. Each item k has two fields:</span>
+0007 <span class="comment">%     data(k).class is a string of the class name</span>
+0008 <span class="comment">%     data(k).fields is a cell array of strings, each cell is a</span>
+0009 <span class="comment">%                    data field after the class name.</span>
+0010 <span class="comment">%   The order of the entries is the same as in the IDF file.</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">%   data = readIDF(filename, classnames) reads all data entries</span>
+0013 <span class="comment">%   of the classes given in classnames, from a given IDF</span>
+0014 <span class="comment">%   file. Input argument classnames is either a string or a cell</span>
+0015 <span class="comment">%   array of strings specifying the class(es) that will be</span>
+0016 <span class="comment">%   read. Data entries not of those classes will be skipped. The output</span>
+0017 <span class="comment">%   'data' is a structure array (a bit DIFFERENT from above): each item k</span>
+0018 <span class="comment">%   of the array contains ALL data entries for CLASS k in 'classnames' (not</span>
+0019 <span class="comment">%   entry k in the IDF file), with 2 fields:</span>
+0020 <span class="comment">%     data(k).class is a string, the name of the class k in 'classnames',</span>
+0021 <span class="comment">%                   converted to lower-case (e.g. 'TimeStep' becomes</span>
+0022 <span class="comment">%                   'timestep').</span>
+0023 <span class="comment">%     data(k).fields is a cell array of cell arrays of strings, each cell</span>
+0024 <span class="comment">%                   contains the fields' strings for one entry of class k.</span>
+0025 <span class="comment">%                   If there is no entry of class k then this field is an</span>
+0026 <span class="comment">%                   empty cell.</span>
+0027 <span class="comment">%</span>
+0028 <span class="comment">% Class names are case insensitive.</span>
+0029 <span class="comment">%</span>
+0030 <span class="comment">% Examples:</span>
+0031 <span class="comment">%   data = readIDF('SmOffPSZ.idf', 'Timestep')</span>
+0032 <span class="comment">%       to read only the time step, e.g. data could be</span>
+0033 <span class="comment">%           data =</span>
+0034 <span class="comment">%               class: 'timestep'</span>
+0035 <span class="comment">%               fields: {{1x1 cell}}</span>
+0036 <span class="comment">%           with data(1).fields{1} = {'4'}</span>
+0037 <span class="comment">%</span>
+0038 <span class="comment">%   data = readIDF('SmOffPSZ.idf',...</span>
+0039 <span class="comment">%                   {'Timestep', 'ExternalInterface:Schedule'})</span>
+0040 <span class="comment">%       to read time step and all external schedule variables.</span>
+0041 <span class="comment">%           data =</span>
+0042 <span class="comment">%           1x2 struct array with fields:</span>
+0043 <span class="comment">%               class</span>
+0044 <span class="comment">%               fields</span>
+0045 <span class="comment">%</span>
+0046 <span class="comment">%           data(2) =</span>
+0047 <span class="comment">%               class: 'externalinterface:schedule'</span>
+0048 <span class="comment">%               fields: {{1x3 cell}  {1x3 cell}}</span>
+0049 <span class="comment">%</span>
+0050 <span class="comment">%</span>
+0051 <span class="comment">% (C) 2018 by Jiri Dostal (jiri.dostal@cvut.cz)</span>
+0052 <span class="comment">% (C) 2012 by Truong X. Nghiem (nghiem@seas.upenn.edu)</span>
+0053 
+0054 <span class="comment">% --- Input check ---------------------------------------------------------</span>
+0055 narginchk(1, 2);
+0056 assert(ischar(filename), <span class="string">'File name must be a string.'</span>);
+0057 <span class="keyword">if</span> ~exist(<span class="string">'classnames'</span>, <span class="string">'var'</span>)
+0058     classnames = {};
+0059 <span class="keyword">else</span>
+0060     <span class="comment">% Lower case strings in classnames</span>
+0061     <span class="keyword">if</span> ischar(classnames)
+0062         classnames = {lower(classnames)};
+0063     <span class="keyword">elseif</span> iscell(classnames)
+0064         assert(all(cellfun(@ischar, classnames)),<span class="keyword">...</span>
+0065                <span class="string">'classnames must be a cell array of strings.'</span>);
+0066         classnames = cellfun(@lower, classnames,<span class="keyword">...</span>
+0067                              <span class="string">'UniformOutput'</span>, false);
+0068     <span class="keyword">else</span>
+0069         error(<span class="string">'classnames must be either a string or a cell array.'</span>);
+0070     <span class="keyword">end</span>
+0071 <span class="keyword">end</span>
+0072 
+0073 noClassnames = isempty(classnames);
+0074 nClassnames = length(classnames);
+0075 
+0076 <span class="comment">% --- Open File - preallocate ---------------------------------------------</span>
+0077 
+0078 <span class="comment">% Open the file in text mode</span>
+0079 [fid, msg] = fopen(filename, <span class="string">'rt'</span>);
+0080 <span class="keyword">if</span> fid &lt; 0
+0081     error(<span class="string">'Cannot open IDF file: %s'</span>, msg);
+0082 <span class="keyword">end</span>
+0083 
+0084 <span class="comment">% Read the file to system cache (performance)</span>
+0085 filetext = fileread(filename);
+0086 lineIdx = strfind(filetext,newline);
+0087 nLines = numel(lineIdx);
+0088 
+0089 <span class="comment">% Close the file</span>
+0090 
+0091 <span class="comment">% Read line by line and parse</span>
+0092 syntaxerr = false;  <span class="comment">% If there is a syntax error in the IDF file</span>
+0093 syntaxmsg = <span class="string">''</span>;
+0094 
+0095 <span class="comment">% Pre-allocate the data struct for faster performance and less</span>
+0096 <span class="comment">% fragmented memory</span>
+0097 <span class="keyword">if</span> noClassnames
+0098     nBlocks = 0;  <span class="comment">% Number of blocks read from file</span>
+0099     data = repmat(struct(<span class="string">'class'</span>, <span class="string">''</span>, <span class="string">'fields'</span>, {{}}), 1, 128);
+0100 <span class="keyword">else</span>
+0101     data = struct(<span class="string">'class'</span>, classnames, <span class="keyword">...</span>
+0102         <span class="string">'fields'</span>, repmat({{}}, 1, nClassnames));
+0103 <span class="keyword">end</span>
+0104 
+0105 inBlock = false;  <span class="comment">% A block is a block of code ended with ;</span>
+0106 saveBlock = false;  <span class="comment">% Is the current block being saved?</span>
+0107 
+0108 <span class="comment">% --- Parse ---------------------------------------------------------------</span>
+0109 <span class="comment">%   A field is a group of 0 or more characters not including comma,</span>
+0110 <span class="comment">%   semi-colon and exclamation; a line consists of a number of fields,</span>
+0111 <span class="comment">%   separated by either a comma or a semi-colon.</span>
+0112 
+0113 startLineIdx = 1;
+0114 <span class="keyword">for</span> iLine = 1:nLines
+0115     
+0116     <span class="comment">% Get line</span>
+0117     endLineIdx = lineIdx(iLine);
+0118     line = filetext(startLineIdx:endLineIdx);
+0119     startLineIdx = endLineIdx + 1;    
+0120     
+0121     <span class="comment">% Remove all surrounding spaces</span>
+0122     line = strtrim(line);
+0123     
+0124     <span class="comment">% If l is empty or a comment line, ignore it</span>
+0125     <span class="keyword">if</span> isempty(line) || line(1) == <span class="string">'!'</span>
+0126         <span class="keyword">continue</span>;
+0127     <span class="keyword">end</span>
+0128     
+0129     <span class="comment">% Remove the comment part if any</span>
+0130     dataEndIdx = strfind(line, <span class="string">'!'</span>);
+0131     <span class="keyword">if</span> ~isempty(dataEndIdx)
+0132         <span class="comment">% Remove from the first occurence of '!' to the end</span>
+0133         line = strtrim(line(1:dataEndIdx(1)-1));
+0134     <span class="keyword">end</span>
+0135     
+0136 
+0137     
+0138     <span class="comment">% If we are not in a block and if class names are given, we search</span>
+0139     <span class="comment">% for any class name in the current line and only parse the line if we</span>
+0140     <span class="comment">% find an interested class name.  Because we are not in a block, the</span>
+0141     <span class="comment">% class name must be at the beginning of the line.</span>
+0142     <span class="keyword">if</span> ~inBlock &amp;&amp; ~noClassnames
+0143         lowerL = lower(line);
+0144         foundClassname = false;
+0145         
+0146         <span class="keyword">for</span> k = 1:nClassnames
+0147             <span class="keyword">if</span> ~isempty(strncmp(classnames{k}, lowerL,strlength(classnames{k})))
+0148                 foundClassname = true;
+0149                 <span class="keyword">break</span>;
+0150             <span class="keyword">end</span>
+0151         <span class="keyword">end</span>
+0152         
+0153         <span class="keyword">if</span> ~foundClassname
+0154             <span class="comment">% Could not find a class name in l, then skip this line</span>
+0155             <span class="keyword">continue</span>;
+0156         <span class="keyword">end</span>
+0157     <span class="keyword">end</span>
+0158     
+0159     <span class="comment">% Get all fields in the line</span>
+0160     dataEndIdx = strfind(line, <span class="string">','</span>);
+0161     semIdx = strfind(line, <span class="string">';'</span>);        
+0162     
+0163     <span class="keyword">if</span> (isempty(dataEndIdx) &amp;&amp; isempty(semIdx)) || <span class="keyword">...</span>
+0164             (~isempty(semIdx) &amp;&amp; ~isempty(dataEndIdx) &amp;&amp; (semIdx &lt; dataEndIdx(end)))
+0165             <span class="comment">% Syntax error</span>
+0166             syntaxerr = true;
+0167             syntaxmsg = line;
+0168             <span class="keyword">break</span>;
+0169     <span class="keyword">end</span>
+0170     
+0171     <span class="comment">% Append semicolon position if any</span>
+0172     <span class="keyword">if</span> ~isempty(semIdx) 
+0173         dataEndIdx = [dataEndIdx semIdx]; <span class="comment">%#ok&lt;AGROW&gt; % When there is only &quot;;&quot; in the line</span>
+0174     <span class="keyword">end</span>
+0175 
+0176     <span class="comment">% Parse fields</span>
+0177     nFields = numel(dataEndIdx);
+0178     dataEndIdx = [0 dataEndIdx]; <span class="comment">%#ok&lt;AGROW&gt;</span>
+0179     <span class="keyword">for</span> k = 1:nFields  
+0180         field = strtrim(line(dataEndIdx(k)+1:dataEndIdx(k+1)-1));
+0181         <span class="keyword">if</span> ~inBlock
+0182             <span class="comment">% Start a new block</span>
+0183             inBlock = true;
+0184             
+0185             <span class="comment">% Only save the block if its class name is desired</span>
+0186             <span class="keyword">if</span> noClassnames
+0187                 saveBlock = true;
+0188                 nBlocks = nBlocks + 1;
+0189                 data(nBlocks).class = field;
+0190                 data(nBlocks).fields = {};
+0191             <span class="keyword">else</span>
+0192                 [saveBlock, classIdx] = <span class="keyword">...</span>
+0193                     ismember(lower(field), classnames);
+0194                 
+0195                 <span class="keyword">if</span> saveBlock
+0196                     data(classIdx).fields{end+1} = {};
+0197                 <span class="keyword">end</span>
+0198             <span class="keyword">end</span>
+0199         <span class="keyword">elseif</span> saveBlock
+0200             <span class="comment">% Continue the previous block</span>
+0201             <span class="keyword">if</span> noClassnames
+0202                 data(nBlocks).fields{end+1} = field;
+0203             <span class="keyword">else</span>
+0204                 data(classIdx).fields{end}{end+1} = field;
+0205             <span class="keyword">end</span>
+0206         <span class="keyword">end</span>
+0207     <span class="keyword">end</span>
+0208     
+0209     <span class="comment">% Close block?</span>
+0210     <span class="keyword">if</span> ~isempty(semIdx)
+0211         inBlock = false;
+0212     <span class="keyword">end</span>      
+0213 <span class="keyword">end</span>
+0214 
+0215 <span class="keyword">if</span> syntaxerr
+0216     error(<span class="string">'Syntax error: %s'</span>, syntaxmsg);
+0217 <span class="keyword">end</span>
+0218 
+0219 <span class="comment">% Free unused spaces (if any)</span>
+0220 <span class="keyword">if</span> noClassnames
+0221     data((1+nBlocks):end) = [];
+0222 <span class="keyword">end</span>
+0223 <span class="keyword">end</span></pre></div>
+<hr><address>EnergyPlus Co-simulation Toolbox &copy; 2018</address>
+</body>
+</html>

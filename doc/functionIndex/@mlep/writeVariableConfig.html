@@ -1,0 +1,146 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of writeVariableConfig</title>
+  <meta name="keywords" content="writeVariableConfig">
+  <meta name="description" content="WRITEVARIABLECONFIG - Create XML definition of the variable exchange for the BCVTB protocol.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../functionIndex.html">Home</a> &gt;  <a href="functionIndex.html">@mlep</a> &gt; writeVariableConfig.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../functionIndex.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="functionIndex.html">Index for @mlep&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>writeVariableConfig
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>WRITEVARIABLECONFIG - Create XML definition of the variable exchange for the BCVTB protocol.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>function writeVariableConfig(fullFilePath, inputTable, outputTable) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> WRITEVARIABLECONFIG - Create XML definition of the variable exchange for the BCVTB protocol.
+Create a XML file (&quot;variables.cfg&quot;) with input/output configuration to be
+used by the BCVTB protocol on both sides of the communication socket. 
+
+  Syntax: writeVariableConfig(fullFilePath, inputTable, outputTable)
+
+  Inputs:
+   fullFilePath - A path to write the configuration to. 
+     inputTable - Table containing specification of the inputs to
+                  EnergyPlus.
+    outputTable - Table containing specification of the outputs from
+                  EnergyPlus.
+
+   See also: <a href="mlep.html" class="code" title="">MLEP</a>.PARSEVARIABLESCONFIGFILE, <a href="mlep.html" class="code" title="">MLEP</a>.MAKEVARIABLESCONFIGFILE
+
+ (C) 2015, Willy Bernal (Willy.BernalHeredia@nrel.gov)
+     2018, Jiri Dostal (jiri.dostal@cvut.cz)
+ All rights reserved. Usage must follow the license given in the class
+ definition.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="mlep.html" class="code" title="">mlep</a>	MLEP Main EnergyPlus co-simulation toolbox class.</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function writeVariableConfig(fullFilePath, inputTable, outputTable)</a>
+0002 <span class="comment">% WRITEVARIABLECONFIG - Create XML definition of the variable exchange for the BCVTB protocol.</span>
+0003 <span class="comment">%Create a XML file (&quot;variables.cfg&quot;) with input/output configuration to be</span>
+0004 <span class="comment">%used by the BCVTB protocol on both sides of the communication socket.</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">%  Syntax: writeVariableConfig(fullFilePath, inputTable, outputTable)</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">%  Inputs:</span>
+0009 <span class="comment">%   fullFilePath - A path to write the configuration to.</span>
+0010 <span class="comment">%     inputTable - Table containing specification of the inputs to</span>
+0011 <span class="comment">%                  EnergyPlus.</span>
+0012 <span class="comment">%    outputTable - Table containing specification of the outputs from</span>
+0013 <span class="comment">%                  EnergyPlus.</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">%   See also: MLEP.PARSEVARIABLESCONFIGFILE, MLEP.MAKEVARIABLESCONFIGFILE</span>
+0016 <span class="comment">%</span>
+0017 <span class="comment">% (C) 2015, Willy Bernal (Willy.BernalHeredia@nrel.gov)</span>
+0018 <span class="comment">%     2018, Jiri Dostal (jiri.dostal@cvut.cz)</span>
+0019 <span class="comment">% All rights reserved. Usage must follow the license given in the class</span>
+0020 <span class="comment">% definition.</span>
+0021 
+0022 <span class="comment">% XML header</span>
+0023 docType = com.mathworks.xml.XMLUtils.createDocumentType(<span class="string">'SYSTEM'</span>, [],<span class="string">'variables.dtd'</span>);
+0024 docNode = com.mathworks.xml.XMLUtils.createDocument([], <span class="string">'BCVTB-variables'</span>, docType);
+0025 setEncoding(docNode, <span class="string">'ISO-8859-1'</span>);
+0026 setVersion(docNode, <span class="string">'1.0'</span>)
+0027 
+0028 <span class="comment">% Disclaimer</span>
+0029 disclaimer = docNode.createComment([newline, <span class="keyword">...</span>
+0030     <span class="string">'|===========================================================|'</span> newline,<span class="keyword">...</span>
+0031     <span class="string">'|           THIS FILE IS AUTOMATICALLY GENERATED            |'</span> newline,<span class="keyword">...</span>
+0032     <span class="string">'| DO NOT EDIT THIS FILE AS ANY CHANGES WILL BE OVERWRITTEN! |'</span> newline,<span class="keyword">...</span>
+0033     <span class="string">'|===========================================================|'</span> newline,<span class="keyword">...</span>
+0034     ]);
+0035 
+0036 <span class="comment">% INPUT to E+</span>
+0037 docRootNode = docNode.getDocumentElement;
+0038 insertBefore(docNode, disclaimer, docRootNode);
+0039 <span class="comment">%docRootNode.setAttribute('SYSTEM','variables.dtd');</span>
+0040 appendChild(docRootNode, docNode.createComment(<span class="string">'INPUT to E+'</span>));
+0041 
+0042 table = inputTable;
+0043 names = table.Name;
+0044 types = table.Type;
+0045 <span class="keyword">for</span> i=1:height(inputTable)
+0046     
+0047     <span class="comment">%Example: &lt;variable source=&quot;Ptolemy&quot;&gt;</span>
+0048     thisElement = createElement(docNode, <span class="string">'variable'</span>);
+0049     setAttribute(thisElement, <span class="string">'source'</span>,<span class="string">'Ptolemy'</span>);
+0050     
+0051     <span class="comment">%Example: &lt;EnergyPlus schedule=&quot;TSetHea&quot;/&gt;</span>
+0052     newElement = createElement(docNode, <span class="string">'EnergyPlus'</span>);
+0053     setAttribute(newElement, names(i),<span class="keyword">...</span><span class="comment"> % schedule, actuator, variable</span>
+0054                              types(i));   <span class="comment">% particular name</span>
+0055     
+0056     appendChild(thisElement, newElement);
+0057     appendChild(docRootNode, thisElement);
+0058 <span class="keyword">end</span>
+0059 
+0060 <span class="comment">% OUTPUT from E+</span>
+0061 docRootNode.appendChild(docNode.createComment(<span class="string">'OUTPUT from E+'</span>));
+0062 table = outputTable;
+0063 names = table.Name;
+0064 types = table.Type;
+0065 <span class="keyword">for</span> i=1:height(outputTable)
+0066     
+0067     <span class="comment">%Example: &lt;variable source=&quot;EnergyPlus&quot;&gt;</span>
+0068     thisElement = createElement(docNode, <span class="string">'variable'</span>);
+0069     setAttribute(thisElement, <span class="string">'source'</span>,<span class="string">'EnergyPlus'</span>);
+0070     
+0071     <span class="comment">%Example: &lt;EnergyPlus name=&quot;ZSF1&quot; type=&quot;Zone Air Temperature&quot;/&gt;</span>
+0072     newElement = createElement(docNode, <span class="string">'EnergyPlus'</span>);
+0073     setAttribute(newElement, <span class="string">'name'</span>,names(i)); <span class="comment">% key value ('zone name')</span>
+0074     setAttribute(newElement, <span class="string">'type'</span>,types(i)); <span class="comment">% variable name ('signal')</span>
+0075     
+0076     appendChild(thisElement, newElement);
+0077     appendChild(docRootNode, thisElement);
+0078 <span class="keyword">end</span>
+0079 
+0080 xmlwrite_r18a(fullFilePath,docNode);
+0081 <span class="keyword">end</span></pre></div>
+<hr><address>EnergyPlus Co-simulation Toolbox &copy; 2018</address>
+</body>
+</html>
