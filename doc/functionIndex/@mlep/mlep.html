@@ -106,15 +106,15 @@ Selected Properties and Methods:
 <h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
 This function calls:
 <ul style="list-style-image:url(../matlabicon.gif)">
-<li><a href="decodePacket.html" class="code" title="function [flag, timevalue, realvalues, intvalues, boolvalues] = decodePacket(packet)">decodePacket</a>	DECODEPACKET - Decode packet to data.</li><li><a href="encodeData.html" class="code" title="function packet = encodeData(vernumber, flag, timevalue, realvalues, intvalues, boolvalues)">encodeData</a>	ENCODEDATA - Encode data to packet.</li><li><a href="encodeRealData.html" class="code" title="function packet = encodeRealData(vernumber, flag, timevalue, realvalues)">encodeRealData</a>	ENCODEREALDATA Encode real value data to packet.</li><li><a href="encodeStatus.html" class="code" title="function packet = encodeStatus(vernumber, flag)">encodeStatus</a>	ENCODESTATUS - Encode status flag to a packet.</li><li><a href="mlep.html" class="code" title="">mlep</a>	MLEP Main EnergyPlus co-simulation toolbox class.</li><li><a href="readIDF.html" class="code" title="function data = readIDF(filename, classnames)">readIDF</a>	READIDF - Read and parse EnergyPlus IDF file.</li><li><a href="writeSocketConfig.html" class="code" title="function writeSocketConfig(fullFilePath, hostname, port)">writeSocketConfig</a>	WRITESOCKETCONFIG - Create socket configuration file.</li><li><a href="writeVariableConfig.html" class="code" title="function writeVariableConfig(fullFilePath, inputTable, outputTable)">writeVariableConfig</a>	WRITEVARIABLECONFIG - Create XML definition of the variable exchange for the BCVTB protocol.</li></ul>
+</ul>
 This function is called by:
 <ul style="list-style-image:url(../matlabicon.gif)">
-<li><a href="mlep.html" class="code" title="">mlep</a>	MLEP Main EnergyPlus co-simulation toolbox class.</li></ul>
+</ul>
 <!-- crossreference -->
 
 <h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
 <ul style="list-style-image:url(../matlabicon.gif)">
-<li><a href="#_sub1" class="code">function obj = mlep</a></li><li><a href="#_sub2" class="code">function initialize(obj)</a></li><li><a href="#_sub3" class="code">function start(obj)</a></li><li><a href="#_sub4" class="code">function [outputs, time] = read(obj)</a></li><li><a href="#_sub5" class="code">function write(obj, inputs, time)</a></li><li><a href="#_sub6" class="code">function stop(obj, stopSignal)</a></li><li><a href="#_sub7" class="code">function s = save(obj)</a></li><li><a href="#_sub8" class="code">function s = load(obj,s)</a></li><li><a href="#_sub9" class="code">function delete(obj)</a></li><li><a href="#_sub10" class="code">function [filename, fullpath] = validateInputFilename(file, extension)</a></li><li><a href="#_sub11" class="code">function file = browseForFile(extension)</a></li><li><a href="#_sub12" class="code">function checksum = fileChecksum(file)</a></li><li><a href="#_sub13" class="code">function set.idfFile(obj, file)</a></li><li><a href="#_sub14" class="code">function set.epwFile(obj,file)</a></li><li><a href="#_sub15" class="code">function loadSettings(obj)</a></li><li><a href="#_sub16" class="code">function runEnergyPlus(obj)</a></li><li><a href="#_sub17" class="code">function epProcListener(src,data)</a></li><li><a href="#_sub18" class="code">function loadIdf(obj)</a></li><li><a href="#_sub19" class="code">function makeVariablesConfigFile(obj)</a></li><li><a href="#_sub20" class="code">function checkIO(obj)</a></li><li><a href="#_sub21" class="code">function cleanEP(obj)</a></li><li><a href="#_sub22" class="code">function [inputTable, outputTable] = parseVariablesConfigFile(file)</a></li><li><a href="#_sub23" class="code">function killProcessByName(name, varargin)</a></li><li><a href="#_sub24" class="code">function str = epFlag2str(flag)</a></li><li><a href="#_sub25" class="code">function [ver, minor] = getEPversion(iddFullpath)</a></li><li><a href="#_sub26" class="code">function makeSocket(obj)</a></li><li><a href="#_sub27" class="code">function acceptSocket(obj)</a></li><li><a href="#_sub28" class="code">function packet = readSocket(obj)</a></li><li><a href="#_sub29" class="code">function writeSocket(obj, packet)</a></li><li><a href="#_sub30" class="code">function setRWTimeout(obj, timeout)</a></li><li><a href="#_sub31" class="code">function closeSocket(obj)</a></li><li><a href="#_sub32" class="code">function createStreams(obj)</a></li></ul>
+<li><a href="#_sub1" class="code">function obj = mlep</a></li><li><a href="#_sub2" class="code">function initialize(obj)</a></li><li><a href="#_sub3" class="code">function start(obj)</a></li><li><a href="#_sub4" class="code">function [outputs, time] = read(obj)</a></li><li><a href="#_sub5" class="code">function write(obj, inputs, time)</a></li><li><a href="#_sub6" class="code">function stop(obj, stopSignal)</a></li><li><a href="#_sub7" class="code">function s = save(obj)</a></li><li><a href="#_sub8" class="code">function s = load(obj,s)</a></li><li><a href="#_sub9" class="code">function delete(obj)</a></li><li><a href="#_sub10" class="code">function [filename, fullpath] = validateInputFilename(file, extension)</a></li><li><a href="#_sub11" class="code">function file = browseForFile(extension)</a></li><li><a href="#_sub12" class="code">function checksum = fileChecksum(file)</a></li><li><a href="#_sub13" class="code">function set.idfFile(obj, file)</a></li><li><a href="#_sub14" class="code">function set.epwFile(obj,file)</a></li><li><a href="#_sub15" class="code">function loadSettings(obj)</a></li><li><a href="#_sub16" class="code">function runEnergyPlus(obj)</a></li><li><a href="#_sub17" class="code">function epProcListener(src,data)</a></li><li><a href="#_sub18" class="code">function loadIdf(obj)</a></li><li><a href="#_sub19" class="code">function makeVariablesConfigFile(obj)</a></li><li><a href="#_sub20" class="code">function checkIO(obj)</a></li><li><a href="#_sub21" class="code">function cleanEP(obj)</a></li><li><a href="#_sub22" class="code">function [ver, minor] = getEPversion(iddFullpath)</a></li><li><a href="#_sub23" class="code">function [inputTable, outputTable] = parseVariablesConfigFile(file)</a></li><li><a href="#_sub24" class="code">function killProcessByName(name, varargin)</a></li><li><a href="#_sub25" class="code">function str = epFlag2str(flag)</a></li><li><a href="#_sub26" class="code">function makeSocket(obj)</a></li><li><a href="#_sub27" class="code">function acceptSocket(obj)</a></li><li><a href="#_sub28" class="code">function packet = readSocket(obj)</a></li><li><a href="#_sub29" class="code">function writeSocket(obj, packet)</a></li><li><a href="#_sub30" class="code">function setRWTimeout(obj, timeout)</a></li><li><a href="#_sub31" class="code">function closeSocket(obj)</a></li><li><a href="#_sub32" class="code">function createStreams(obj)</a></li></ul>
 
 <h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
 <div class="fragment"><pre>0001 <span class="comment">%MLEP Main EnergyPlus co-simulation toolbox class.</span>
@@ -213,7 +213,7 @@ This function is called by:
 0094 <span class="comment">%    2010-2015 by Willy Bernal(Willy.BernalHeredia@nrel.gov)</span>
 0095 <span class="comment">%    2018      by Jiri Dostal (jiri.dostal@cvut.cz)</span>
 0096 
-0097 classdef <a href="mlep.html" class="code" title="">mlep</a> &lt; mlepSO
+0097 classdef <a href="#_sub1" class="code" title="subfunction obj = mlep">mlep</a> &lt; mlepSO
 0098 
 0099 properties (Nontunable)
 0100     idfFile = <span class="string">''</span>;     <span class="comment">% Specify IDF file</span>
@@ -261,8 +261,8 @@ This function is called by:
 0142 <span class="keyword">end</span>
 0143 
 0144 properties (Constant, Access = private)
-0145     rwTimeout = 10000;      <span class="comment">% Timeout for sending/receiving data (0 = infinite) [ms]</span>
-0146     acceptTimeout = 6000;   <span class="comment">% Timeout for waiting for the client to connect [ms]</span>
+0145     rwTimeout = 0;      <span class="comment">% Timeout for sending/receiving data (0 = infinite) [ms]</span>
+0146     acceptTimeout = 20000;   <span class="comment">% Timeout for waiting for the client to connect [ms]</span>
 0147     port = 0;               <span class="comment">% Socket port (default 0 = any free port)</span>
 0148     host = <span class="string">''</span>;              <span class="comment">% Host name (default '' = localhost)</span>
 0149     verboseEP = true;       <span class="comment">% Print standard output of the E+ process into Matlab</span>
@@ -737,17 +737,17 @@ This function is called by:
 0618             S = <a href="#_sub8" class="code" title="subfunction s = load(obj,s)">load</a>(<span class="string">'MLEPSETTINGS.mat'</span>,<span class="string">'MLEPSETTINGS'</span>);
 0619             mlepSetting = S.MLEPSETTINGS;
 0620 
-0621         <span class="keyword">elseif</span> exist(<span class="string">'installMlep.m'</span>, <span class="string">'file'</span>)
+0621         <span class="keyword">elseif</span> exist(<span class="string">'setupMlep.m'</span>, <span class="string">'file'</span>)
 0622             <span class="comment">% Run installation script</span>
-0623             installMlep();
+0623             setupMlep();
 0624             <span class="keyword">if</span> exist(<span class="string">'MLEPSETTINGS.mat'</span>,<span class="string">'file'</span>)
 0625                 S = <a href="#_sub8" class="code" title="subfunction s = load(obj,s)">load</a>(<span class="string">'MLEPSETTINGS.mat'</span>,<span class="string">'MLEPSETTINGS'</span>);
 0626                 mlepSetting = S.MLEPSETTINGS;
 0627             <span class="keyword">else</span>
-0628                 error(<span class="string">'Error loading mlep settings. Run &quot;installMlep.m&quot; again and check that the file &quot;MLEPSETTINGS.mat&quot; is in your search path.'</span>);
+0628                 error(<span class="string">'Error loading mlep settings. Run &quot;setupMlep.m&quot; again and check that the file &quot;MLEPSETTINGS.mat&quot; is in your search path.'</span>);
 0629             <span class="keyword">end</span>
 0630         <span class="keyword">else</span>
-0631             error(<span class="string">'Error loading mlep settings. Run &quot;installMlep.m&quot; again and check that the file &quot;MLEPSETTINGS.mat&quot; is in your search path.'</span>);
+0631             error(<span class="string">'Error loading mlep settings. Run &quot;setupMlep.m&quot; again and check that the file &quot;MLEPSETTINGS.mat&quot; is in your search path.'</span>);
 0632         <span class="keyword">end</span>
 0633 
 0634         <span class="keyword">if</span> isfield(mlepSetting,<span class="string">'versionProtocol'</span>) &amp;&amp; <span class="keyword">...</span>
@@ -764,7 +764,7 @@ This function is called by:
 0645             obj.epDir = mlepSetting.eplusDir;
 0646             addpath(mlepSetting.eplusDir,mlepSetting.javaDir);
 0647         <span class="keyword">else</span>
-0648             error(<span class="string">'Error loading mlep settings. Please run &quot;installMlep.m&quot; again.'</span>);
+0648             error(<span class="string">'Error loading mlep settings. Please run &quot;setupMlep.m&quot; again.'</span>);
 0649         <span class="keyword">end</span>
 0650     <span class="keyword">end</span>
 0651 
@@ -1031,356 +1031,358 @@ This function is called by:
 0912 <span class="keyword">end</span>
 0913 
 0914 <span class="comment">%% ---------------------- Static EP methods ---------------------------</span>
-0915 methods (Access = private, Static)
-0916 
-0917     <a name="_sub21" href="#_subfunctions" class="code">function [inputTable, outputTable] = parseVariablesConfigFile(file)</a>
-0918         <span class="comment">%PARSEVARIABLESCONFIGFILE - Parse variables.cfg file for the desired I/O.</span>
-0919         <span class="comment">%</span>
-0920         <span class="comment">% Syntax:  [inputTable, outputTable] = parseVariablesConfigFile(file)</span>
-0921         <span class="comment">%</span>
-0922         <span class="comment">% Inputs:</span>
-0923         <span class="comment">%    file   - Path to the &quot;variables.cfg&quot; file.</span>
-0924         <span class="comment">%</span>
-0925         <span class="comment">% Outputs:</span>
-0926         <span class="comment">%    inputTable  - Table with parsed inputs.</span>
-0927         <span class="comment">%    outputTable - Table with parsed outputs.</span>
-0928         <span class="comment">%</span>
-0929         <span class="comment">% See also: MLEP, MLEP.MAKEVARIABLESCONFIGFILE</span>
-0930 
-0931         assert(exist(file,<span class="string">'file'</span>) &gt; 0,<span class="string">'File &quot;%s&quot; not found.'</span>);
-0932 
-0933         inputTable = table(<span class="string">'Size'</span>,[0 2],<span class="string">'VariableTypes'</span>,{<span class="string">'string'</span>,<span class="string">'string'</span>},<span class="string">'VariableNames'</span>,{<span class="string">'Name'</span>,<span class="string">'Type'</span>});
-0934         cInput = 1;
-0935         outputTable = table(<span class="string">'Size'</span>,[0 3],<span class="string">'VariableTypes'</span>,{<span class="string">'string'</span>,<span class="string">'string'</span>,<span class="string">'string'</span>},<span class="string">'VariableNames'</span>,{<span class="string">'Name'</span>,<span class="string">'Type'</span>,<span class="string">'Period'</span>});
-0936         cOutput = 1;
-0937 
-0938         <span class="comment">% Start parsing</span>
-0939         s = xml2struct(file); <span class="comment">%modified version of xml2struct allowing for not checking the .dtd file</span>
-0940         s = struct2cell(s);
-0941         vars = s{1}{2}.variable;
-0942         <span class="keyword">for</span> i = 1:numel(vars)
-0943             <span class="keyword">switch</span> vars{i}.Attributes.source
-0944                 <span class="comment">% Output from E+</span>
-0945                 <span class="keyword">case</span> <span class="string">'EnergyPlus'</span>
-0946                     out = vars{i}.EnergyPlus.Attributes;
-0947                     assert(isfield(out,<span class="string">'name'</span>) &amp;&amp; isfield(out,<span class="string">'type'</span>),<span class="string">'Fields &quot;name&quot; and/or &quot;type&quot; are not existing'</span>);
-0948                     outputTable(cOutput,:) = {out.name, out.type, <span class="string">'timestep'</span>};
-0949                     cOutput = cOutput + 1;
-0950 
-0951                     <span class="comment">% Input to E+</span>
-0952                 <span class="keyword">case</span> <span class="string">'Ptolemy'</span>
-0953                     name = fieldnames(vars{i}.EnergyPlus.Attributes);
-0954                     assert(any(contains({<span class="string">'schedule'</span>,<span class="string">'variable'</span>,<span class="string">'actuator'</span>},name)),<span class="keyword">...</span>
-0955                         <span class="string">'Unknown variable name &quot;%s&quot;.'</span>,name);
-0956                     inputTable(cInput,:) = {name{1}, vars{i}.EnergyPlus.Attributes.(name{1})};
-0957                     cInput = cInput + 1;
-0958 
-0959                     <span class="comment">% Error</span>
-0960                 <span class="keyword">otherwise</span>
-0961                     error(<span class="string">'Unknown varible source &quot;%s&quot;.'</span>,vars{i}.Attributes.source)
-0962             <span class="keyword">end</span>
-0963         <span class="keyword">end</span>
-0964     <span class="keyword">end</span>
-0965 
-0966     <a name="_sub22" href="#_subfunctions" class="code">function killProcessByName(name, varargin)</a>
-0967         <span class="comment">%KILLPROCESSBYNAME - Helper function for killing processes identified by name.</span>
-0968         <span class="comment">%</span>
-0969         <span class="comment">% Syntax:  killProcessByName(name)</span>
-0970         <span class="comment">%</span>
-0971         <span class="comment">% Inputs:</span>
-0972         <span class="comment">%         name - Name of the process to be killed.</span>
-0973         <span class="comment">% issueWarning - Notify when killing processes. (Default: true)</span>
-0974         <span class="comment">%</span>
-0975         <span class="comment">% See also: MLEP, MLEP.RUNENERGYPLUS</span>
-0976 
-0977         <span class="keyword">if</span> nargin &lt; 2
-0978             issueWarning = true;
-0979         <span class="keyword">else</span>
-0980             issueWarning = varargin{1};
-0981             assert(isa(issueWarning,<span class="string">'numeric'</span>) || isa(issueWarning,<span class="string">'logical'</span>));
-0982         <span class="keyword">end</span>
-0983 
-0984         p = System.Diagnostics.Process.GetProcessesByName(name);
-0985         <span class="keyword">for</span> i = 1:p.Length
-0986             <span class="keyword">try</span>
-0987                 dt = p(i).StartTime.Now - p(i).StartTime;
-0988                 <span class="keyword">if</span> issueWarning
-0989                     warning(<span class="string">'Found process &quot;%s&quot;, ID = %d, started %d minutes ago. Terminating the process.'</span>,name, p(i).Id, dt.Minutes);
-0990                 <span class="keyword">end</span>
-0991                 p(i).Kill();
-0992                 p(i).WaitForExit(100);
-0993             <span class="keyword">catch</span>
-0994                 warning(<span class="string">'Couldn''t kill process &quot;%s&quot; with ID = %d.'</span>,name,p(i).Id);
-0995                 <span class="comment">% process was terminating or can't be terminated - deal with it</span>
-0996                 <span class="comment">% process has already exited - might be able to let this one go</span>
-0997             <span class="keyword">end</span>
-0998         <span class="keyword">end</span>
-0999     <span class="keyword">end</span>
-1000 
-1001     <a name="_sub23" href="#_subfunctions" class="code">function str = epFlag2str(flag)</a>
-1002         <span class="comment">%EPFLAG2STR - Transform numeric flag returned by EnergyPlus into a human readable form.</span>
-1003         <span class="comment">% Flag    Description:</span>
-1004         <span class="comment">% +1    Simulation reached end time.</span>
-1005         <span class="comment">% 0        Normal operation.</span>
-1006         <span class="comment">% -1    Simulation terminated due to an unspecified error.</span>
-1007         <span class="comment">% -10    Simulation terminated due to an error during the initialization.</span>
-1008         <span class="comment">% -20    Simulation terminated due to an error during the time integration.%</span>
-1009         <span class="comment">%</span>
-1010         <span class="comment">% Syntax:  str = epFlag2str(flag)</span>
-1011         <span class="comment">%</span>
-1012         <span class="comment">% Inputs:</span>
-1013         <span class="comment">%         flag - EnergyPlus return flag.</span>
-1014         <span class="comment">%</span>
-1015         <span class="comment">% Outputs:</span>
-1016         <span class="comment">%          str - Flag description.</span>
-1017         <span class="comment">%</span>
-1018         <span class="comment">% See also: MLEP, MLEP.RUNENERGYPLUS</span>
-1019 
-1020         <span class="keyword">switch</span> flag
-1021             <span class="keyword">case</span> 1
-1022                 str = <span class="string">'Simulation reached end time. If this is not intended, extend the simulation period in the IDF file'</span>;
-1023             <span class="keyword">case</span> 0
-1024                 str = <span class="string">'Normal operation'</span>;
-1025             <span class="keyword">case</span> -1
-1026                 str = <span class="string">'Simulation terminated due to an unspecified runtime error'</span>;
-1027             <span class="keyword">case</span> -10
-1028                 str = <span class="string">'Simulation terminated due to an error during initialization'</span>;
-1029             <span class="keyword">case</span> -20
-1030                 str = <span class="string">'Simulation terminated due to an error during the time integration'</span>;
-1031             <span class="keyword">otherwise</span>
-1032                 str = sprintf(<span class="string">'Unknown flag &quot;%d&quot;.'</span>,flag);
-1033         <span class="keyword">end</span>
-1034     <span class="keyword">end</span>
-1035 
-1036     <a name="_sub24" href="#_subfunctions" class="code">function [ver, minor] = getEPversion(iddFullpath)</a>
-1037         <span class="comment">%GETEPVERSION - Get EnergyPlus version out of Energy+.idd file</span>
-1038         <span class="comment">%</span>
-1039         <span class="comment">%  Syntax:  [ver, minor] = getEPversion(iddFullpath)</span>
+0915 methods (Access = public, Static, Hidden)
+0916      <a name="_sub21" href="#_subfunctions" class="code">function [ver, minor] = getEPversion(iddFullpath)</a>
+0917         <span class="comment">%GETEPVERSION - Get EnergyPlus version out of Energy+.idd file</span>
+0918         <span class="comment">%</span>
+0919         <span class="comment">%  Syntax:  [ver, minor] = getEPversion(iddFullpath)</span>
+0920         <span class="comment">%</span>
+0921         <span class="comment">%  Inputs:</span>
+0922         <span class="comment">%  iddFullpath - Path to a .IDD file.</span>
+0923         <span class="comment">%</span>
+0924         <span class="comment">% Outputs:</span>
+0925         <span class="comment">%          ver - EnergyPlus version (e.g. 8.9)</span>
+0926         <span class="comment">%        minor - Last digit of the EnergyPlus version (e.g. 0)</span>
+0927         <span class="comment">%</span>
+0928         <span class="comment">% See also: MLEP, MLEP.INITIALIZE</span>
+0929 
+0930         <span class="comment">% Parse EnergyPlus version out of Energy+.idd file</span>
+0931         assert(exist(iddFullpath,<span class="string">'file'</span>)&gt;0,<span class="string">'Could not find &quot;%s&quot; file. Please correct the file path or make sure it is on the Matlab search path.'</span>,iddFullpath);
+0932         <span class="comment">% Read file</span>
+0933         fid = fopen(iddFullpath);
+0934         <span class="keyword">if</span> fid == -1, error(<span class="string">'Cannot open file &quot;%s&quot;.'</span>, iddFullpath); <span class="keyword">end</span>
+0935         str = fread(fid,100,<span class="string">'*char'</span>)';
+0936         fclose(fid);
+0937         <span class="comment">% Parse the string</span>
+0938         expr = <span class="string">'(?&gt;^!IDD_Version\s+|\G)(\d{1}\.\d{1}|\G)\.(\d+)'</span>;
+0939         tokens = regexp(str,expr,<span class="string">'tokens'</span>);
+0940         assert(~isempty(tokens)&amp;&amp;size(tokens{1},2)==2,<span class="string">' Error while parsing &quot;%s&quot; for EnergyPlus version'</span>,iddFullpath);
+0941         ver = tokens{1}{1};
+0942         minor = tokens{1}{2};
+0943      <span class="keyword">end</span>
+0944 <span class="keyword">end</span>
+0945 
+0946 methods (Access = private, Static)
+0947 
+0948     <a name="_sub22" href="#_subfunctions" class="code">function [inputTable, outputTable] = parseVariablesConfigFile(file)</a>
+0949         <span class="comment">%PARSEVARIABLESCONFIGFILE - Parse variables.cfg file for the desired I/O.</span>
+0950         <span class="comment">%</span>
+0951         <span class="comment">% Syntax:  [inputTable, outputTable] = parseVariablesConfigFile(file)</span>
+0952         <span class="comment">%</span>
+0953         <span class="comment">% Inputs:</span>
+0954         <span class="comment">%    file   - Path to the &quot;variables.cfg&quot; file.</span>
+0955         <span class="comment">%</span>
+0956         <span class="comment">% Outputs:</span>
+0957         <span class="comment">%    inputTable  - Table with parsed inputs.</span>
+0958         <span class="comment">%    outputTable - Table with parsed outputs.</span>
+0959         <span class="comment">%</span>
+0960         <span class="comment">% See also: MLEP, MLEP.MAKEVARIABLESCONFIGFILE</span>
+0961 
+0962         assert(exist(file,<span class="string">'file'</span>) &gt; 0,<span class="string">'File &quot;%s&quot; not found.'</span>);
+0963 
+0964         inputTable = table(<span class="string">'Size'</span>,[0 2],<span class="string">'VariableTypes'</span>,{<span class="string">'string'</span>,<span class="string">'string'</span>},<span class="string">'VariableNames'</span>,{<span class="string">'Name'</span>,<span class="string">'Type'</span>});
+0965         cInput = 1;
+0966         outputTable = table(<span class="string">'Size'</span>,[0 3],<span class="string">'VariableTypes'</span>,{<span class="string">'string'</span>,<span class="string">'string'</span>,<span class="string">'string'</span>},<span class="string">'VariableNames'</span>,{<span class="string">'Name'</span>,<span class="string">'Type'</span>,<span class="string">'Period'</span>});
+0967         cOutput = 1;
+0968 
+0969         <span class="comment">% Start parsing</span>
+0970         s = xml2struct(file); <span class="comment">%modified version of xml2struct allowing for not checking the .dtd file</span>
+0971         s = struct2cell(s);
+0972         vars = s{1}{2}.variable;
+0973         <span class="keyword">for</span> i = 1:numel(vars)
+0974             <span class="keyword">switch</span> vars{i}.Attributes.source
+0975                 <span class="comment">% Output from E+</span>
+0976                 <span class="keyword">case</span> <span class="string">'EnergyPlus'</span>
+0977                     out = vars{i}.EnergyPlus.Attributes;
+0978                     assert(isfield(out,<span class="string">'name'</span>) &amp;&amp; isfield(out,<span class="string">'type'</span>),<span class="string">'Fields &quot;name&quot; and/or &quot;type&quot; are not existing'</span>);
+0979                     outputTable(cOutput,:) = {out.name, out.type, <span class="string">'timestep'</span>};
+0980                     cOutput = cOutput + 1;
+0981 
+0982                     <span class="comment">% Input to E+</span>
+0983                 <span class="keyword">case</span> <span class="string">'Ptolemy'</span>
+0984                     name = fieldnames(vars{i}.EnergyPlus.Attributes);
+0985                     assert(any(contains({<span class="string">'schedule'</span>,<span class="string">'variable'</span>,<span class="string">'actuator'</span>},name)),<span class="keyword">...</span>
+0986                         <span class="string">'Unknown variable name &quot;%s&quot;.'</span>,name);
+0987                     inputTable(cInput,:) = {name{1}, vars{i}.EnergyPlus.Attributes.(name{1})};
+0988                     cInput = cInput + 1;
+0989 
+0990                     <span class="comment">% Error</span>
+0991                 <span class="keyword">otherwise</span>
+0992                     error(<span class="string">'Unknown varible source &quot;%s&quot;.'</span>,vars{i}.Attributes.source)
+0993             <span class="keyword">end</span>
+0994         <span class="keyword">end</span>
+0995     <span class="keyword">end</span>
+0996 
+0997     <a name="_sub23" href="#_subfunctions" class="code">function killProcessByName(name, varargin)</a>
+0998         <span class="comment">%KILLPROCESSBYNAME - Helper function for killing processes identified by name.</span>
+0999         <span class="comment">%</span>
+1000         <span class="comment">% Syntax:  killProcessByName(name)</span>
+1001         <span class="comment">%</span>
+1002         <span class="comment">% Inputs:</span>
+1003         <span class="comment">%         name - Name of the process to be killed.</span>
+1004         <span class="comment">% issueWarning - Notify when killing processes. (Default: true)</span>
+1005         <span class="comment">%</span>
+1006         <span class="comment">% See also: MLEP, MLEP.RUNENERGYPLUS</span>
+1007 
+1008         <span class="keyword">if</span> nargin &lt; 2
+1009             issueWarning = true;
+1010         <span class="keyword">else</span>
+1011             issueWarning = varargin{1};
+1012             assert(isa(issueWarning,<span class="string">'numeric'</span>) || isa(issueWarning,<span class="string">'logical'</span>));
+1013         <span class="keyword">end</span>
+1014 
+1015         p = System.Diagnostics.Process.GetProcessesByName(name);
+1016         <span class="keyword">for</span> i = 1:p.Length
+1017             <span class="keyword">try</span>
+1018                 dt = p(i).StartTime.Now - p(i).StartTime;
+1019                 <span class="keyword">if</span> issueWarning
+1020                     warning(<span class="string">'Found process &quot;%s&quot;, ID = %d, started %d minutes ago. Terminating the process.'</span>,name, p(i).Id, dt.Minutes);
+1021                 <span class="keyword">end</span>
+1022                 p(i).Kill();
+1023                 p(i).WaitForExit(100);
+1024             <span class="keyword">catch</span>
+1025                 warning(<span class="string">'Couldn''t kill process &quot;%s&quot; with ID = %d.'</span>,name,p(i).Id);
+1026                 <span class="comment">% process was terminating or can't be terminated - deal with it</span>
+1027                 <span class="comment">% process has already exited - might be able to let this one go</span>
+1028             <span class="keyword">end</span>
+1029         <span class="keyword">end</span>
+1030     <span class="keyword">end</span>
+1031 
+1032     <a name="_sub24" href="#_subfunctions" class="code">function str = epFlag2str(flag)</a>
+1033         <span class="comment">%EPFLAG2STR - Transform numeric flag returned by EnergyPlus into a human readable form.</span>
+1034         <span class="comment">% Flag    Description:</span>
+1035         <span class="comment">% +1    Simulation reached end time.</span>
+1036         <span class="comment">% 0        Normal operation.</span>
+1037         <span class="comment">% -1    Simulation terminated due to an unspecified error.</span>
+1038         <span class="comment">% -10    Simulation terminated due to an error during the initialization.</span>
+1039         <span class="comment">% -20    Simulation terminated due to an error during the time integration.%</span>
 1040         <span class="comment">%</span>
-1041         <span class="comment">%  Inputs:</span>
-1042         <span class="comment">%  iddFullpath - Path to a .IDD file.</span>
-1043         <span class="comment">%</span>
-1044         <span class="comment">% Outputs:</span>
-1045         <span class="comment">%          ver - EnergyPlus version (e.g. 8.9)</span>
-1046         <span class="comment">%        minor - Last digit of the EnergyPlus version (e.g. 0)</span>
-1047         <span class="comment">%</span>
-1048         <span class="comment">% See also: MLEP, MLEP.INITIALIZE</span>
-1049 
-1050         <span class="comment">% Parse EnergyPlus version out of Energy+.idd file</span>
-1051         assert(exist(iddFullpath,<span class="string">'file'</span>)&gt;0,<span class="string">'Could not find &quot;%s&quot; file. Please correct the file path or make sure it is on the Matlab search path.'</span>,iddFullpath);
-1052         <span class="comment">% Read file</span>
-1053         fid = fopen(iddFullpath);
-1054         <span class="keyword">if</span> fid == -1, error(<span class="string">'Cannot open file &quot;%s&quot;.'</span>, iddFullpath); <span class="keyword">end</span>
-1055         str = fread(fid,100,<span class="string">'*char'</span>)';
-1056         fclose(fid);
-1057         <span class="comment">% Parse the string</span>
-1058         expr = <span class="string">'(?&gt;^!IDD_Version\s+|\G)(\d{1}\.\d{1}|\G)\.(\d+)'</span>;
-1059         tokens = regexp(str,expr,<span class="string">'tokens'</span>);
-1060         assert(~isempty(tokens)&amp;&amp;size(tokens{1},2)==2,<span class="string">' Error while parsing &quot;%s&quot; for EnergyPlus version'</span>,iddFullpath);
-1061         ver = tokens{1}{1};
-1062         minor = tokens{1}{2};
-1063     <span class="keyword">end</span>
-1064 
-1065     <span class="comment">% Parse IDF file</span>
-1066     data = <a href="readIDF.html" class="code" title="function data = readIDF(filename, classnames)">readIDF</a>(filename, classnames);
-1067 <span class="keyword">end</span>
-1068 
-1069 <span class="comment">%% ======================= Communication ==============================</span>
-1070 methods (Access = private)
-1071 
-1072     <a name="_sub25" href="#_subfunctions" class="code">function makeSocket(obj)</a>
-1073         <span class="comment">%MAKESOCKET - Create or reuse java socket.</span>
-1074         <span class="comment">%Open a socket on a free port on localhost. Make the</span>
-1075         <span class="comment">%&quot;socket.cfg&quot; file to be read by BCVTB.</span>
-1076         <span class="comment">%</span>
-1077         <span class="comment">%  Syntax:  makeSocket(obj)</span>
+1041         <span class="comment">% Syntax:  str = epFlag2str(flag)</span>
+1042         <span class="comment">%</span>
+1043         <span class="comment">% Inputs:</span>
+1044         <span class="comment">%         flag - EnergyPlus return flag.</span>
+1045         <span class="comment">%</span>
+1046         <span class="comment">% Outputs:</span>
+1047         <span class="comment">%          str - Flag description.</span>
+1048         <span class="comment">%</span>
+1049         <span class="comment">% See also: MLEP, MLEP.RUNENERGYPLUS</span>
+1050 
+1051         <span class="keyword">switch</span> flag
+1052             <span class="keyword">case</span> 1
+1053                 str = <span class="string">'Simulation reached end time. If this is not intended, extend the simulation period in the IDF file'</span>;
+1054             <span class="keyword">case</span> 0
+1055                 str = <span class="string">'Normal operation'</span>;
+1056             <span class="keyword">case</span> -1
+1057                 str = <span class="string">'Simulation terminated due to an unspecified runtime error'</span>;
+1058             <span class="keyword">case</span> -10
+1059                 str = <span class="string">'Simulation terminated due to an error during initialization'</span>;
+1060             <span class="keyword">case</span> -20
+1061                 str = <span class="string">'Simulation terminated due to an error during the time integration'</span>;
+1062             <span class="keyword">otherwise</span>
+1063                 str = sprintf(<span class="string">'Unknown flag &quot;%d&quot;.'</span>,flag);
+1064         <span class="keyword">end</span>
+1065     <span class="keyword">end</span>
+1066 
+1067     <span class="comment">% Parse IDF file</span>
+1068     data = readIDF(filename, classnames);
+1069 <span class="keyword">end</span>
+1070 
+1071 <span class="comment">%% ======================= Communication ==============================</span>
+1072 methods (Access = private)
+1073 
+1074     <a name="_sub25" href="#_subfunctions" class="code">function makeSocket(obj)</a>
+1075         <span class="comment">%MAKESOCKET - Create or reuse java socket.</span>
+1076         <span class="comment">%Open a socket on a free port on localhost. Make the</span>
+1077         <span class="comment">%&quot;socket.cfg&quot; file to be read by BCVTB.</span>
 1078         <span class="comment">%</span>
-1079         <span class="comment">% See also: INITIALIZE, ACCEPTSOCKET</span>
-1080 
-1081         <span class="keyword">if</span> isempty(obj.serverSocket) || <span class="keyword">...</span>
-1082                 (~isempty(obj.serverSocket) &amp;&amp; isClosed(obj.serverSocket))
-1083             <span class="comment">% If any error happens, this function will be interrupted</span>
-1084             <span class="keyword">if</span> ~isempty(obj.host)
-1085                 serversock = java.net.ServerSocket(obj.port, 0, obj.host);
-1086                 hostname = obj.host;
-1087             <span class="keyword">else</span>
-1088                 serversock = java.net.ServerSocket(obj.port);
-1089 
-1090                 <span class="comment">% The following get local host address for incoming connections even</span>
-1091                 <span class="comment">% from outside, but it seems unstable, sometimes E+ cannot connect.</span>
-1092                 <span class="comment">% hostname = char(getHostName(java.net.InetAddress.getLocalHost));</span>
-1093 
-1094                 <span class="comment">% The following get address that can only be used locally on this</span>
-1095                 <span class="comment">% machine, no connections from outside. It may be more stable.</span>
-1096                 hostname = char(getHostName(javaMethod(<span class="string">'getLocalHost'</span>, <span class="string">'java.net.InetAddress'</span>)));
-1097                 <span class="comment">%hostname = char(getHostAddress(serversock.getInetAddress));</span>
-1098             <span class="keyword">end</span>
-1099             obj.serverSocket = serversock;
-1100         <span class="keyword">else</span>
-1101             hostname = char(getHostName(javaMethod(<span class="string">'getLocalHost'</span>, <span class="string">'java.net.InetAddress'</span>)));
-1102             <span class="comment">%hostname = char(getHostAddress(serversock.getInetAddress));</span>
-1103         <span class="keyword">end</span>
-1104 
-1105         <span class="comment">% Set accept timeout</span>
-1106         setSoTimeout(obj.serverSocket, obj.acceptTimeout);
-1107 
-1108         <span class="comment">% Write socket config file</span>
-1109         mlep.writeSocketConfig(<span class="keyword">...</span>
-1110             fullfile(obj.outputDirFullPath,obj.socketConfigFileName),<span class="keyword">...</span>
-1111             hostname,<span class="keyword">...</span>
-1112             obj.serverSocket.getLocalPort);
-1113 
-1114         obj.commSocket = [];
-1115     <span class="keyword">end</span>
-1116 
-1117     <a name="_sub26" href="#_subfunctions" class="code">function acceptSocket(obj)</a>
-1118         <span class="comment">%ACCEPTSOCKET - Establish connection by accepting socket.</span>
-1119         <span class="comment">%</span>
-1120         <span class="comment">%  Syntax:  acceptSocket(obj)</span>
+1079         <span class="comment">%  Syntax:  makeSocket(obj)</span>
+1080         <span class="comment">%</span>
+1081         <span class="comment">% See also: INITIALIZE, ACCEPTSOCKET</span>
+1082 
+1083         <span class="keyword">if</span> isempty(obj.serverSocket) || <span class="keyword">...</span>
+1084                 (~isempty(obj.serverSocket) &amp;&amp; isClosed(obj.serverSocket))
+1085             <span class="comment">% If any error happens, this function will be interrupted</span>
+1086             <span class="keyword">if</span> ~isempty(obj.host)
+1087                 serversock = java.net.ServerSocket(obj.port, 0, obj.host);
+1088                 hostname = obj.host;
+1089             <span class="keyword">else</span>
+1090                 serversock = java.net.ServerSocket(obj.port);
+1091 
+1092                 <span class="comment">% The following get local host address for incoming connections even</span>
+1093                 <span class="comment">% from outside, but it seems unstable, sometimes E+ cannot connect.</span>
+1094                 <span class="comment">% hostname = char(getHostName(java.net.InetAddress.getLocalHost));</span>
+1095 
+1096                 <span class="comment">% The following get address that can only be used locally on this</span>
+1097                 <span class="comment">% machine, no connections from outside. It may be more stable.</span>
+1098                 hostname = char(getHostName(javaMethod(<span class="string">'getLocalHost'</span>, <span class="string">'java.net.InetAddress'</span>)));
+1099                 <span class="comment">%hostname = char(getHostAddress(serversock.getInetAddress));</span>
+1100             <span class="keyword">end</span>
+1101             obj.serverSocket = serversock;
+1102         <span class="keyword">else</span>
+1103             hostname = char(getHostName(javaMethod(<span class="string">'getLocalHost'</span>, <span class="string">'java.net.InetAddress'</span>)));
+1104             <span class="comment">%hostname = char(getHostAddress(serversock.getInetAddress));</span>
+1105         <span class="keyword">end</span>
+1106 
+1107         <span class="comment">% Set accept timeout</span>
+1108         setSoTimeout(obj.serverSocket, obj.acceptTimeout);
+1109 
+1110         <span class="comment">% Write socket config file</span>
+1111         mlep.writeSocketConfig(<span class="keyword">...</span>
+1112             fullfile(obj.outputDirFullPath,obj.socketConfigFileName),<span class="keyword">...</span>
+1113             hostname,<span class="keyword">...</span>
+1114             obj.serverSocket.getLocalPort);
+1115 
+1116         obj.commSocket = [];
+1117     <span class="keyword">end</span>
+1118 
+1119     <a name="_sub26" href="#_subfunctions" class="code">function acceptSocket(obj)</a>
+1120         <span class="comment">%ACCEPTSOCKET - Establish connection by accepting socket.</span>
 1121         <span class="comment">%</span>
-1122         <span class="comment">% See also: MAKESOCKET, READSOCKET, WRITESOCKET, CLOSESOCKET,</span>
-1123         <span class="comment">%           READ, WRITE</span>
-1124 
-1125         assert(obj.isInitialized, <span class="string">'Initialize the object first.'</span>);
-1126         <span class="comment">% Accept Socket</span>
-1127         obj.commSocket = accept(obj.serverSocket);
-1128 
-1129         <span class="comment">% Create Streams</span>
-1130         <span class="keyword">if</span> isjava(obj.commSocket)
-1131             <span class="comment">% Create writer and reader</span>
-1132             <span class="keyword">if</span> obj.rwTimeout ~= 0
-1133                 setSoTimeout(obj.commSocket,obj.rwTimeout);
-1134             <span class="keyword">end</span>
-1135             obj.createStreams;
-1136             obj.isRunning = true;
-1137         <span class="keyword">else</span>
-1138             error(<span class="string">'Could not establish socket connection. Check that the EnergyPlus process is running and socket configuration.'</span>);
-1139         <span class="keyword">end</span>
-1140     <span class="keyword">end</span>
-1141 
-1142     <a name="_sub27" href="#_subfunctions" class="code">function packet = readSocket(obj)</a>
-1143         <span class="comment">%READSOCKET - Read from socket.</span>
-1144         <span class="comment">%</span>
-1145         <span class="comment">%  Syntax: packet = readSocket(obj)</span>
+1122         <span class="comment">%  Syntax:  acceptSocket(obj)</span>
+1123         <span class="comment">%</span>
+1124         <span class="comment">% See also: MAKESOCKET, READSOCKET, WRITESOCKET, CLOSESOCKET,</span>
+1125         <span class="comment">%           READ, WRITE</span>
+1126 
+1127         assert(obj.isInitialized, <span class="string">'Initialize the object first.'</span>);
+1128         <span class="comment">% Accept Socket</span>
+1129         obj.commSocket = accept(obj.serverSocket);
+1130 
+1131         <span class="comment">% Create Streams</span>
+1132         <span class="keyword">if</span> isjava(obj.commSocket)
+1133             <span class="comment">% Create writer and reader</span>
+1134             <span class="keyword">if</span> obj.rwTimeout ~= 0
+1135                 setSoTimeout(obj.commSocket,obj.rwTimeout);
+1136             <span class="keyword">end</span>
+1137             obj.createStreams;
+1138             obj.isRunning = true;
+1139         <span class="keyword">else</span>
+1140             error(<span class="string">'Could not establish socket connection. Check that the EnergyPlus process is running and socket configuration.'</span>);
+1141         <span class="keyword">end</span>
+1142     <span class="keyword">end</span>
+1143 
+1144     <a name="_sub27" href="#_subfunctions" class="code">function packet = readSocket(obj)</a>
+1145         <span class="comment">%READSOCKET - Read from socket.</span>
 1146         <span class="comment">%</span>
-1147         <span class="comment">% Outputs: packet - One line of data obtained from the socket.</span>
+1147         <span class="comment">%  Syntax: packet = readSocket(obj)</span>
 1148         <span class="comment">%</span>
-1149         <span class="comment">% See also: MAKESOCKET, WRITESOCKET</span>
-1150 
-1151         <span class="keyword">if</span> obj.isRunning
-1152             packet = char(readLine(obj.reader));
-1153             <span class="comment">%                 packet = char(readLine(java.io.BufferedReader(java.io.InputStreamReader(obj.commSocket.getInputStream))));</span>
-1154         <span class="keyword">else</span>
-1155             error(<span class="string">'Co-simulation is not running.'</span>);
-1156         <span class="keyword">end</span>
-1157     <span class="keyword">end</span>
-1158 
-1159     <a name="_sub28" href="#_subfunctions" class="code">function writeSocket(obj, packet)</a>
-1160         <span class="comment">%WRITESOCKET - Write data to socket.</span>
-1161         <span class="comment">%</span>
-1162         <span class="comment">%  Syntax: writeSocket(obj, packet)</span>
+1149         <span class="comment">% Outputs: packet - One line of data obtained from the socket.</span>
+1150         <span class="comment">%</span>
+1151         <span class="comment">% See also: MAKESOCKET, WRITESOCKET</span>
+1152 
+1153         <span class="keyword">if</span> obj.isRunning
+1154             packet = char(readLine(obj.reader));
+1155             <span class="comment">%                 packet = char(readLine(java.io.BufferedReader(java.io.InputStreamReader(obj.commSocket.getInputStream))));</span>
+1156         <span class="keyword">else</span>
+1157             error(<span class="string">'Co-simulation is not running.'</span>);
+1158         <span class="keyword">end</span>
+1159     <span class="keyword">end</span>
+1160 
+1161     <a name="_sub28" href="#_subfunctions" class="code">function writeSocket(obj, packet)</a>
+1162         <span class="comment">%WRITESOCKET - Write data to socket.</span>
 1163         <span class="comment">%</span>
-1164         <span class="comment">%  Inputs: packet - Data to be sent to the socket.</span>
+1164         <span class="comment">%  Syntax: writeSocket(obj, packet)</span>
 1165         <span class="comment">%</span>
-1166         <span class="comment">% See also: MAKESOCKET, READSOCKET</span>
-1167 
-1168         <span class="keyword">if</span> obj.isRunning
-1169             <span class="comment">%                 wr = java.io.BufferedWriter(java.io.OutputStreamWriter(obj.commSocket.getOutputStream));</span>
-1170             <span class="comment">%                 wr.write(sprintf('%s\n', packet));</span>
-1171             <span class="comment">%                 wr.flush;</span>
-1172             assert(numel(packet) &lt; 21621);
-1173             <a href="#_sub5" class="code" title="subfunction write(obj, inputs, time)">write</a>(obj.writer,[packet mlep.CRChar]);
-1174             flush(obj.writer);
-1175         <span class="keyword">else</span>
-1176             error(<span class="string">'Co-simulation is not running.'</span>);
-1177         <span class="keyword">end</span>
-1178     <span class="keyword">end</span>
-1179 
-1180     <a name="_sub29" href="#_subfunctions" class="code">function setRWTimeout(obj, timeout)</a>
-1181         <span class="comment">%SETRWTIMEOUT - Set read/write timeout for the communication socket.</span>
-1182         <span class="comment">%</span>
-1183         <span class="comment">%  Syntax: setRWTimeout(obj, value)</span>
+1166         <span class="comment">%  Inputs: packet - Data to be sent to the socket.</span>
+1167         <span class="comment">%</span>
+1168         <span class="comment">% See also: MAKESOCKET, READSOCKET</span>
+1169 
+1170         <span class="keyword">if</span> obj.isRunning
+1171             <span class="comment">%                 wr = java.io.BufferedWriter(java.io.OutputStreamWriter(obj.commSocket.getOutputStream));</span>
+1172             <span class="comment">%                 wr.write(sprintf('%s\n', packet));</span>
+1173             <span class="comment">%                 wr.flush;</span>
+1174             assert(numel(packet) &lt; 21621);
+1175             <a href="#_sub5" class="code" title="subfunction write(obj, inputs, time)">write</a>(obj.writer,[packet mlep.CRChar]);
+1176             flush(obj.writer);
+1177         <span class="keyword">else</span>
+1178             error(<span class="string">'Co-simulation is not running.'</span>);
+1179         <span class="keyword">end</span>
+1180     <span class="keyword">end</span>
+1181 
+1182     <a name="_sub29" href="#_subfunctions" class="code">function setRWTimeout(obj, timeout)</a>
+1183         <span class="comment">%SETRWTIMEOUT - Set read/write timeout for the communication socket.</span>
 1184         <span class="comment">%</span>
-1185         <span class="comment">%  Inputs: timeout - Communication timeout in [ms].</span>
+1185         <span class="comment">%  Syntax: setRWTimeout(obj, value)</span>
 1186         <span class="comment">%</span>
-1187         <span class="comment">% See also: MAKESOCKET, READ, WRITE</span>
-1188 
-1189         <span class="keyword">if</span> timeout &lt; 0, timeout = 0; <span class="keyword">end</span>
-1190         obj.rwTimeout = timeout;
-1191         <span class="keyword">if</span> isjava(obj.commSocket)
-1192             setSoTimeout(obj.commSocket,timeout);
-1193             obj.createStreams;  <span class="comment">% Recreate reader and writer streams</span>
-1194         <span class="keyword">end</span>
-1195     <span class="keyword">end</span>
-1196 
-1197     <a name="_sub30" href="#_subfunctions" class="code">function closeSocket(obj)</a>
-1198         <span class="comment">%CLOSESOCKET - Close socket connection.</span>
-1199         <span class="comment">%</span>
-1200         <span class="comment">%  Syntax: closeSocket(obj)</span>
+1187         <span class="comment">%  Inputs: timeout - Communication timeout in [ms].</span>
+1188         <span class="comment">%</span>
+1189         <span class="comment">% See also: MAKESOCKET, READ, WRITE</span>
+1190 
+1191         <span class="keyword">if</span> timeout &lt; 0, timeout = 0; <span class="keyword">end</span>
+1192         obj.rwTimeout = timeout;
+1193         <span class="keyword">if</span> isjava(obj.commSocket)
+1194             setSoTimeout(obj.commSocket,timeout);
+1195             obj.createStreams;  <span class="comment">% Recreate reader and writer streams</span>
+1196         <span class="keyword">end</span>
+1197     <span class="keyword">end</span>
+1198 
+1199     <a name="_sub30" href="#_subfunctions" class="code">function closeSocket(obj)</a>
+1200         <span class="comment">%CLOSESOCKET - Close socket connection.</span>
 1201         <span class="comment">%</span>
-1202         <span class="comment">% See also: MAKESOCKET, READ, WRITE</span>
-1203 
-1204         <span class="keyword">if</span> isjava(obj.serverSocket)
-1205             close(obj.serverSocket);
-1206         <span class="keyword">end</span>
-1207 
-1208         <span class="comment">% Close commSocket</span>
-1209         <span class="keyword">if</span> isjava(obj.commSocket)
-1210             close(obj.commSocket);
-1211         <span class="keyword">end</span>
-1212 
-1213         <span class="comment">% Close Reader</span>
-1214         <span class="keyword">if</span> isjava(obj.reader)
-1215             close(obj.reader);
-1216         <span class="keyword">end</span>
-1217 
-1218         <span class="comment">% Close Writer</span>
-1219         <span class="keyword">if</span> isjava(obj.writer)
-1220             close(obj.writer);
-1221         <span class="keyword">end</span>
-1222 
-1223         <span class="comment">% Delete Java Objects</span>
-1224         obj.reader = [];
-1225         obj.writer = [];
-1226         obj.serverSocket = [];
-1227         obj.commSocket = [];
-1228     <span class="keyword">end</span>
-1229 
-1230     <a name="_sub31" href="#_subfunctions" class="code">function createStreams(obj)</a>
-1231         <span class="comment">%CREATESTREAMS - Prepare Java I/O streams.</span>
-1232         <span class="comment">%</span>
-1233         <span class="comment">%  Syntax: createStreams(obj)</span>
+1202         <span class="comment">%  Syntax: closeSocket(obj)</span>
+1203         <span class="comment">%</span>
+1204         <span class="comment">% See also: MAKESOCKET, READ, WRITE</span>
+1205 
+1206         <span class="keyword">if</span> isjava(obj.serverSocket)
+1207             close(obj.serverSocket);
+1208         <span class="keyword">end</span>
+1209 
+1210         <span class="comment">% Close commSocket</span>
+1211         <span class="keyword">if</span> isjava(obj.commSocket)
+1212             close(obj.commSocket);
+1213         <span class="keyword">end</span>
+1214 
+1215         <span class="comment">% Close Reader</span>
+1216         <span class="keyword">if</span> isjava(obj.reader)
+1217             close(obj.reader);
+1218         <span class="keyword">end</span>
+1219 
+1220         <span class="comment">% Close Writer</span>
+1221         <span class="keyword">if</span> isjava(obj.writer)
+1222             close(obj.writer);
+1223         <span class="keyword">end</span>
+1224 
+1225         <span class="comment">% Delete Java Objects</span>
+1226         obj.reader = [];
+1227         obj.writer = [];
+1228         obj.serverSocket = [];
+1229         obj.commSocket = [];
+1230     <span class="keyword">end</span>
+1231 
+1232     <a name="_sub31" href="#_subfunctions" class="code">function createStreams(obj)</a>
+1233         <span class="comment">%CREATESTREAMS - Prepare Java I/O streams.</span>
 1234         <span class="comment">%</span>
-1235         <span class="comment">% See also: READ, WRITE</span>
-1236 
-1237         obj.writer = java.io.BufferedWriter(java.io.OutputStreamWriter(getOutputStream(obj.commSocket)));
-1238         obj.reader = java.io.BufferedReader(java.io.InputStreamReader(getInputStream(obj.commSocket)));
-1239     <span class="keyword">end</span>
-1240 <span class="keyword">end</span>
-1241 
-1242 <span class="comment">%% ---------------- Static communication methods ----------------------</span>
-1243 methods (Access = private, Hidden, Static)
-1244     <span class="comment">% Decode BCVTB protocol packet</span>
-1245     [flag, timevalue, realvalues, intvalues, boolvalues] = <a href="decodePacket.html" class="code" title="function [flag, timevalue, realvalues, intvalues, boolvalues] = decodePacket(packet)">decodePacket</a>(packet);
-1246 
-1247     <span class="comment">% Encode BCVTB protocol packet</span>
-1248     packet = <a href="encodeData.html" class="code" title="function packet = encodeData(vernumber, flag, timevalue, realvalues, intvalues, boolvalues)">encodeData</a>(vernumber, flag, timevalue, realvalues, intvalues, boolvalues);
-1249 
-1250     <span class="comment">% Encode BCVTB protocol packet with only real values</span>
-1251     packet = <a href="encodeRealData.html" class="code" title="function packet = encodeRealData(vernumber, flag, timevalue, realvalues)">encodeRealData</a>(vernumber, flag, timevalue, realvalues);
-1252 
-1253     <span class="comment">% Encode BCVTB protocol simulation status</span>
-1254     packet = <a href="encodeStatus.html" class="code" title="function packet = encodeStatus(vernumber, flag)">encodeStatus</a>(vernumber, flag);
-1255 
-1256     <span class="comment">% Make socket configuration file</span>
-1257     <a href="writeSocketConfig.html" class="code" title="function writeSocketConfig(fullFilePath, hostname, port)">writeSocketConfig</a>(fullFilePath, hostname, port);
-1258 
-1259     <span class="comment">% Make co-simulation I/O configuration file</span>
-1260     <a href="writeVariableConfig.html" class="code" title="function writeVariableConfig(fullFilePath, inputTable, outputTable)">writeVariableConfig</a>(fullFilePath, inputTable, outputTable);
-1261 <span class="keyword">end</span>
-1262 
+1235         <span class="comment">%  Syntax: createStreams(obj)</span>
+1236         <span class="comment">%</span>
+1237         <span class="comment">% See also: READ, WRITE</span>
+1238 
+1239         obj.writer = java.io.BufferedWriter(java.io.OutputStreamWriter(getOutputStream(obj.commSocket)));
+1240         obj.reader = java.io.BufferedReader(java.io.InputStreamReader(getInputStream(obj.commSocket)));
+1241     <span class="keyword">end</span>
+1242 <span class="keyword">end</span>
+1243 
+1244 <span class="comment">%% ---------------- Static communication methods ----------------------</span>
+1245 methods (Access = private, Hidden, Static)
+1246     <span class="comment">% Decode BCVTB protocol packet</span>
+1247     [flag, timevalue, realvalues, intvalues, boolvalues] = decodePacket(packet);
+1248 
+1249     <span class="comment">% Encode BCVTB protocol packet</span>
+1250     packet = encodeData(vernumber, flag, timevalue, realvalues, intvalues, boolvalues);
+1251 
+1252     <span class="comment">% Encode BCVTB protocol packet with only real values</span>
+1253     packet = encodeRealData(vernumber, flag, timevalue, realvalues);
+1254 
+1255     <span class="comment">% Encode BCVTB protocol simulation status</span>
+1256     packet = encodeStatus(vernumber, flag);
+1257 
+1258     <span class="comment">% Make socket configuration file</span>
+1259     writeSocketConfig(fullFilePath, hostname, port);
+1260 
+1261     <span class="comment">% Make co-simulation I/O configuration file</span>
+1262     writeVariableConfig(fullFilePath, inputTable, outputTable);
 1263 <span class="keyword">end</span>
-1264</pre></div>
+1264 
+1265 <span class="keyword">end</span>
+1266</pre></div>
 <hr><address>EnergyPlus Co-simulation Toolbox &copy; 2018</address>
 </body>
 </html>

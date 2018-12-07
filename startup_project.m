@@ -1,14 +1,19 @@
-
 % clear command window
 clc
 
+projectName = 'EnergyPlus co-simulation toolbox';
+matprojFilename = 'matproj.mat';
+
 %% Load state of the editor
-disp('============== Loading editor state ================================')
+
 proj = slproject.getCurrentProject;
 projRootFolder = proj.RootFolder;
-filename = 'matproj.mat';
-matproj('LOAD', fullfile(projRootFolder, filename));
-disp('============== Project opened ======================================')
+if strcmpi(proj.Name,projectName)
+    
+    disp('============== Loading editor state ================================')
+    matproj('LOAD', fullfile(projRootFolder, matprojFilename));
+end
+disp('===================== Project opened ===================================')
 
 
 %% Functions

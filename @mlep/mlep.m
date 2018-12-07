@@ -142,8 +142,8 @@ properties (Access = private)
 end
 
 properties (Constant, Access = private)
-    rwTimeout = 10000;      % Timeout for sending/receiving data (0 = infinite) [ms]
-    acceptTimeout = 6000;   % Timeout for waiting for the client to connect [ms]
+    rwTimeout = 0;      % Timeout for sending/receiving data (0 = infinite) [ms]
+    acceptTimeout = 20000;   % Timeout for waiting for the client to connect [ms]
     port = 0;               % Socket port (default 0 = any free port)
     host = '';              % Host name (default '' = localhost)
     verboseEP = true;       % Print standard output of the E+ process into Matlab
@@ -618,17 +618,17 @@ methods (Access = private)
             S = load('MLEPSETTINGS.mat','MLEPSETTINGS');
             mlepSetting = S.MLEPSETTINGS;
 
-        elseif exist('installMlep.m', 'file')
+        elseif exist('setupMlep.m', 'file')
             % Run installation script
-            installMlep();
+            setupMlep();
             if exist('MLEPSETTINGS.mat','file')
                 S = load('MLEPSETTINGS.mat','MLEPSETTINGS');
                 mlepSetting = S.MLEPSETTINGS;
             else
-                error('Error loading mlep settings. Run "installMlep.m" again and check that the file "MLEPSETTINGS.mat" is in your search path.');
+                error('Error loading mlep settings. Run "setupMlep.m" again and check that the file "MLEPSETTINGS.mat" is in your search path.');
             end
         else
-            error('Error loading mlep settings. Run "installMlep.m" again and check that the file "MLEPSETTINGS.mat" is in your search path.');
+            error('Error loading mlep settings. Run "setupMlep.m" again and check that the file "MLEPSETTINGS.mat" is in your search path.');
         end
 
         if isfield(mlepSetting,'versionProtocol') && ...
@@ -645,7 +645,7 @@ methods (Access = private)
             obj.epDir = mlepSetting.eplusDir;
             addpath(mlepSetting.eplusDir,mlepSetting.javaDir);
         else
-            error('Error loading mlep settings. Please run "installMlep.m" again.');
+            error('Error loading mlep settings. Please run "setupMlep.m" again.');
         end
     end
 
@@ -912,6 +912,37 @@ methods (Access = private)
 end
 
 %% ---------------------- Static EP methods ---------------------------
+methods (Access = public, Static, Hidden)
+     function [ver, minor] = getEPversion(iddFullpath)
+        %GETEPVERSION - Get EnergyPlus version out of Energy+.idd file
+        %
+        %  Syntax:  [ver, minor] = getEPversion(iddFullpath)
+        %
+        %  Inputs:
+        %  iddFullpath - Path to a .IDD file.
+        %
+        % Outputs:
+        %          ver - EnergyPlus version (e.g. 8.9)
+        %        minor - Last digit of the EnergyPlus version (e.g. 0)
+        %
+        % See also: MLEP, MLEP.INITIALIZE
+
+        % Parse EnergyPlus version out of Energy+.idd file
+        assert(exist(iddFullpath,'file')>0,'Could not find "%s" file. Please correct the file path or make sure it is on the Matlab search path.',iddFullpath);
+        % Read file
+        fid = fopen(iddFullpath);
+        if fid == -1, error('Cannot open file "%s".', iddFullpath); end
+        str = fread(fid,100,'*char')';
+        fclose(fid);
+        % Parse the string
+        expr = '(?>^!IDD_Version\s+|\G)(\d{1}\.\d{1}|\G)\.(\d+)';
+        tokens = regexp(str,expr,'tokens');
+        assert(~isempty(tokens)&&size(tokens{1},2)==2,' Error while parsing "%s" for EnergyPlus version',iddFullpath);
+        ver = tokens{1}{1};
+        minor = tokens{1}{2};
+     end
+end
+
 methods (Access = private, Static)
 
     function [inputTable, outputTable] = parseVariablesConfigFile(file)
@@ -1031,35 +1062,6 @@ methods (Access = private, Static)
             otherwise
                 str = sprintf('Unknown flag "%d".',flag);
         end
-    end
-
-    function [ver, minor] = getEPversion(iddFullpath)
-        %GETEPVERSION - Get EnergyPlus version out of Energy+.idd file
-        %
-        %  Syntax:  [ver, minor] = getEPversion(iddFullpath)
-        %
-        %  Inputs:
-        %  iddFullpath - Path to a .IDD file.
-        %
-        % Outputs:
-        %          ver - EnergyPlus version (e.g. 8.9)
-        %        minor - Last digit of the EnergyPlus version (e.g. 0)
-        %
-        % See also: MLEP, MLEP.INITIALIZE
-
-        % Parse EnergyPlus version out of Energy+.idd file
-        assert(exist(iddFullpath,'file')>0,'Could not find "%s" file. Please correct the file path or make sure it is on the Matlab search path.',iddFullpath);
-        % Read file
-        fid = fopen(iddFullpath);
-        if fid == -1, error('Cannot open file "%s".', iddFullpath); end
-        str = fread(fid,100,'*char')';
-        fclose(fid);
-        % Parse the string
-        expr = '(?>^!IDD_Version\s+|\G)(\d{1}\.\d{1}|\G)\.(\d+)';
-        tokens = regexp(str,expr,'tokens');
-        assert(~isempty(tokens)&&size(tokens{1},2)==2,' Error while parsing "%s" for EnergyPlus version',iddFullpath);
-        ver = tokens{1}{1};
-        minor = tokens{1}{2};
     end
 
     % Parse IDF file

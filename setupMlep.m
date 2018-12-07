@@ -1,5 +1,5 @@
-function installMlep
-%INSTALLMLEP Install mlep tool. 
+function setupMlep
+%SETUPMLEP Setup mlep tool. 
 %Search for all necessary paths and save them for future use. The script is
 %ran automatically, but run it manually when settings need to be changed.
 %The settings are stored to the toolbox directory into a MLEPSETTINGS.mat
@@ -112,8 +112,10 @@ MLEPSETTINGS.homeDir = homePath;        %#ok<STRNU>
 
 % Save mlep settings
 save(fullfile(homePath,'MLEPSETTINGS.mat'),'MLEPSETTINGS');
+disp(' ------------------------------------------------------------- ');
+disp('|    EnergyPlus Co-simulation Toolbox setup successfull       |');
+disp(' ------------------------------------------------------------- ');
 
-disp('================ mlep installation succesful ================');
 
 %% === Helper functions ===================================================
 % EnergyPlus folder validation function

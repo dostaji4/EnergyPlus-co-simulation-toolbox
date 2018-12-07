@@ -33,7 +33,7 @@
 <h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
 This function calls:
 <ul style="list-style-image:url(../matlabicon.gif)">
-<li><a href="vector2Bus_clbk.html" class="code" title="function vector2Bus_clbk(block, type)">vector2Bus_clbk</a>	VECTOR2BUS_CLBK - Callback functions.</li></ul>
+</ul>
 This function is called by:
 <ul style="list-style-image:url(../matlabicon.gif)">
 </ul>
@@ -102,7 +102,7 @@ This function is called by:
 0056 <span class="comment">% The bus objects are available now. Set them into all necessary blocks.</span>
 0057 <span class="comment">% Set Vector2Bus</span>
 0058 set_param([block <span class="string">'/Vector to Bus'</span>], <span class="string">'busType'</span>, [<span class="string">'Bus: '</span> outputBusName]);
-0059 <a href="vector2Bus_clbk.html" class="code" title="function vector2Bus_clbk(block, type)">vector2Bus_clbk</a>([block <span class="string">'/Vector to Bus'</span>],<span class="string">'popup'</span>);
+0059 vector2Bus_clbk([block <span class="string">'/Vector to Bus'</span>],<span class="string">'popup'</span>);
 0060 
 0061 <span class="comment">% Set output</span>
 0062 set_param([block <span class="string">'/Out'</span>], <span class="string">'OutDataTypeStr'</span>, [<span class="string">'Bus: '</span> outputBusName]);

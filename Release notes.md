@@ -5,8 +5,14 @@
  * EPW source block for Simulink.
  * Bus objects may be stored in a DataDictionary to avoid its residency in 
    the base workspace.
-   
+
 ## [unreleased] 
+
+### Added    
+
+### Changed
+  
+## [v1.2.1] 
 
 ### Added   
  * Better documentation

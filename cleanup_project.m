@@ -1,6 +1,9 @@
 function cleanup_project(varargin)
-disp('-------------- Running project cleanup -----------------------------')
 
+projectName = 'EnergyPlus co-simulation toolbox';
+matprojFilename = 'matproj.mat';
+
+disp('-------------- Running project cleanup -----------------------------')
 verbose = 1;
 
 % Project Root
@@ -26,10 +29,12 @@ end
 
 
 %% Save state of the editor
-disp('--- Saving editor state ---')
-filename = 'matproj.mat';
-matproj('SAVE', fullfile(projRootFolder, filename));
-disp('Done');
+if exist('proj','var') > 0 && strcmpi(proj.Name, projectName)
+    disp('--- Saving editor state ---')    
+    matproj('SAVE', fullfile(projRootFolder, matprojFilename));
+    disp('Done');
+end
+
 
 %% Remove generated files
 disp('--- Removing generated files ---')
