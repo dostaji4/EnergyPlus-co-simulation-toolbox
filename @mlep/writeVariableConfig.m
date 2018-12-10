@@ -1,5 +1,5 @@
 function writeVariableConfig(fullFilePath, inputTable, outputTable)
-% WRITEVARIABLECONFIG - Create XML definition of the variable exchange for the BCVTB protocol.
+% WRITEVARIABLECONFIG Create XML definition of the variable exchange for the BCVTB protocol.
 %Create a XML file ("variables.cfg") with input/output configuration to be
 %used by the BCVTB protocol on both sides of the communication socket. 
 %

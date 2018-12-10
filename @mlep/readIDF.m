@@ -1,5 +1,5 @@
 function data = readIDF(filename, classnames)
-% READIDF - Read and parse EnergyPlus IDF file.
+% READIDF Read and parse EnergyPlus IDF file.
 %
 %   data = readIDF(filename) reads all data entries from an IDF
 %   file with name filename. The output data is a structure array,

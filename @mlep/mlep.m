@@ -99,7 +99,7 @@ classdef mlep < mlepSO
 properties (Nontunable)
     idfFile = '';     % Specify IDF file
     epwFile = '';     % Specify EPW file
-    workDir = '';          % Working directory (default is the directory of the IDF file)
+    workDir = '';     % Working directory (default is the directory of the IDF file)
     outputDirName = 'eplusout'; % EnergyPlus output directory (created under working folder)
 end
 
@@ -143,7 +143,7 @@ end
 
 properties (Constant, Access = private)
     rwTimeout = 0;      % Timeout for sending/receiving data (0 = infinite) [ms]
-    acceptTimeout = 20000;   % Timeout for waiting for the client to connect [ms]
+    acceptTimeout = 30000;   % Timeout for waiting for the client to connect [ms]
     port = 0;               % Socket port (default 0 = any free port)
     host = '';              % Host name (default '' = localhost)
     verboseEP = true;       % Print standard output of the E+ process into Matlab

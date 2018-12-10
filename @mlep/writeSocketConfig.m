@@ -1,5 +1,5 @@
 function writeSocketConfig(fullFilePath, hostname, port)
-% WRITESOCKETCONFIG - Create socket configuration file. 
+% WRITESOCKETCONFIG Create socket configuration file. 
 %Create a BCVTB communication configuration file. 
 %
 %  Syntax: writeSocketConfig(fullFilePath, serverSocket, hostname)

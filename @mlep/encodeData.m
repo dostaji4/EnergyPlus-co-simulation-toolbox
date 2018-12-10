@@ -1,5 +1,5 @@
 function packet = encodeData(vernumber, flag, timevalue, realvalues, intvalues, boolvalues)
-%ENCODEDATA - Encode data to packet.
+%ENCODEDATA Encode data to packet.
 %Encode data to a packet (a string) that can be sent to the external
 %program.  The packet format follows the BCVTB co-simulation
 %communication protocol.

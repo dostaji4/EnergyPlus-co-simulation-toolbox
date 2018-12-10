@@ -5,12 +5,15 @@
  * EPW source block for Simulink.
  * Bus objects may be stored in a DataDictionary to avoid its residency in 
    the base workspace.
+ * epJSON
 
 ## [unreleased] 
 
 ### Added    
 
 ### Changed
+ * renamed installMlep to setupMlep. Solved a critical bug therein (v1.2.1.1).
+ * 
   
 ## [v1.2.1] 
 

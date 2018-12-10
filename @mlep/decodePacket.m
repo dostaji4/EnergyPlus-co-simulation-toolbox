@@ -1,5 +1,5 @@
 function [flag, timevalue, realvalues, intvalues, boolvalues] = decodePacket(packet)
-%DECODEPACKET - Decode packet to data.
+%DECODEPACKET Decode packet to data.
 %Decode a packet (a string) to data.  The packet format follows the
 %BCVTB co-simulation communication protocol .
 %

@@ -1,5 +1,5 @@
 function packet = encodeStatus(vernumber, flag)
-%ENCODESTATUS - Encode status flag to a packet.
+%ENCODESTATUS Encode status flag to a packet.
 %Encode a status flag to a packet (a string) that can be sent to the
 %external program.  This function is a special version of
 %mlepEncodeData in which only a flag (non-zero) is transferred. 
