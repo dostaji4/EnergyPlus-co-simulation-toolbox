@@ -114,6 +114,9 @@ classdef mlepSO < matlab.System &...
             [~, idfFullpath] = mlep.validateInputFilename(obj.idfFullFilename, 'IDF');
             isReinitialize = mlepSO.requiresReinitialization(idfFullpath);
             
+            %%%% !!!!!!! DISABLE PROPERTY LOADING UNTIL TESTED
+            isReinitialize = true;
+            
             if isReinitialize
                 % Run initialization
                 obj.initialize;
@@ -166,14 +169,19 @@ classdef mlepSO < matlab.System &...
                 inputs = input;
             end
             
-            outtime = obj.getCurrentTime;
-            if isempty(outtime), outtime = obj.time; end
+            outtime = obj.getCurrentTime;            
+            if isempty(outtime), outtime = obj.time; end            
+            dt = outtime - obj.time;
+            if dt ~= 0
+                warning('Discrepancy in simulation time detected. EnergyPlus is %d sec. ahead.',dt);
+            end
+            
             
             % Write data
             obj.write(inputs, outtime);
         end
         
-        function output = outputImpl(obj,~)
+        function output = outputImpl(obj,input)
             % Read data from EnergyPlus and output them as a collumn vector
             
             assert(obj.isRunning, 'EnergyPlusCosim: Co-simulation process in not running.');

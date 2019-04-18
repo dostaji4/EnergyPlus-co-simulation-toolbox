@@ -13,7 +13,10 @@
 
 ### Changed
  * renamed installMlep to setupMlep. Solved a critical bug therein (v1.2.1.1).
- * 
+ * disabled loading of object properties - until needed or better tested.
+ * updated examples to EnergyPlus version 9.1.0
+ * disabled IDF simulation with mismatching EnergyPlus version. 
+ * updated simulink models to Matlab r18b. It can still be simulated by older Matlab (enable this in Simulink preferences).
   
 ## [v1.2.1] 
 
@@ -41,7 +44,7 @@ Structure of the main Simulink library was changed to support signal names longe
 ### Added
  * Bus objects now support signal names longer than 63 characters.
  * Simulation and initialization are now considerably faster. 
- * **Vector to Bus block**. Make a bus out of a apprapriately sized vector.
+ * **Vector to Bus block**. Make a bus out of a appropriately sized vector.
  * Browse buttons in the Simulink block mask.
  
 ### Changed

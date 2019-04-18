@@ -142,8 +142,8 @@ properties (Access = private)
 end
 
 properties (Constant, Access = private)
-    rwTimeout = 0;      % Timeout for sending/receiving data (0 = infinite) [ms]
-    acceptTimeout = 30000;   % Timeout for waiting for the client to connect [ms]
+    rwTimeout = 60000;      % Timeout for sending/receiving data (0 = infinite) [ms]
+    acceptTimeout = 10000;   % Timeout for waiting for the client to connect [ms]
     port = 0;               % Socket port (default 0 = any free port)
     host = '';              % Host name (default '' = localhost)
     verboseEP = true;       % Print standard output of the E+ process into Matlab
@@ -199,9 +199,14 @@ methods
 
         % Check IDF version
         if ~strcmp(obj.versionEnergyPlus,obj.idfData.version{1}{1})
-            warning('IDF file of version "%s" is being simulated by an EnergyPlus of version "%s".\n This may cause severe errors in the EnergyPlus simulation.\n Use IDFVersionUpdate utility to upgrade the file (<EP_dir>/PreProcess/IDFVersionUpdater/..).',...
+            error('IDF file of version "%s" is being simulated by an EnergyPlus of version "%s".\n This may cause severe errors in the EnergyPlus simulation.\n Use IDFVersionUpdate utility to upgrade the file (<EP_dir>/PreProcess/IDFVersionUpdater/..).',...
                 obj.idfData.version{1}{1}, obj.versionEnergyPlus);
         end
+        
+        % Check Timestep (must an integer)
+        assert( mod(obj.timestep,60)==0 && obj.timestep/60 >= 1 && obj.timestep/60 <= 60,...
+            'Illegal timestep ''%2.1f min.''found. Please correct the Timestep in the IDF file to result in an integer number of minutes between samples.',...
+            obj.timestep/60);
 
         % Set working directory
         if isempty(obj.workDir)
