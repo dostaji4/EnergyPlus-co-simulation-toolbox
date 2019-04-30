@@ -120,7 +120,7 @@ classdef mlepSO < matlab.System &...
             if isReinitialize
                 % Run initialization
                 obj.initialize;
-                
+            
                 if isSimulink
                     % Save the data
                     dataStoreBlock = mlepSO.getDataStoreBlock;
@@ -389,6 +389,10 @@ classdef mlepSO < matlab.System &...
         end
         
         function saveToUserData(obj, block)
+            
+            % Disable warning
+            warning('off','Simulink:Commands:SetParamLinkChangeWarn');
+            
             % --- Save initialized data to block ------------------
             if isempty(gcb), return, end
             
@@ -417,6 +421,9 @@ classdef mlepSO < matlab.System &...
             % Save object into the block UserData
             set_param(block,'UserData',outUserData);
             set_param(block,'UserDataPersistent',1);
+            
+            % Enable warning            
+            warning('on','Simulink:Commands:SetParamLinkChangeWarn');
         end
         
     end

@@ -143,7 +143,7 @@ end
 
 properties (Constant, Access = private)
     rwTimeout = 60000;      % Timeout for sending/receiving data (0 = infinite) [ms]
-    acceptTimeout = 10000;   % Timeout for waiting for the client to connect [ms]
+    acceptTimeout = 20000;   % Timeout for waiting for the client to connect [ms]
     port = 0;               % Socket port (default 0 = any free port)
     host = '';              % Host name (default '' = localhost)
     verboseEP = true;       % Print standard output of the E+ process into Matlab
@@ -703,10 +703,10 @@ methods (Access = private)
 
         function epProcListener(src,data)
             fprintf('\n');
-            fprintf('%s: EnergyPlus process stopped with exitValue = %d.\n',src.id,src.exitValue);
+            fprintf('%s: EnergyPlus process stopped. ',src.id);
 
             if src.exitValue ~= 1
-                fprintf('Event name %s\n',data.EventName);
+                fprintf('Event name: "%s".\n',data.EventName);
                 fprintf('\n');
                 if ~isempty(src.stdout)
                     fprintf('StdOut of the process:\n\n');
@@ -716,6 +716,8 @@ methods (Access = private)
                     fprintf('StdErr of the process:\n\n');
                     processManager.printStream(src.stdout,'StdErr',80);
                 end
+            else
+                fprintf('\n');
             end
 
         end
@@ -764,12 +766,12 @@ methods (Access = private)
         end
 
         % List Actuators
-        cInput = height(inTable);
+        cInput = height(inTable);        
         for i = 1:size(actuator,2)
             if ~size(actuator,1)
                 break;
             end
-            inTable(cInput+i) = {'actuator',...   % Name
+            inTable(cInput+i,:) = {'actuator',...   % Name
                 actuator{i}{1}}; % Type
         end
 
@@ -779,7 +781,7 @@ methods (Access = private)
             if ~size(obj.idfData.variable,1)
                 break;
             end
-            inTable(cInput+i) = {'variable',...   % Name
+            inTable(cInput+i,:) = {'variable',...   % Name
                 variable{i}{1}}; % Type
         end
         obj.idfData.inputTable = inTable ;
