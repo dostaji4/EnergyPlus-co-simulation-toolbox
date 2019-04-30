@@ -5,9 +5,15 @@
  * EPW source block for Simulink.
  * Bus objects may be stored in a DataDictionary to avoid its residency in 
    the base workspace.
- * epJSON
+ * epJSON (out = jsondecode(fileread(".epJSON")))
 
 ## [unreleased] 
+
+### Added    
+
+### Changed
+
+## [v1.2.1] 
 
 ### Added    
 
