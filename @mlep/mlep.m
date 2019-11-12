@@ -125,12 +125,13 @@ end
 
 properties (SetAccess=private, Transient)
     isInitialized = false;  % Initialization flag
-    isRunning = false;      % Is co-simulation running?
+    isRunning = false;      % Is co-simulation running?    
 end
 
 properties (Access = private)
     workDirPrivate;         % Private property mimicking the public nontunable workDir
     isValidateInputFilename = 1; % Turn on input filename validation
+    isPtolemyConfigured;    % Used in IDF checking
 end
 
 properties (Access = private)
@@ -741,11 +742,14 @@ methods (Access = private)
             'ExternalInterface:Actuator',...
             'ExternalInterface:Variable',...
             'Output:Variable',...
-            'Version'});
+            'Version',...
+            'ExternalInterface'});
+        
         obj.idfData.timeStep = str2double(char(in(1).fields{1}));
         obj.timestep = 60/obj.idfData.timeStep * 60; %[s];
         obj.idfData.runPeriod = (str2double(char(in(2).fields{1}(4))) - str2double(char(in(2).fields{1}(2))))*31 + 1 + str2double(char(in(2).fields{1}(5))) - str2double(char(in(2).fields{1}(3)));
-        schedule = in(3).fields;
+        obj.isPtolemyConfigured = ~isempty(in(8).fields) && strcmp(in(8).fields{1}{1},'PtolemyServer');
+        schedule = in(3).fields;        
         obj.idfData.schedule = schedule;
         actuator = in(4).fields;
         obj.idfData.actuator = actuator;
@@ -853,7 +857,11 @@ methods (Access = private)
         % See also: INITIALIZE, MAKEVARIABLESCONFIGFILE
 
         % Check variables.cfg config for wrong entries
-        assert(~isempty(obj.inputTable) && ~isempty(obj.outputTable), 'Run parsing of the variables.cfg file first.');
+        assert(obj.isPtolemyConfigured, '"ExternalInterface" object of the IDF file must be set to "PtolemyServer".');
+        if isempty(obj.inputTable)
+            warning('There are input variables configured in the IDF file.');
+        end
+        assert(~isempty(obj.outputTable), 'Run parsing of the variables.cfg file first.');
 
         % Check validity of user specified variables.cfg file
         if obj.isUserVarFile
