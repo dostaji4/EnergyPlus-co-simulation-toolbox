@@ -15,4 +15,4 @@ blkStruct.MaskDisplay = 'disp(''mlep Library Blocks'');';
 % Library information for Simulink library browser
 blkStruct.Browser = struct();
 blkStruct.Browser.Library = 'mlepLibrary';
-blkStruct.Browser.Name    = 'mlep Blocks';
+blkStruct.Browser.Name    = 'EnergyPlus co-simulation toolbox';

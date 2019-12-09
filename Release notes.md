@@ -13,7 +13,18 @@
 
 ### Changed
 
-## [v1.2.1] 
+## [v1.2.3] 
+
+### Added
+* Added help link to the EP communication block.
+ * Added checking for ExternalInterface being set to PtolemyServer
+
+### Changed
+ * Updated IDF files to EnergyPlus version 9.2.
+ * Fixed a bug when reading ExternalInterface:Actuator inputs.  
+ * Fixed function index link in the documentation. 
+ 
+## [v1.2.2] 
 
 ### Added    
 

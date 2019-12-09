@@ -19,7 +19,7 @@
 		Getting Started
 		</tocitem>
 		
-		<tocitem target="/functionIndex/functionIndex.html" image="HelpIcon.FUNCTION"> 
+		<tocitem target="./functionIndex/functionIndex.html" image="HelpIcon.FUNCTION"> 
 		Function Index
 		</tocitem>
 		

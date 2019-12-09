@@ -292,7 +292,7 @@ classdef mlepSO < matlab.System &...
             signames = obj.outputSigName;
             for i = 1:obj.nOut
                 elems{i} = cell(1,6);
-                elems{i}{1} = signames{i};   %Element name
+                elems{i}{1} = signames{i};  %Element name
                 elems{i}{2} = 1;            %Dimensions
                 elems{i}{3} = 'double';     %Data type
                 elems{i}{4} = Ts;           %Sample time

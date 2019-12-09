@@ -146,18 +146,18 @@ classdef processManager < handle
          p = inputParser;
          p.KeepUnmatched = false;
          p.FunctionName = 'processManager constructor';
-         p.addParamValue('id','');
-         p.addParamValue('command','');
-         p.addParamValue('workingDir','');
-         p.addParamValue('envp','');
-         p.addParamValue('printStdout',true);
-         p.addParamValue('printStderr',true);
-         p.addParamValue('keepStdout',false);
-         p.addParamValue('keepStderr',false);
-         p.addParamValue('wrap',80);
-         p.addParamValue('autoStart',true);
-         p.addParamValue('verbose',false);
-         p.addParamValue('pollInterval',0.05);
+         p.addParameter('id','');
+         p.addParameter('command','');
+         p.addParameter('workingDir','');
+         p.addParameter('envp','');
+         p.addParameter('printStdout',true);
+         p.addParameter('printStderr',true);
+         p.addParameter('keepStdout',false);
+         p.addParameter('keepStderr',false);
+         p.addParameter('wrap',80);
+         p.addParameter('autoStart',true);
+         p.addParameter('verbose',false);
+         p.addParameter('pollInterval',0.05);
          p.parse(varargin{:});
          
          if ~usejava('jvm')
