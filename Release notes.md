@@ -1,17 +1,21 @@
 # Release notes
 
-## [todo]
- * Add support for EnergyManagementSystem:OutputVariable
+## [todo] 
  * EPW source block for Simulink.
  * Bus objects may be stored in a DataDictionary to avoid its residency in 
    the base workspace.
  * epJSON (out = jsondecode(fileread(".epJSON")))
+ * Get rid of Simulink in Matlab only simulations.
 
 ## [unreleased] 
 
 ### Added    
+ * Support for "EnergyManagementSystem:OutputVariable".
 
 ### Changed
+ * Increased "acceptTimeout" to 20 seconds to accomodate for simulations with
+   extensive pre-simulation computation. Lower to value for IDF troubleshooting.
+
 
 ## [v1.2.3] 
 
@@ -23,6 +27,7 @@
  * Updated IDF files to EnergyPlus version 9.2.
  * Fixed a bug when reading ExternalInterface:Actuator inputs.  
  * Fixed function index link in the documentation. 
+ * Used Upgrade advisor and corrected some "not recommended" commands. Mainly in the third party tools.
  
 ## [v1.2.2] 
 

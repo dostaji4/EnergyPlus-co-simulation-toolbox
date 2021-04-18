@@ -734,70 +734,95 @@ methods (Access = private)
         %
         % See also: INITIALIZE
 
-        % Parse IDF
-        in = mlep.readIDF(obj.idfFullFilename,...
-            {'Timestep',...
+        classes = {'Timestep',...
             'RunPeriod',...
             'ExternalInterface:Schedule',...
             'ExternalInterface:Actuator',...
             'ExternalInterface:Variable',...
             'Output:Variable',...
+            'EnergyManagementSystem:OutputVariable',...
             'Version',...
-            'ExternalInterface'});
+            'ExternalInterface'};
         
-        obj.idfData.timeStep = str2double(char(in(1).fields{1}));
+        % Parse IDF
+        in = mlep.readIDF(obj.idfFullFilename,classes);
+        
+        timestep_ = in(matches(classes,"Timestep"));
+        obj.idfData.timeStep = str2double(char(timestep_.fields{1}));
         obj.timestep = 60/obj.idfData.timeStep * 60; %[s];
-        obj.idfData.runPeriod = (str2double(char(in(2).fields{1}(4))) - str2double(char(in(2).fields{1}(2))))*31 + 1 + str2double(char(in(2).fields{1}(5))) - str2double(char(in(2).fields{1}(3)));
-        obj.isPtolemyConfigured = ~isempty(in(8).fields) && strcmp(in(8).fields{1}{1},'PtolemyServer');
-        schedule = in(3).fields;        
-        obj.idfData.schedule = schedule;
-        actuator = in(4).fields;
-        obj.idfData.actuator = actuator;
-        variable = in(5).fields;
-        obj.idfData.variable = variable;
-        output = in(6).fields;
-        obj.idfData.output = output;
-        obj.idfData.version = in(7).fields;
+        
+        runPeriod_ = in(matches(classes,"RunPeriod"));
+        obj.idfData.runPeriod = (str2double(char(runPeriod_.fields{1}(4))) - str2double(char(runPeriod_.fields{1}(2))))*31 + 1 + str2double(char(runPeriod_.fields{1}(5))) - str2double(char(runPeriod_.fields{1}(3)));
+        
+        ptolemyServer_ = in(matches(classes,"ExternalInterface"));
+        obj.isPtolemyConfigured = ~isempty(ptolemyServer_.fields) && strcmp(ptolemyServer_.fields{1}{1},'PtolemyServer');
+        
+        schedule_ = in(matches(classes,"ExternalInterface:Schedule"));        
+        obj.idfData.schedule = schedule_.fields;
+        
+        actuator_ = in(matches(classes,"ExternalInterface:Actuator"));       
+        obj.idfData.actuator = actuator_.fields;
+        
+        variable_ = in(matches(classes,"ExternalInterface:Variable"));
+        obj.idfData.variable = variable_.fields;
+        
+        output_ = in(matches(classes,"Output:Variable"));
+        obj.idfData.output = output_.fields;
+        
+        outputEMS_ = in(matches(classes,"EnergyManagementSystem:OutputVariable"));
+        obj.idfData.outputEMS = outputEMS_.fields;
+        
+        version_ = in(matches(classes,"Version"));
+        obj.idfData.version = version_.fields;
 
         % List Schedules
         inTable = table('Size',[0 2],'VariableTypes',{'string','string'},'VariableNames',{'Name','Type'});
-        for i = 1:size(schedule,2)
-            if ~size(schedule,1)
+        for i = 1:size(obj.idfData.schedule,2)
+            if ~size(obj.idfData.schedule,1)
                 break;
             end
             inTable(i,:) = {'schedule',...   % Name
-                schedule{i}{1}}; % Type
+                obj.idfData.schedule{i}{1}}; % Type
         end
 
         % List Actuators
-        cInput = height(inTable);        
-        for i = 1:size(actuator,2)
-            if ~size(actuator,1)
+        cnt = height(inTable);        
+        for i = 1:size(obj.idfData.actuator,2)
+            if ~size(obj.idfData.actuator,1)
                 break;
             end
-            inTable(cInput+i,:) = {'actuator',...   % Name
-                actuator{i}{1}}; % Type
+            inTable(cnt+i,:) = {'actuator',...   % Name
+                obj.idfData.actuator{i}{1}}; % Type
         end
 
         % List Variable
-        cInput = height(inTable);
+        cnt = height(inTable);
         for i = 1:size(obj.idfData.variable,2)
             if ~size(obj.idfData.variable,1)
                 break;
             end
-            inTable(cInput+i,:) = {'variable',...   % Name
-                variable{i}{1}}; % Type
+            inTable(cnt+i,:) = {'variable',...   % Name
+                obj.idfData.variable{i}{1}}; % Type
         end
         obj.idfData.inputTable = inTable ;
 
         % List Outputs
         outTable = table('Size',[0 3],'VariableTypes',{'string','string','string'},'VariableNames',{'Name','Type','Period'});
-        for i = 1:size(output,2)
-            outTable(i,:) = {output{i}{1}, ... % Name
-                output{i}{2}, ... % Type
-                output{i}{3}};    % Period
+        for i = 1:size(obj.idfData.output,2)
+            outTable(i,:) = {obj.idfData.output{i}{1}, ... % Name
+                obj.idfData.output{i}{2}, ... % Type
+                obj.idfData.output{i}{3}};    % Period
         end
-        obj.idfData.outputTable = outTable;
+        
+        % List EMS:Outputs
+        cnt = height(outTable);
+        for i = 1:size(obj.idfData.outputEMS,2)
+            outTable(cnt+i,:) = {'EMS', ... % Name
+                obj.idfData.outputEMS{i}{1}, ... % Type
+                obj.idfData.outputEMS{i}{4}};    % Period
+        end
+               
+        obj.idfData.outputTable = outTable;        
     end
 
     function makeVariablesConfigFile(obj)
@@ -891,7 +916,7 @@ methods (Access = private)
         % Check Outputs for asterisks
         chk = contains(obj.outputTable.Name,'*');
         if any(chk)
-            warning('IDF file: Ambiguous "*" key value detected. Please specify the key value exactly (using "Environment", zone name, surface name, etc.). The issue was detected in the following entries:\n%s\n',...
+            warning('IDF file: Ambiguous "*" key value detected. Please specify the key value exactly (using "Environment","Whole Building", zone name, surface name, etc.). The issue was detected in the following entries:\n%s\n',...
                 evalc('disp(obj.outputTable(chk,:))'));
             obj.outputTable = obj.outputTable(~chk,:);
         end
@@ -921,7 +946,12 @@ methods (Access = private)
 
         dirname = fullfile(rootDir,obj.outputDirName);
         if exist(dirname,'dir')
-            rmdir(dirname,'s');
+            try
+                rmdir(dirname,'s');
+            catch
+                error('Could not remove folder "%s" from "%s". EnergyPlus writes outputs to this folder and all of it files will be overwritten. Make sure no other software is using the files inside this folder in order to run the simulation.',...
+                    obj.outputDirName, rootDir);
+            end                
         end
     end
 end
